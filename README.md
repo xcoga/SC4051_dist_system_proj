@@ -11,4 +11,4 @@ Marhsalling Structure:
 1. Null marker (bool) => Check if data is empty.
 2. Object reference marker (bool) => Checks if object has been serialised before
 3. Object reference/handle (Object) => consists of the entire object's fieldname, fieldtype + data.<br />
-   3.1) Each object reference consists of : ClassName, field_lengths, fieldname, fieldType, fieldVal
+   3.1. Each object reference consists of : ClassName, field_lengths, fieldname, fieldType, fieldVal
