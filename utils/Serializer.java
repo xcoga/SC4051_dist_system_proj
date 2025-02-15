@@ -9,10 +9,6 @@ public class Serializer {
     private static Map<Integer, Object> deserializedObjects = new HashMap<>();
     private static int objectCounter = 0;
 
-    enum Day {
-        SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY;
-    }
-
     public static byte[] serialize(Object obj) throws Exception {
         serializedObjects.clear();
         objectCounter = 0;
@@ -57,7 +53,6 @@ public class Serializer {
         // Issue with accessing restricted internal Java classes for wrapper classes
         // types Integer, Long, etc.,
         // which throws an error.
-        // Get only non-static fields
         java.lang.reflect.Field[] allFields = obj.getClass().getDeclaredFields();
         java.util.List<java.lang.reflect.Field> serializableFields = new java.util.ArrayList<>();
 
