@@ -12,3 +12,13 @@ Marhsalling Structure:
 2. Object reference marker (bool) => Checks if object has been serialised before
 3. Object reference/handle (Object) => consists of the entire object's fieldname, fieldtype + data.<br />
    3.1. Each object reference consists of : ClassName, field_lengths, fieldname, fieldType, fieldVal
+
+Just some compilation and run program tips:
+
+1. javac -d bin Main.java utils/_.java
+   This ensures:
+   Main.class is inside bin/SC4051_dist_system_proj/
+   utils/_.class is inside bin/SC4051_dist_system_proj/utils/
+
+2. Since Main.java has package SC4051_dist_system_proj;, you must run it with:
+   java -cp bin SC4051_dist_system_proj.Main

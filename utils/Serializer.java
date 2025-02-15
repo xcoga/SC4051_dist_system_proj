@@ -9,6 +9,10 @@ public class Serializer {
     private static Map<Integer, Object> deserializedObjects = new HashMap<>();
     private static int objectCounter = 0;
 
+    enum Day {
+        SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY;
+    }
+
     public static byte[] serialize(Object obj) throws Exception {
         serializedObjects.clear();
         objectCounter = 0;
@@ -50,10 +54,26 @@ public class Serializer {
         // Write class metadata
         buffer.writeString(obj.getClass().getName());
 
-        java.lang.reflect.Field[] fields = obj.getClass().getDeclaredFields();
-        buffer.writeInt(fields.length);
+        // Issue with accessing restricted internal Java classes for wrapper classes
+        // types Integer, Long, etc.,
+        // which throws an error.
+        // Get only non-static fields
+        java.lang.reflect.Field[] allFields = obj.getClass().getDeclaredFields();
+        java.util.List<java.lang.reflect.Field> serializableFields = new java.util.ArrayList<>();
 
-        for (java.lang.reflect.Field field : fields) {
+        for (java.lang.reflect.Field field : allFields) {
+            // System.out.println("object's field: " + field);
+            int modifiers = field.getModifiers();
+            if (!java.lang.reflect.Modifier.isStatic(modifiers) &&
+                    !java.lang.reflect.Modifier.isTransient(modifiers)) {
+                serializableFields.add(field);
+            }
+        }
+
+        // Write the number of fields to serialise.
+        buffer.writeInt(serializableFields.size());
+
+        for (java.lang.reflect.Field field : serializableFields) {
             field.setAccessible(true);
 
             // Write field metadata
@@ -83,15 +103,31 @@ public class Serializer {
         }
     }
 
+    // TODO bug here! Integer has a bug, I suspect the rest too. Cant even compile.
+    // private static void writePrimitive(ByteBuffer buffer, Object value, Class<?>
+    // type) {
+    // // System.out.println("detected primitive: " + type);
+    // if (type == int.class) {
+    // buffer.writeInt((Integer) value);
+    // } else if (type == long.class) {
+    // buffer.writeLong((Long) value);
+    // } else if (type == double.class) {
+    // buffer.writeDouble((Double) value);
+    // } else if (type == boolean.class) {
+    // buffer.writeByte((byte) ((Boolean) value ? 1 : 0));
+    // }
+    // }
+
     private static void writePrimitive(ByteBuffer buffer, Object value, Class<?> type) {
         if (type == int.class) {
-            buffer.writeInt((Integer) value);
+            System.out.println("detected int: " + value);
+            buffer.writeInt(((Number) value).intValue());
         } else if (type == long.class) {
-            buffer.writeLong((Long) value);
+            buffer.writeLong(((Number) value).longValue());
         } else if (type == double.class) {
-            buffer.writeDouble((Double) value);
-        } else if (type == boolean.class) {
-            buffer.writeByte((byte) ((Boolean) value ? 1 : 0));
+            buffer.writeDouble(((Number) value).doubleValue());
+        } else if (type == byte.class) {
+            buffer.writeByte(((Number) value).byteValue());
         }
     }
 
@@ -130,6 +166,39 @@ public class Serializer {
         return deserializeObject(reader);
     }
 
+    /*
+     * getClassFromName(String className) is a Helper function for
+     * deserializeObject().
+     * 
+     * Primitive class types cannot get the class name using Class.forName method
+     * during deserialisation
+     */
+    private static Class<?> getClassFromName(String className) throws ClassNotFoundException {
+        // Handle primitive types
+        switch (className) {
+            case "int":
+                return int.class;
+            case "long":
+                return long.class;
+            case "double":
+                return double.class;
+            case "float":
+                return float.class;
+            case "boolean":
+                return boolean.class;
+            case "byte":
+                return byte.class;
+            case "short":
+                return short.class;
+            case "char":
+                return char.class;
+            case "void":
+                return void.class;
+            default:
+                return Class.forName(className);
+        }
+    }
+
     private static Object deserializeObject(ByteReader reader) throws Exception {
         byte nullMarker = reader.readByte();
         if (nullMarker == 0) {
@@ -145,7 +214,18 @@ public class Serializer {
 
         // Read class metadata
         String className = reader.readString();
-        Class<?> cls = Class.forName(className);
+        Class<?> cls = getClassFromName(className);
+
+        System.out.println("object class: " + cls);
+
+        // Handle primitive types directly
+        if (cls.isPrimitive()) {
+            System.out.println("detected primitive: " + cls);
+            Object value = readPrimitive(reader, cls);
+            deserializedObjects.put(objectCounter++, value);
+            return value;
+        }
+
         Object obj = cls.getDeclaredConstructor().newInstance();
 
         // Store object before deserializing fields to handle circular references
@@ -157,10 +237,15 @@ public class Serializer {
             String fieldTypeName = reader.readString();
 
             java.lang.reflect.Field field = cls.getDeclaredField(fieldName);
-            field.setAccessible(true);
 
-            Class<?> fieldType = Class.forName(fieldTypeName);
-            field.set(obj, readValue(reader, fieldType));
+            // Skip if field is static or transient
+            if (!java.lang.reflect.Modifier.isStatic(field.getModifiers()) &&
+                    !java.lang.reflect.Modifier.isTransient(field.getModifiers())) {
+                field.setAccessible(true);
+                System.out.println("fieldtypename: " + fieldTypeName);
+                Class<?> fieldType = getClassFromName(fieldTypeName);
+                field.set(obj, readValue(reader, fieldType));
+            }
         }
 
         return obj;
@@ -180,6 +265,7 @@ public class Serializer {
     }
 
     private static Object readPrimitive(ByteReader reader, Class<?> type) {
+        System.out.println("detected primitive: " + type);
         if (type == int.class) {
             return reader.readInt();
         } else if (type == long.class) {
