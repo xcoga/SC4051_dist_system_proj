@@ -22,3 +22,8 @@ Just some compilation and run program tips:
 
 2. Since Main.java has package SC4051_dist_system_proj;, you must run it with:
    java -cp bin SC4051_dist_system_proj.Main
+
+For C++:
+
+1.  Compile into .exe file called 'main': g++ main.cpp -o main
+2.  Execute the file: main.exe
