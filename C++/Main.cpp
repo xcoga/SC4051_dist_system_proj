@@ -280,6 +280,7 @@ public:
 
 void registerClasses()
 {
+    // Need to match package name in Java
     ObjectFactory::registerClass<Person>("SC4051_dist_system_proj.Person");
     ObjectFactory::registerClass<Employee>("SC4051_dist_system_proj.Employee");
     ObjectFactory::registerClass<RequestMessage>("SC4051_dist_system_proj.RequestMessage");
