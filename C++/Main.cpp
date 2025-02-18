@@ -6,10 +6,13 @@
 #include <cstring>
 #include <stdexcept>
 #include <functional>
+using namespace std;
 
 #include "utils/Serializer.cpp"
 
-// Example implementation
+/*In serialisation, only function field + fieldtypes are serialised. Methods arent serialised.
+So, we can write serilisation methods within the class itself, without any issues.
+ */
 class Person : public JavaSerializable
 {
 private:
@@ -22,7 +25,7 @@ public:
 
     std::string getJavaClassName() const override
     {
-        return "com.example.Person";
+        return "SC4051_dist_system_proj.Person";
     }
 
     std::vector<std::pair<std::string, std::string>> getFieldMetadata() const override
@@ -85,13 +88,13 @@ public:
 
     std::string getJavaClassName() const override
     {
-        return "com.example.Employee";
+        return "SC4051_dist_system_proj.Employee";
     }
 
     std::vector<std::pair<std::string, std::string>> getFieldMetadata() const override
     {
         return {
-            {"person", "com.example.Person"},
+            {"person", "SC4051_dist_system_proj.Person"},
             {"department", "java.lang.String"},
             {"salary", "double"},
             {"employeeId", "java.lang.String"}};
@@ -159,7 +162,7 @@ public:
             if (newObjectMarker == 0)
             {
                 std::string className = reader.readString();
-                if (className != "com.example.Person")
+                if (className != "SC4051_dist_system_proj.Person")
                 {
                     throw std::runtime_error("Invalid person class name: " + className);
                 }
@@ -219,11 +222,67 @@ public:
     std::string getEmployeeId() const { return employeeId; }
 };
 
-// Example usage:
+class RequestMessage : public JavaSerializable
+{
+private:
+    int requestID;
+    string data;
+
+public:
+    RequestMessage() : requestID(0) {} // Default constructor needed for deserialization
+    RequestMessage(int id, const string &d) : requestID(id), data(d) {}
+
+    string getJavaClassName() const override
+    {
+        return "SC4051_dist_system_proj.RequestMessage";
+    }
+
+    vector<pair<string, string>> getFieldMetadata() const override
+    {
+        return {
+            {"requestID", "int"},
+            {"data", "java.lang.String"}};
+    }
+    void serializeFields(ByteBuffer &buffer) const override
+    {
+        buffer.writeInt(requestID);
+
+        if (data.empty())
+        {
+            buffer.writeByte(0);
+        }
+        else
+        {
+            buffer.writeByte(1);
+            buffer.writeString(data);
+        }
+    }
+
+    void deserializeFields(ByteReader &reader) override
+    {
+        requestID = reader.readInt();
+
+        uint8_t dataNullMarker = reader.readByte();
+        if (dataNullMarker == 1)
+        {
+            data = reader.readString();
+        }
+        else
+        {
+            data = "";
+        }
+    }
+
+    // Getters
+    int getRequestID() const { return requestID; }
+    string getData() const { return data; }
+};
+
 void registerClasses()
 {
-    ObjectFactory::registerClass<Person>("com.example.Person");
-    ObjectFactory::registerClass<Employee>("com.example.Employee");
+    ObjectFactory::registerClass<Person>("SC4051_dist_system_proj.Person");
+    ObjectFactory::registerClass<Employee>("SC4051_dist_system_proj.Employee");
+    ObjectFactory::registerClass<RequestMessage>("SC4051_dist_system_proj.RequestMessage");
 }
 
 int main()
@@ -233,12 +292,14 @@ int main()
 
     // Create a person
     auto person = std::make_shared<Person>("John Doe", 30);
+    auto requestmessage = RequestMessage(1, "Hello");
 
     // Create an employee
     Employee employee(person, "Engineering", 75000.0, "EMP001");
 
     // Serialize
     std::vector<uint8_t> serializedData = JavaSerializer::serialize(&employee);
+    std::vector<uint8_t> serializedData2 = JavaSerializer::serialize(&requestmessage);
 
     // Deserialize
     auto deserialized = std::dynamic_pointer_cast<Employee>(
@@ -250,5 +311,14 @@ int main()
         std::cout << "Name: " << deserialized->getPerson()->getName() << std::endl;
         std::cout << "Department: " << deserialized->getDepartment() << std::endl;
         std::cout << "Salary: " << deserialized->getSalary() << std::endl;
+    }
+
+    auto deserialized2 = std::dynamic_pointer_cast<RequestMessage>(
+        JavaDeserializer::deserialize(serializedData2));
+
+    if (deserialized2)
+    {
+        std::cout << "Request ID: " << deserialized2->getRequestID() << std::endl;
+        std::cout << "Data: " << deserialized2->getData() << std::endl;
     }
 }
