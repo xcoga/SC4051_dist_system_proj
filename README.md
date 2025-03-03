@@ -44,13 +44,13 @@ Just some compilation and run program tips:
 
 For Java Server:
 
-1. javac -d bin Server/Server.java Server/utils/\*.java
+1. javac -d Server/bin Server/Server.java Server/utils/\*.java
    This ensures:
    Server.class is inside /bin folder
    Java files in Server/utils folder are also in bin folder.
 
 2. Since Server.class is in bin, run it with:
-   java -cp bin Server.Server
+   java -cp Server/bin Server.Server
 
 For C++ Client:
 
