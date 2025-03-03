@@ -1,4 +1,4 @@
-package SC4051_dist_system_proj.utils;
+package Server.utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,6 +68,8 @@ public class Serializer {
         // Write the number of fields to serialise.
         buffer.writeInt(serializableFields.size());
 
+        // MODIFIED: Write field metadata and value together for each field
+        // This matches the C++ serialization format
         for (java.lang.reflect.Field field : serializableFields) {
             field.setAccessible(true);
 
@@ -75,9 +77,15 @@ public class Serializer {
             buffer.writeString(field.getName());
             buffer.writeString(field.getType().getName());
 
-            // Write field value
+            // Write field value immediately after metadata
+            // writeValue(buffer, field.get(obj), field.getType());
+        }
+
+        // TESTING THIS LOOP
+        for (java.lang.reflect.Field field : serializableFields) {
             writeValue(buffer, field.get(obj), field.getType());
         }
+
     }
 
     private static void writeValue(ByteBuffer buffer, Object value, Class<?> type) throws Exception {
@@ -97,21 +105,6 @@ public class Serializer {
             serializeObject(value, buffer);
         }
     }
-
-    // TODO bug here! Integer has a bug, I suspect the rest too. Cant even compile.
-    // private static void writePrimitive(ByteBuffer buffer, Object value, Class<?>
-    // type) {
-    // // System.out.println("detected primitive: " + type);
-    // if (type == int.class) {
-    // buffer.writeInt((Integer) value);
-    // } else if (type == long.class) {
-    // buffer.writeLong((Long) value);
-    // } else if (type == double.class) {
-    // buffer.writeDouble((Double) value);
-    // } else if (type == boolean.class) {
-    // buffer.writeByte((byte) ((Boolean) value ? 1 : 0));
-    // }
-    // }
 
     private static void writePrimitive(ByteBuffer buffer, Object value, Class<?> type) {
         if (type == int.class) {
@@ -211,11 +204,8 @@ public class Serializer {
         String className = reader.readString();
         Class<?> cls = getClassFromName(className);
 
-        System.out.println("object class: " + cls);
-
         // Handle primitive types directly
         if (cls.isPrimitive()) {
-            System.out.println("detected primitive: " + cls);
             Object value = readPrimitive(reader, cls);
             deserializedObjects.put(objectCounter++, value);
             return value;
@@ -227,19 +217,35 @@ public class Serializer {
         deserializedObjects.put(objectCounter++, obj);
 
         int fieldCount = reader.readInt();
+
+        // First read all field metadata
+        java.util.List<java.lang.reflect.Field> fields = new java.util.ArrayList<>();
+        java.util.List<Class<?>> fieldTypes = new java.util.ArrayList<>();
+
         for (int i = 0; i < fieldCount; i++) {
             String fieldName = reader.readString();
             String fieldTypeName = reader.readString();
 
             java.lang.reflect.Field field = cls.getDeclaredField(fieldName);
+            field.setAccessible(true);
+
+            Class<?> fieldType = getClassFromName(fieldTypeName);
+
+            fields.add(field);
+            fieldTypes.add(fieldType);
+        }
+
+        // Then read all field values
+        for (int i = 0; i < fieldCount; i++) {
+            java.lang.reflect.Field field = fields.get(i);
+            Class<?> fieldType = fieldTypes.get(i);
 
             // Skip if field is static or transient
             if (!java.lang.reflect.Modifier.isStatic(field.getModifiers()) &&
                     !java.lang.reflect.Modifier.isTransient(field.getModifiers())) {
-                field.setAccessible(true);
-                System.out.println("fieldtypename: " + fieldTypeName);
-                Class<?> fieldType = getClassFromName(fieldTypeName);
-                field.set(obj, readValue(reader, fieldType));
+                // Read field value
+                Object fieldValue = readValue(reader, fieldType);
+                field.set(obj, fieldValue);
             }
         }
 

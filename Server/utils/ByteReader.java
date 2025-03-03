@@ -1,4 +1,4 @@
-package SC4051_dist_system_proj.utils;
+package Server.utils;
 
 public class ByteReader {
     private byte[] buffer;

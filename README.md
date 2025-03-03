@@ -42,15 +42,21 @@ Data is in Big Endian format. MSB of data is at LSB of buffer.
 
 Just some compilation and run program tips:
 
-1. javac -d bin Main.java utils/*.java
+For Java Server:
+
+1. javac -d bin Server/Server.java Server/utils/\*.java
    This ensures:
-   Main.class is inside bin/SC4051*dist_system_proj/
-   utils/\*.class is inside bin/SC4051_dist_system_proj/utils/
+   Server.class is inside /bin folder
+   Java files in Server/utils folder are also in bin folder.
 
-2. Since Main.java has package SC4051_dist_system_proj;, you must run it with:
-   java -cp bin SC4051_dist_system_proj.Main
+2. Since Server.class is in bin, run it with:
+   java -cp bin Server.Server
 
-For C++:
+For C++ Client:
 
-1.  Compile into .exe file called 'main': g++ main.cpp -o main
-2.  Execute the file: main.exe
+1.  Compile into .exe file called 'Client':
+    g++ Client/Client.cpp Client/utils/ByteBuffer.cpp Client/utils/ByteReader.cpp Client/utils/Serializer.cpp -o Client/Client -lws2_32
+
+Note: The -lws2_32 flag in your compilation command is a linker flag that tells the compiler to link your program with the Windows Socket 2 library (ws2_32.dll)
+
+2.  Execute the file: Client.exe
