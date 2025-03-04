@@ -13,10 +13,10 @@ public class RequestMessage {
     this.requestID = requestID;
     this.data = data;
   }
-  // public RequestMessage(int requestID, String data) {
-  // this.requestID = requestID;
-  // this.data = data;
-  // }
+  
+  public String toString() {
+    return "RequestMessage: " + this.requestType + " " + this.requestID + " " + this.data;
+  }
 
   public int getRequestType() {
     return this.requestType;

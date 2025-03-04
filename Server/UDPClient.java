@@ -35,8 +35,7 @@ public class UDPClient {
 
       RequestMessage deserialised_data = (RequestMessage) Serializer.deserialize(reply.getData());
 
-      System.out.println("Reply from server: " + deserialised_data.getRequestType() + " "
-          + deserialised_data.getRequestID() + " " + deserialised_data.getData());
+      System.out.println("Reply from server: " + deserialised_data.toString());
     } catch (SocketException e) {
       System.err.println("Socket error: " + e.getMessage());
     } catch (IOException e) {

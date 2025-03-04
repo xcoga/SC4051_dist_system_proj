@@ -33,41 +33,7 @@ public class Server {
         DatagramPacket request = new DatagramPacket(buffer, buffer.length);
         aSocket.receive(request); // Blocks until a packet is received
 
-        // Deserialize request
-        try {
-          byte[] receivedData = Arrays.copyOfRange(request.getData(), 0, request.getLength());
-
-          // Print out the data
-          System.out.println("Received data size: " + receivedData.length + " bytes");
-          for (byte b : receivedData) {
-            System.out.print(String.format("%02X ", b));
-          }
-          System.out.println();
-
-          printSupposedData(1, 1, "Hello from client!");
-
-          requestMessage = (RequestMessage) Serializer.deserialize(receivedData);
-          // requestMessage = (RequestMessage) Serializer.deserialize(request.getData());
-        } catch (Exception e) {
-          System.err.println("Error deserializing request: " + e.getMessage());
-
-          // for cpp client
-          requestMessage = new RequestMessage(0, 0, "ERROR: bad request");
-          byte[] replybuff = null;
-          try {
-            replybuff = Serializer.serialize(requestMessage);
-          } catch (Exception e1) {
-            System.err.println("Error serializing bad response: " + e1.getMessage());
-          }
-
-          DatagramPacket reply = new DatagramPacket(replybuff,
-              replybuff.length,
-              request.getAddress(),
-              request.getPort());
-          aSocket.send(reply);
-          continue;
-        }
-
+        System.out.println("Received request from: " + request.getAddress() + ":" + request.getPort());
         RequestMessage responseMessage = handleRequest(request);
 
         // send response
@@ -80,11 +46,12 @@ public class Server {
               request.getAddress(),
               request.getPort());
           aSocket.send(reply);
+
+          System.out.println("Replied to " + request.getAddress() + ":" + request.getPort() + " with: " + responseMessage.toString());
         } catch (Exception e) {
           System.out.println("Error serializing response: " + e.getMessage());
         }
 
-        System.out.println("Replied to: " + request.getAddress() + ":" + request.getPort());
       }
     } catch (SocketException e) {
       System.err.println("Socket error: " + e.getMessage());
@@ -116,20 +83,16 @@ public class Server {
     // Deserialize request
     try {
       requestMessage = (RequestMessage) Serializer.deserialize(request.getData());
+      System.out.println("Request: " + requestMessage.toString());
     } catch (Exception e) {
       System.err.println("Error deserializing request: " + e.getMessage());
-      // reply that message is bad, comment out if not needed, use line below if
-      // commented out
-      // requestMessage = new RequestMessage(0, 0, "manual set server");
-
-      // TODO uncomment
-      // responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR:
-      // bad request");
+      
+      responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: bad request");
       return responseMessage;
     }
 
     // TODO uncomment
-    // responseMessage = new RequestMessage(0, 0, "Good: good request");
+    responseMessage = new RequestMessage(0, 0, "Good: good request");
     return responseMessage;
 
     // RequestInfo requestInformation = new RequestInfo(responseMessage,
