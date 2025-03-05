@@ -3,8 +3,12 @@ package Server;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.time.DayOfWeek;
 import java.util.Arrays;
 
+import Server.models.Avaliablility;
+import Server.models.Facility;
+import Server.services.FacilityFactory;
 import Server.services.MonitorService;
 import Server.services.RequestInfo;
 import Server.services.RequestHistory;
@@ -13,8 +17,9 @@ import Server.utils.Serializer;
 import java.io.IOException;
 
 public class Server {
-  private static MonitorService facultyMonitorService;
+  private static MonitorService facilityMonitorService;
   private static RequestHistory requestHistory;
+  private static FacilityFactory facilityFactory;
 
   private static DatagramSocket aSocket = null;
 
@@ -35,6 +40,7 @@ public class Server {
 
         System.out.println("Received request from: " + request.getAddress() + ":" + request.getPort());
         RequestMessage responseMessage = handleRequest(request);
+        System.out.println("Current request history: " + requestHistory.toString());
 
         // send response
         try {
@@ -47,7 +53,8 @@ public class Server {
               request.getPort());
           aSocket.send(reply);
 
-          System.out.println("Replied to " + request.getAddress() + ":" + request.getPort() + " with: " + responseMessage.toString());
+          System.out.println(
+              "Replied to " + request.getAddress() + ":" + request.getPort() + " with: " + responseMessage.toString());
         } catch (Exception e) {
           System.out.println("Error serializing response: " + e.getMessage());
         }
@@ -67,8 +74,32 @@ public class Server {
 
   // initailize the service classes
   private static void init() {
-    facultyMonitorService = new MonitorService();
+    facilityMonitorService = new MonitorService();
     requestHistory = new RequestHistory();
+    facilityFactory = new FacilityFactory();
+
+    // Create some facilities at the start
+    Facility f1 = facilityFactory.newFacility("Weekday1");
+    Facility f2 = facilityFactory.newFacility("Weekday2");
+    Facility f3 = facilityFactory.newFacility("Weekends");
+
+    // Set availability for each facility
+    Avaliablility a1 = new Avaliablility();
+    a1.setAvaOfDay(DayOfWeek.MONDAY, true, 8, 0, 17, 0);
+    a1.setAvaOfDay(DayOfWeek.TUESDAY, true, 8, 0, 17, 0);
+    a1.setAvaOfDay(DayOfWeek.WEDNESDAY, true, 8, 0, 17, 0);
+    f1.setAvaliablility(a1);
+
+    Avaliablility a2 = new Avaliablility();
+    a2.setAvaOfDay(DayOfWeek.WEDNESDAY, true, 8, 30, 23, 30);
+    a2.setAvaOfDay(DayOfWeek.THURSDAY, true, 8, 30, 23, 30);
+    a2.setAvaOfDay(DayOfWeek.FRIDAY, true, 8, 30, 23, 30);
+    f2.setAvaliablility(a2);
+
+    Avaliablility a3 = new Avaliablility();
+    a3.setAvaOfDay(DayOfWeek.SATURDAY, true, 9, 0, 18, 0);
+    a3.setAvaOfDay(DayOfWeek.SUNDAY, true, 9, 0, 18, 0);
+    f3.setAvaliablility(a3);
   }
 
   /**
@@ -86,39 +117,93 @@ public class Server {
       System.out.println("Request: " + requestMessage.toString());
     } catch (Exception e) {
       System.err.println("Error deserializing request: " + e.getMessage());
-      
+
       responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: bad request");
       return responseMessage;
     }
 
     // TODO uncomment
-    responseMessage = new RequestMessage(0, 0, "Good: good request");
-    return responseMessage;
-
-    // RequestInfo requestInformation = new RequestInfo(responseMessage,
-    // request.getAddress(), request.getPort(), null);
-
-    // // Check if request is in history
-    // RequestInfo prevRequest =
-    // requestHistory.containsAndReplace(requestInformation);
-    // if (prevRequest != null) {
-    // System.out.println("Request already processed: " +
-    // requestMessage.getRequestID());
-    // // response for already done is the same as the previous request
-    // responseMessage = prevRequest.responseMessage;
+    // responseMessage = new RequestMessage(0, 0, "Good: good request");
     // return responseMessage;
-    // }
 
-    // // Process request
+    // Check if request is in history, return previous response if it is
+    RequestInfo requestInformation = new RequestInfo(
+        requestMessage,
+        request.getAddress(),
+        request.getPort(),
+        null);
+    RequestInfo prevRequest = requestHistory.containsRequest(requestInformation);
+    if (prevRequest != null) {
+      System.out.println("Duplicate request id detected: " +
+          requestMessage.getRequestID());
+      // response for already done is the same as the previous request
+      responseMessage = prevRequest.responseMessage;
+      return responseMessage;
+    }
 
-    // // Check if request changes monitored resources
-    // // TODO: the list of things to monitor is not confirmed currently, to add on
-    // if
-    // // needed
+    // Process request
+    switch (requestMessage.getOperation()) {
+      case READ:
+        // read facility infomation
+        String requestString = requestMessage.getData();
+        // different behaviour based on string in request
+        switch (requestString) {
+          case "ALL":
+            // return all facility names
+            String facilityNames = "";
+            for (Facility facility : facilityFactory.getFacilities()) {
+              facilityNames += "Facility name: " + facility.getName() + " ";
+            }
+            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                facilityNames);
+            break;
+          default:
+            // return specified facility information
+            System.out.println("handleRequest: Requested facility: " + requestString);
+            Facility requestedFacility = facilityFactory.getFacility(requestString);
+            if (requestedFacility != null) {
+              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                  requestedFacility.toString());
+            } else {
+              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                  "ERROR: facility not found");
+            }
+            break;
+        }
+        
+        break;
+      case WRITE:
+        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        break;
+      case UPDATE:
+        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        break;
+      case DELETE:
+        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        break;
+      case MONITOR:
+        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        break;
+      default:
+        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unknown operation");
+        break;
+    }
+
+    // save request and response to history
+    RequestInfo currentRequestInformation = new RequestInfo(
+        requestMessage,
+        request.getAddress(),
+        request.getPort(),
+        responseMessage);
+    requestHistory.addRequest(currentRequestInformation);
+
+    // Check if request changes monitored resources
+    // TODO: the list of things to monitor is not confirmed currently, to add on if
+    // needed
     // if (requestMessage.getOperation() == Operation.UPDATE) {
-    // facultyMonitorService.notifyAll(aSocket);
+    // facilityMonitorService.notifyAll(aSocket);
     // }
-    // return responseMessage;
+    return responseMessage;
   }
 
   private static void printSupposedData(int requestType, int requestID, String data) {

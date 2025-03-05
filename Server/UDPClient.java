@@ -13,11 +13,12 @@ public class UDPClient {
     String message = "Hello from UDP client!";
     String hostname = "localhost";
 
+    int clientPort = 62766;
     DatagramSocket aSocket = null;
     System.out.println("");
     try {
-      aSocket = new DatagramSocket(); // use a free local port
-      RequestMessage requestMessage = new RequestMessage(1, 123, "Hello from client!");
+      aSocket = new DatagramSocket(clientPort); // use a free local port
+      RequestMessage requestMessage = new RequestMessage(Operation.READ.getOpCode(), 2, "ALL");
       byte[] m = Serializer.serialize(requestMessage);
 
       // translate user-specified hostname to Internet address

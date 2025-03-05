@@ -82,4 +82,12 @@ public class RequestHistory {
     }
     return false;
   }
+
+  public String toString() {
+    String str = "Request History: ";
+    for (RequestInfo r : this.requestHistory) {
+      str += r.toString() + "; ";
+    }
+    return str;
+  }
 }
