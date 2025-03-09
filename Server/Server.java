@@ -170,7 +170,7 @@ public class Server {
             }
             break;
         }
-        
+
         break;
       case WRITE:
         responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");

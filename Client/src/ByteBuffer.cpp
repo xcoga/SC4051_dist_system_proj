@@ -1,4 +1,5 @@
-#include "ByteBuffer.hpp"
+// #include "ByteBuffer.hpp"
+#include "../include/ByteBuffer.hpp"
 
 #include <iostream>
 #include <vector>
@@ -8,7 +9,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <functional>
-
 
 ByteBuffer::ByteBuffer(size_t initialSize)
 {

@@ -133,6 +133,11 @@ void printSA(struct sockaddr_in sa)
 
 int main()
 {
+    ObjectFactory::creators["Server.RequestMessage"] = []()
+    {
+        return std::make_shared<RequestMessage>();
+    };
+
     // Initialize Winsock
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -203,6 +208,60 @@ int main()
     }
 
     cout << "Sent serialized RequestMessage" << endl;
+
+    // Set up for receiving response
+    cout << "Waiting for server response..." << endl;
+
+    // Buffer to receive data
+    const int BUFFER_SIZE = 2048;
+    char recvBuffer[BUFFER_SIZE];
+
+    // Set up for address of sender
+    struct sockaddr_in senderAddr;
+    int senderAddrLen = sizeof(senderAddr);
+
+    // Receive data
+    int bytesReceived = recvfrom(s, recvBuffer, BUFFER_SIZE, 0,
+                                 (struct sockaddr *)&senderAddr, &senderAddrLen);
+
+    if (bytesReceived == SOCKET_ERROR)
+    {
+        cout << "Error receiving data: " << WSAGetLastError() << endl;
+        closesocket(s);
+        WSACleanup();
+        return 1;
+    }
+
+    cout << "Received " << bytesReceived << " bytes from ";
+    printSA(senderAddr);
+
+    // Print raw bytes received
+    cout << "Raw received data: " << endl;
+    for (int i = 0; i < bytesReceived; i++)
+    {
+        cout << hex << (int)(unsigned char)recvBuffer[i] << " ";
+    }
+    cout << dec << endl;
+
+    // Deserialize the response
+    try
+    {
+        vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
+        std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
+
+        // Cast to RequestMessage if that's what we're expecting
+        std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
+
+        // Display deserialized message
+        cout << "Deserialized message:" << endl;
+        cout << "Request ID: " << responseMessage->getRequestID() << endl;
+        cout << "Message Type: " << responseMessage->getRequestType() << endl;
+        cout << "Message: " << responseMessage->getData() << endl;
+    }
+    catch (const std::exception &e)
+    {
+        cout << "Error deserializing response: " << e.what() << endl;
+    }
 
     // Clean up
     closesocket(s);
