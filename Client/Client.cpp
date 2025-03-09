@@ -5,7 +5,7 @@
 #include <string>
 #include <cstring>
 
-#include "./utils/Serializer.hpp"
+#include "./include/Serializer.hpp"
 
 // Need to link with Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
