@@ -1,6 +1,6 @@
 # SC4051 Distributed Systems Project
 
-This is a repo for the group project to design and implement a `Distributed Facility Booking System`.
+This is a repository for the SC4051 group project to design and implement a `Distributed Facility Booking System`.
 
 ## Request-Reply Structure
 
@@ -35,27 +35,44 @@ Data is in Big Endian format. MSB of data is at LSB of buffer.
 
 ### Structure
 
-1. Null marker (bool) => Check if data is empty.
-2. Object reference marker (bool) => Checks if object has been serialised before
-3. Object reference/handle (Object) => consists of the entire object's fieldname, fieldtype + data.<br />
-   3.1. Each object reference consists of : ClassName, field_lengths, fieldname, fieldType, fieldVal
+1. Null marker (`bool`) $\rightarrow$ Checks if data is empty.
 
-Just some compilation and run program tips:
+2. Object reference marker (`bool`) $\rightarrow$ Checks if object has been serialized before.
 
-For Java Server:
+3. Object reference / handle (`Object`) $\rightarrow$ Consists of the entire object's `fieldname`, `fieldtype`, and `data`.
 
-1. javac -d Server/bin Server/Server.java Server/utils/\*.java
-   This ensures:
-   Server.class is inside /bin folder
-   Java files in Server/utils folder are also in bin folder.
+   - Every object reference consists of: `ClassName`, `field_lengths`, `fieldname`, `fieldType`, `fieldVal`
 
-2. Since Server.class is in bin, run it with:
-   java -cp Server/bin Server.Server
+## Compilation and Execution
 
-For C++ Client:
+### Java Server
 
-1.  Compile into .exe file called 'Client':
-    g++ Client/Client.cpp Client/utils/ByteBuffer.cpp Client/utils/ByteReader.cpp Client/utils/Serializer.cpp -o Client/Client -lws2_32
+1. To change directory into `Server/`, run: `cd Server/`
+
+2. To compile Java source files into `bin/` directory, run: `javac -d bin Server.java utils/*.java`
+
+3. To start the Java server, run: `java -cp bin Server.Server`
+
+### C++ Client
+
+1. To change directory into `Client/`, run: `cd Client/`
+
+2. To create `build/` directory and change into it, run: `mkdir build/ && cd build/`
+
+3. To generate build files using CMake, run: `cmake ..`
+
+4. To compile C++ source files into `build/` directory, run `cmake --build .`
+
+5. To start the C++ client,
+
+   - On Windows, run: `Client.exe`
+
+   - On UNIX, run: `./Client`
+
+
+#### Windows-specific
+1. Compile into .exe file called 'Client':
+   g++ Client/Client.cpp Client/utils/ByteBuffer.cpp Client/utils/ByteReader.cpp Client/utils/Serializer.cpp -o Client/Client -lws2_32
 
 Note: The -lws2_32 flag in your compilation command is a linker flag that tells the compiler to link your program with the Windows Socket 2 library (ws2_32.dll)
 
