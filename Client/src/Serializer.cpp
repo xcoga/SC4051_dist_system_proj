@@ -84,7 +84,6 @@ std::shared_ptr<JavaSerializable> ObjectFactory::createObject(const std::string 
 }
 
 // JavaDeserializer
-
 std::shared_ptr<JavaSerializable> JavaDeserializer::deserialize(const std::vector<uint8_t> &data)
 {
     deserializedObjects.clear();
