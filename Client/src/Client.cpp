@@ -4,17 +4,25 @@
 
 Client::Client(const std::string &serverIp, int serverPort)
 {
-    if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+    try
     {
-        perror("Error creating socket");
+        socket.create(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    }
+    catch (const std::runtime_error &e)
+    {
+        std::cerr << "Error creating socket: " << e.what() << std::endl;
         exit(1);
     }
 
     makeLocalSocketAddress(&clientAddr);
 
-    if (::bind(s, (struct sockaddr *)&clientAddr, sizeof(clientAddr)) < 0)
+    try
     {
-        perror("Error binding socket");
+        socket.bind(0);
+    }
+    catch (const std::runtime_error &e)
+    {
+        std::cerr << "Error binding socket: " << e.what() << std::endl;
         exit(1);
     }
 
@@ -25,7 +33,7 @@ Client::Client(const std::string &serverIp, int serverPort)
 
 Client::~Client()
 {
-    close(s);
+    socket.closeSocket();
 }
 
 void Client::sendMessage()
@@ -88,9 +96,7 @@ void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int
 
 void Client::printBoundSocketInfo()
 {
-    // Get the assigned port and IP address
-    socklen_t addrLen = sizeof(clientAddr);
-    if (getsockname(s, (struct sockaddr *)&clientAddr, &addrLen) < 0)
+    if (socket.getSocketName((struct sockaddr *)&clientAddr) < 0)
     {
         perror("Error getting socket name");
         exit(1);
@@ -106,27 +112,34 @@ void Client::sendRequest(const RequestMessage &request)
 {
     std::vector<uint8_t> serializedData = JavaSerializer::serialize(&request);
 
-    if (sendto(s, (const char *)serializedData.data(), (int)serializedData.size(), 0, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
+    try
     {
-        perror("Error sending data");
+        socket.sendDataTo(serializedData, serverAddr);
+    }
+    catch (const std::runtime_error &e)
+    {
+        std::cerr << "Error sending data: " << e.what() << std::endl;
         exit(1);
     }
 }
 
 std::string Client::receiveResponse()
 {
-    uint8_t buffer[BUFFER_SIZE];
 
-    socklen_t serverAddrLen = sizeof(serverAddr);
-    int bytesReceived = recvfrom(s, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&serverAddr, &serverAddrLen);
+    int bytesReceived = 0;
 
-    if (bytesReceived < 0)
+    try
     {
-        perror("Error receiving data");
+        buffer.resize(BUFFER_SIZE);
+        bytesReceived = socket.receiveDataFrom(buffer, serverAddr);
+    }
+    catch (const std::runtime_error &e)
+    {
+        std::cerr << "Error receiving data: " << e.what() << std::endl;
         exit(1);
     }
 
-    std::vector<uint8_t> receivedData(buffer, buffer + bytesReceived);
+    std::vector<uint8_t> receivedData(buffer.begin(), buffer.begin() + bytesReceived);
     auto deserializedObject = JavaDeserializer::deserialize(receivedData);
 
     // Process the deserialized object (for example, print out some fields)

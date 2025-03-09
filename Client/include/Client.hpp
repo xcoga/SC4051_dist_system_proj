@@ -10,14 +10,16 @@
 #include <vector>
 
 #include "RequestMessage.hpp"
+#include "Socket.hpp"
 
 #define BUFFER_SIZE 1024
 
 class Client
 {
 private:
-    int s;
+    Socket socket;
     struct sockaddr_in clientAddr, serverAddr;
+    std::vector<uint8_t> buffer;
 
 public:
     Client(const std::string &serverIp, int serverPort);
