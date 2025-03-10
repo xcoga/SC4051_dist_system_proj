@@ -152,7 +152,7 @@ public class Server {
             // return all facility names
             String facilityNames = "";
             for (Facility facility : facilityFactory.getFacilities()) {
-              facilityNames += "Facility name: " + facility.getName() + " ";
+              facilityNames += "Facility: " + facility.getName() + " ";
             }
             responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                 facilityNames);

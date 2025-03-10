@@ -10,7 +10,7 @@ public class Facility {
   }
 
   public String toString() {
-    return "Facility name: " + this.name + ", " + this.avaliablility.toString();
+    return "Facility: " + this.name + ", " + this.avaliablility.toString();
   }
   
   public String getName() {
