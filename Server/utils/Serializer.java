@@ -14,6 +14,15 @@ public class Serializer {
         objectCounter = 0;
         ByteBuffer buffer = new ByteBuffer(1024);
         serializeObject(obj, buffer);
+
+        // Get the serialized data
+        byte[] serializedData = buffer.getBuffer();
+        byte parityBit = Parity.calculateEvenParityBit(serializedData);
+
+        // Add the parity bit to the end of the same buffer
+        buffer.writeByte(parityBit);
+
+        // Return the buffer contents (now includes the parity bit)
         return buffer.getBuffer();
     }
 
@@ -148,9 +157,22 @@ public class Serializer {
      */
 
     public static Object deserialize(byte[] data) throws Exception {
+        // Parity checking
+        byte receivedParityBit = data[data.length - 1];
+        byte[] actualData = new byte[data.length - 1];
+        System.arraycopy(data, 0, actualData, 0, data.length - 1);
+        // Calculate and verify parity
+        byte calculatedParity = Parity.calculateEvenParityBit(actualData);
+        if (calculatedParity != receivedParityBit) {
+            throw new Exception("Parity check failed: data corruption detected");
+        }
+
+        System.out.println("Parity check passed in deserialisation");
+
+        // Deserialisation
         deserializedObjects.clear();
         objectCounter = 0;
-        ByteReader reader = new ByteReader(data);
+        ByteReader reader = new ByteReader(actualData);
         return deserializeObject(reader);
     }
 

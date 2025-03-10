@@ -11,6 +11,7 @@ This is a repository for the SC4051 group project to design and implement a `Dis
 | 0           | Request Type     | 4               | Integer   | See [Request Types](#request-types)       |
 | 4           | Request ID       | 4               | Integer   | 0-indexed for every client                |
 | 8           | Application Data | Variable        |           | See [Data Marshalling](#data-marshalling) |
+| Variable    | Even parity bit  | 1               | Byte      | Even parity bit for error detection       |
 
 #### Request Types
 
@@ -67,10 +68,10 @@ Data is in Big Endian format. MSB of data is at LSB of buffer.
 
    - On UNIX, run: `./Client`
 
-
 #### Windows-specific
+
 1. Compile into .exe file called 'Client':
-   g++ Client/Client.cpp Client/utils/ByteBuffer.cpp Client/utils/ByteReader.cpp Client/utils/Serializer.cpp -o Client/Client -lws2_32
+   g++ Client/Client.cpp Client/utils/ByteBuffer.cpp Client/utils/ByteReader.cpp Client/utils/Serializer.cpp Client/utils/Parity.cpp -o Client/Client -lws2_32
 
 Note: The -lws2_32 flag in your compilation command is a linker flag that tells the compiler to link your program with the Windows Socket 2 library (ws2_32.dll)
 
