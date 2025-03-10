@@ -2,6 +2,7 @@
 
 #include "ByteBuffer.hpp"
 #include "ByteReader.hpp"
+#include "./Parity.hpp"
 
 #include <iostream>
 #include <vector>
@@ -28,6 +29,11 @@ std::vector<uint8_t> JavaSerializer::serialize(const JavaSerializable *obj)
     objectCounter = 0;
     ByteBuffer buffer;
     serializeObject(obj, buffer);
+
+    // Modify buffer in memory
+    uint8_t parityBit = Parity::calculateEvenParityBit(buffer.getBuffer());
+    buffer.writeByte(parityBit); // Assuming ByteBuffer has an append method
+
     return buffer.getBuffer();
 }
 
@@ -87,6 +93,21 @@ std::shared_ptr<JavaSerializable> ObjectFactory::createObject(const std::string 
 
 std::shared_ptr<JavaSerializable> JavaDeserializer::deserialize(const std::vector<uint8_t> &data)
 {
+    if (data.empty())
+    {
+        throw std::runtime_error("Empty data received for deserialization");
+    }
+
+    // Extract the data and parity bit
+    std::vector<uint8_t> serializedData(data.begin(), data.end() - 1);
+    uint8_t receivedParityBit = data.back();
+
+    // Verify the parity
+    if (!Parity::verifyEvenParity(serializedData, receivedParityBit))
+    {
+        throw std::runtime_error("Message parity check failed during deserialization");
+    }
+
     deserializedObjects.clear();
     objectCounter = 0;
     ByteReader reader(data);

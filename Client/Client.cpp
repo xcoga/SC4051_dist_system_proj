@@ -4,8 +4,10 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <winsock2.h> // Include winsock2.h for SOCKET_ERROR definition
 
 #include "./utils/Serializer.hpp"
+#include "./utils/Parity.hpp"
 
 // Need to link with Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
@@ -131,8 +133,68 @@ void printSA(struct sockaddr_in sa)
     cout << "sa = " << sa.sin_family << ", " << ipStr << ", " << ntohs(sa.sin_port) << endl;
 }
 
+int testSerializationLocally()
+{
+    // Register the RequestMessage class with the factory
+    ObjectFactory::creators["Server.RequestMessage"] = []()
+    {
+        return std::make_shared<RequestMessage>();
+    };
+
+    // Create a test RequestMessage object
+    RequestMessage requestMessage(1, 1, "Hello from test!");
+
+    // Serialize the object
+    vector<uint8_t> serializedData = JavaSerializer::serialize(&requestMessage);
+
+    cout << "Serialized data size (including parity bit): " << serializedData.size() << " bytes" << endl;
+
+    // Extract message data and parity bit
+    vector<uint8_t> messageData(serializedData.begin(), serializedData.end() - 1);
+    uint8_t parityBit = serializedData.back();
+
+    cout << "Message data (" << messageData.size() << " bytes): ";
+    for (uint8_t byte : messageData)
+    {
+        cout << hex << (int)byte << " ";
+    }
+    cout << endl;
+
+    cout << "Parity bit: 0x" << hex << (int)parityBit << dec << endl;
+
+    // Verify the calculated parity bit
+    uint8_t calculatedParity = Parity::calculateEvenParityBit(messageData);
+    cout << "Calculated parity: 0x" << hex << (int)calculatedParity << dec;
+    cout << " (" << (calculatedParity == parityBit ? "MATCHES" : "ERROR: DOES NOT MATCH") << ")" << endl;
+
+    // Deserialize the object
+    try
+    {
+        std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(serializedData);
+        std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
+
+        // Display deserialized message
+        cout << "Deserialized message:" << endl;
+        cout << "Request ID: " << responseMessage->getRequestID() << endl;
+        cout << "Message Type: " << responseMessage->getRequestType() << endl;
+        cout << "Message: " << responseMessage->getData() << endl;
+    }
+    catch (const std::exception &e)
+    {
+        cout << "Error deserializing response: " << e.what() << endl;
+    }
+
+    return 0;
+}
+
 int main()
 {
+    // Register the RequestMessage class with the factory
+    ObjectFactory::creators["Server.RequestMessage"] = []()
+    {
+        return std::make_shared<RequestMessage>();
+    };
+
     // Initialize Winsock
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -183,16 +245,30 @@ int main()
     // Format message into required structure and serialize before sending
     RequestMessage requestMessage(1, 1, "Hello from client!");
     vector<uint8_t> serializedData = JavaSerializer::serialize(&requestMessage);
-    // serializedData.push_back(0x21);
 
-    cout << "Serialized data size after append: " << serializedData.size() << " bytes" << endl;
-    for (size_t i = 0; i < serializedData.size(); i++)
+    // The serialize method now automatically adds the parity bit at the end
+    // Display the serialized data with parity bit
+    cout << "Serialized data size (including parity bit): " << serializedData.size() << " bytes" << endl;
+
+    // Extract and show the data and parity bit separately for debugging
+    vector<uint8_t> messageData(serializedData.begin(), serializedData.end() - 1);
+    uint8_t parityBit = serializedData.back();
+
+    cout << "Message data (" << messageData.size() << " bytes): ";
+    for (size_t i = 0; i < messageData.size(); i++)
     {
-        cout << hex << (int)serializedData[i] << " ";
+        cout << hex << (int)messageData[i] << " ";
     }
     cout << endl;
 
-    // Send the serialized data to the server
+    cout << "Parity bit: 0x" << hex << (int)parityBit << dec << endl;
+
+    // Verify that our parity calculation is correct
+    uint8_t calculatedParity = Parity::calculateEvenParityBit(messageData);
+    cout << "Calculated parity: 0x" << hex << (int)calculatedParity << dec;
+    cout << " (" << (calculatedParity == parityBit ? "MATCHES" : "ERROR: DOES NOT MATCH") << ")" << endl;
+
+    // Send the serialized data (with parity bit) to the server
     if (sendto(s, (const char *)serializedData.data(), (int)serializedData.size(), 0,
                (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
     {
@@ -202,7 +278,70 @@ int main()
         return 1;
     }
 
-    cout << "Sent serialized RequestMessage" << endl;
+    cout << "Sent serialized RequestMessage with parity bit" << endl;
+
+    // Set up for receiving response
+    cout << "Waiting for server response..." << endl;
+
+    // Buffer to receive data
+    const int BUFFER_SIZE = 2048;
+    char recvBuffer[BUFFER_SIZE];
+
+    // Set up for address of sender
+    struct sockaddr_in senderAddr;
+    int senderAddrLen = sizeof(senderAddr);
+
+    // Receive data
+    int bytesReceived = recvfrom(s, recvBuffer, BUFFER_SIZE, 0,
+                                 (struct sockaddr *)&senderAddr, &senderAddrLen);
+
+    if (bytesReceived == SOCKET_ERROR)
+    {
+        cout << "Error receiving data: " << WSAGetLastError() << endl;
+        closesocket(s);
+        WSACleanup();
+        return 1;
+    }
+
+    cout << "Received " << bytesReceived << " bytes from ";
+    printSA(senderAddr);
+
+    // Extract and verify parity from the received data for logging purposes
+    if (bytesReceived > 0)
+    {
+        vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
+        vector<uint8_t> receivedMessageData(receivedData.begin(), receivedData.end() - 1);
+        uint8_t receivedParityBit = receivedData.back();
+
+        cout << "Received message data size: " << receivedMessageData.size() << " bytes" << endl;
+        cout << "Received parity bit: 0x" << hex << (int)receivedParityBit << dec << endl;
+
+        uint8_t calculatedReceivedParity = Parity::calculateEvenParityBit(receivedMessageData);
+        cout << "Calculated parity for received data: 0x" << hex << (int)calculatedReceivedParity << dec;
+        cout << " (" << (calculatedReceivedParity == receivedParityBit ? "VALID" : "INVALID - possible data corruption") << ")" << endl;
+    }
+
+    // Deserialize the response - now handles parity check internally
+    try
+    {
+        vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
+
+        // The deserialize method now automatically extracts and verifies the parity bit
+        std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
+
+        // Cast to RequestMessage if that's what we're expecting
+        std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
+
+        // Display deserialized message
+        cout << "Deserialized message:" << endl;
+        cout << "Request ID: " << responseMessage->getRequestID() << endl;
+        cout << "Message Type: " << responseMessage->getRequestType() << endl;
+        cout << "Message: " << responseMessage->getData() << endl;
+    }
+    catch (const std::exception &e)
+    {
+        cout << "Error deserializing response: " << e.what() << endl;
+    }
 
     // Clean up
     closesocket(s);

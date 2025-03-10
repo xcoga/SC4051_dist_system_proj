@@ -19,10 +19,12 @@ public class Server {
   private static DatagramSocket aSocket = null;
 
   public static void main(String[] args) {
+    testSerialisation();
     init();
     RequestMessage requestMessage = null;
 
     try {
+
       // Bind socket to port 6789
       aSocket = new DatagramSocket(6789);
       byte[] buffer = new byte[1000];
@@ -68,12 +70,17 @@ public class Server {
           continue;
         }
 
-        RequestMessage responseMessage = handleRequest(request);
+        // RequestMessage responseMessage = handleRequest(request);
+        RequestMessage responseMessage = new RequestMessage(0, 0, "Hello from Server!");
 
         // send response
         try {
           byte[] replybuff = Serializer.serialize(responseMessage);
-          System.out.println("serialized");
+          System.out.println("serialized. Reply buff byte data: ");
+          for (byte b : replybuff) {
+            System.out.print(String.format("%02X ", b));
+          }
+          System.out.println("bytebuff length: " + replybuff.length);
           // Send response (echo the received message)
           DatagramPacket reply = new DatagramPacket(replybuff,
               replybuff.length,
@@ -174,6 +181,22 @@ public class Server {
       System.err.println("Error serializing request: " + e.getMessage());
       e.printStackTrace();
     }
+  }
+
+  private static void testSerialisation() {
+    RequestMessage responseMessage = new RequestMessage(0, 0, "Hello from Server!");
+    try {
+      byte[] replybuff = Serializer.serialize(responseMessage);
+      RequestMessage requestMessage = (RequestMessage) Serializer.deserialize(replybuff);
+
+      System.out.println("requestMessage id: " + requestMessage.getRequestID());
+      System.out.println("Request message type: " + requestMessage.getRequestType());
+      System.out.println("Request Message Data: " + requestMessage.getData());
+    } catch (Exception e) {
+      System.err.println("Error serializing request: " + e.getMessage());
+      e.printStackTrace();
+    }
+
   }
 
 }

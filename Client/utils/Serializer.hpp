@@ -19,6 +19,7 @@ public:
     virtual ~JavaSerializable() = default;
     virtual std::string getJavaClassName() const = 0;
     virtual std::vector<std::pair<std::string, std::string>> getFieldMetadata() const = 0;
+    static std::map<std::string, std::function<std::shared_ptr<JavaSerializable>()>> creators;
 
     // This remains for backward compatibility but will be empty in new implementations
     virtual void serializeFields(ByteBuffer &buffer) const {}
@@ -44,8 +45,6 @@ private:
 
 class ObjectFactory
 {
-private:
-    static std::map<std::string, std::function<std::shared_ptr<JavaSerializable>()>> creators;
 
 public:
     template <typename T>
@@ -54,7 +53,7 @@ public:
         creators[className] = []()
         { return std::make_shared<T>(); };
     }
-
+    static std::map<std::string, std::function<std::shared_ptr<JavaSerializable>()>> creators;
     static std::shared_ptr<JavaSerializable> createObject(const std::string &className);
 };
 
