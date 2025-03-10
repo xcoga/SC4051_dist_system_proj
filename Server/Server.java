@@ -121,6 +121,12 @@ public class Server {
       responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: bad request");
       return responseMessage;
     }
+    // do nothing if requested server to echo 
+    if (requestMessage.getOperation() == Operation.ECHO) {
+      System.out.println("Echo request received");
+      return requestMessage;
+    }
+
 
     // TODO uncomment
     // responseMessage = new RequestMessage(0, 0, "Good: good request");

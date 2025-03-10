@@ -10,7 +10,8 @@ public enum Operation {
   WRITE(1), 
   UPDATE(2), 
   DELETE(3), 
-  MONITOR(4);
+  MONITOR(4),
+  ECHO(5);
 
   private int op;
 

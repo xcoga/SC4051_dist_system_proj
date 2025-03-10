@@ -22,6 +22,7 @@ This section explains how `requestType` values correspond to server operations.
 | **UPDATE** | 2         | Modifies existing data |
 | **DELETE** | 3         | Removes data |
 | **MONITOR** | 4        | Registers a client to receive updates when a monitored resource changes |
+| **ECHO** | 5        | Echoes the request back to client without further processing |
 
 ## Response Format
 Responses from the server are serialized objects that mirror the request structure.
@@ -30,10 +31,22 @@ Responses from the server are serialized objects that mirror the request structu
 - The **data** field contains the requested information or an error message.
 
 ## Supported Requests
+All requests and responses are transmitted using **UDP packets**. The JSON format below is used for readability purposes.
+
+### Echoing requests
+#### Request and Response:
+```json
+{
+  "operation": 5,
+  "requestID": <any integer>,
+  "data": <any string>
+}
+```
+
 
 ### Retrieve All Facility Names
 #### Request:
-```
+```json
 {
   "operation": 0,
   "requestID": 0,
@@ -41,7 +54,7 @@ Responses from the server are serialized objects that mirror the request structu
 }
 ```
 #### Response:
-```
+```json
 {
   "operation": 0,
   "requestID": 0,
@@ -51,7 +64,7 @@ Responses from the server are serialized objects that mirror the request structu
 
 ### Query Availability of a Specific Facility
 #### Request:
-```
+```json
 {
   "operation": 0,
   "requestID": 1,
@@ -59,7 +72,7 @@ Responses from the server are serialized objects that mirror the request structu
 }
 ```
 #### Response:
-```
+```json
 {
   "operation": 0,
   "requestID": 1,
