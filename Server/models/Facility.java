@@ -2,26 +2,26 @@ package Server.models;
 
 public class Facility {
   private String name;
-  private Avaliablility avaliablility;
+  private Availability availability;
 
   public Facility(String name) {
     this.name = name;
-    this.avaliablility = new Avaliablility();
+    this.availability = new Availability();
   }
 
   public String toString() {
-    return "Facility: " + this.name + ", " + this.avaliablility.toString();
+    return "Facility: " + this.name + ", " + this.availability.toString();
   }
   
   public String getName() {
     return this.name;
   }
 
-  public void setAvaliablility(Avaliablility avaliablility) {
-    this.avaliablility = avaliablility;
+  public void setAvailability(Availability availability) {
+    this.availability = availability;
   }
 
-  public Avaliablility getAvaliablility() {
-    return this.avaliablility;
+  public Availability getAvailability() {
+    return this.availability;
   }
 }

@@ -6,7 +6,7 @@ import java.net.SocketException;
 import java.time.DayOfWeek;
 import java.util.Arrays;
 
-import Server.models.Avaliablility;
+import Server.models.Availability;
 import Server.models.Facility;
 import Server.services.FacilityFactory;
 import Server.services.MonitorService;
@@ -84,22 +84,22 @@ public class Server {
     Facility f3 = facilityFactory.newFacility("Weekends");
 
     // Set availability for each facility
-    Avaliablility a1 = new Avaliablility();
+    Availability a1 = new Availability();
     a1.setAvaOfDay(DayOfWeek.MONDAY, true, 8, 0, 17, 0);
     a1.setAvaOfDay(DayOfWeek.TUESDAY, true, 8, 0, 17, 0);
     a1.setAvaOfDay(DayOfWeek.WEDNESDAY, true, 8, 0, 17, 0);
-    f1.setAvaliablility(a1);
+    f1.setAvailability(a1);
 
-    Avaliablility a2 = new Avaliablility();
+    Availability a2 = new Availability();
     a2.setAvaOfDay(DayOfWeek.WEDNESDAY, true, 8, 30, 23, 30);
     a2.setAvaOfDay(DayOfWeek.THURSDAY, true, 8, 30, 23, 30);
     a2.setAvaOfDay(DayOfWeek.FRIDAY, true, 8, 30, 23, 30);
-    f2.setAvaliablility(a2);
+    f2.setAvailability(a2);
 
-    Avaliablility a3 = new Avaliablility();
+    Availability a3 = new Availability();
     a3.setAvaOfDay(DayOfWeek.SATURDAY, true, 9, 0, 18, 0);
     a3.setAvaOfDay(DayOfWeek.SUNDAY, true, 9, 0, 18, 0);
-    f3.setAvaliablility(a3);
+    f3.setAvailability(a3);
   }
 
   /**

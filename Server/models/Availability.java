@@ -2,14 +2,14 @@ package Server.models;
 
 import java.time.DayOfWeek;
 
-public class Avaliablility {
+public class Availability {
   private boolean[] days;
   private int[] startHour;
   private int[] startMinute;
   private int[] endHour;
   private int[] endMinute;
 
-  public Avaliablility() {
+  public Availability() {
     this.days = new boolean[7];
     this.startHour = new int[7];
     this.startMinute = new int[7];
@@ -18,7 +18,7 @@ public class Avaliablility {
   }
 
   public String toString() {
-    String str = "Avaliablility: ";
+    String str = "Availability: ";
     for (int i = 0; i < 7; i++) {
       str += "Day " + DayOfWeek.of(i + 1).toString() + ": " + (this.days[i] ? "Open" : "Closed") + " ";
       if (this.days[i]) {
