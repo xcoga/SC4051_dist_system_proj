@@ -1,5 +1,5 @@
-// Socket.cpp
 #include "Socket.hpp"
+
 #include <iostream>
 #include <cstring>
 
@@ -88,21 +88,21 @@ void Socket::sendDataTo(const std::vector<uint8_t> &data, const struct sockaddr_
 }
 
 // TODO: Fix receiving messages from server
-int Socket::receiveDataFrom(std::vector<uint8_t> &buffer, struct sockaddr_in &addr)
+int Socket::receiveDataFrom(char *buffer, struct sockaddr_in &addr)
 {
 #ifdef _WIN32
     int addrLen = sizeof(addr);
 #else
     socklen_t addrLen = sizeof(addr);
 #endif
-    int bytesReceived = recvfrom(sockfd, buffer.data(), buffer.size(), 0, (struct sockaddr *)&addr, &addrLen);
+    int bytesReceived = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&addr, &addrLen);
     if (bytesReceived < 0)
     {
         throw std::runtime_error("Receive failed!");
     }
     return bytesReceived;
 }
-    
+
 // std::string Socket::receiveDataFrom(struct sockaddr_in &addr)
 // {
 //     char buffer[BUFFER_SIZE];

@@ -38,10 +38,10 @@ Client::~Client()
 
 void Client::sendMessage()
 {
-    RequestMessage requestMessage(1, 0, "Hello from client");
+    RequestMessage requestMessage(5, 0, "Hello from client");
     sendRequest(requestMessage);
 
-    std::string response = receiveResponse();
+    receiveResponse();
 }
 
 void Client::queryAvailability()
@@ -125,45 +125,35 @@ void Client::sendRequest(const RequestMessage &request)
 
 std::string Client::receiveResponse()
 {
+    char recvBuffer[BUFFER_SIZE];
 
-    int bytesReceived = 0;
+    struct sockaddr_in senderAddr;
+    int senderAddrLen = sizeof(senderAddr);
+
+    int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
 
     try
     {
-        buffer.resize(BUFFER_SIZE);
-        bytesReceived = socket.receiveDataFrom(buffer, serverAddr);
+        int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
+
+        // Parity
+
+        // Deserialize response
+        std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
+        std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
+
+        std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
+
+        // Display deserialized message
+        std::cout << "Deserialized message:" << std::endl;
+        std::cout << "Request ID: " << responseMessage->getRequestID() << std::endl;
+        std::cout << "Message Type: " << responseMessage->getRequestType() << std::endl;
+        std::cout << "Message: " << responseMessage->getData() << std::endl;
+
+        return responseMessage->getData();
     }
-    catch (const std::runtime_error &e)
+    catch(const std::exception& e)
     {
-        std::cerr << "Error receiving data: " << e.what() << std::endl;
-        exit(1);
+        std::cerr << e.what() << '\n';
     }
-
-    std::vector<uint8_t> receivedData(buffer.begin(), buffer.begin() + bytesReceived);
-    auto deserializedObject = JavaDeserializer::deserialize(receivedData);
-
-    // Process the deserialized object (for example, print out some fields)
-    if (deserializedObject)
-    {
-        std::cout << "Received Object of Class: " 
-                  << deserializedObject->getJavaClassName() << std::endl;
-
-        // Cast to your specific class (e.g., RequestMessage)
-        RequestMessage *response = dynamic_cast<RequestMessage *>(deserializedObject.get());
-        if (response)
-        {
-            std::cout << "Request ID: " << response->getRequestID() << std::endl;
-            std::cout << "Request Data: " << response->getData() << std::endl;
-        }
-        else
-        {
-            std::cout << "Failed to cast to RequestMessage" << std::endl;
-        }
-    }
-    else
-    {
-        std::cerr << "Failed to deserialize the received data" << std::endl;
-    }
-
-    return "";
 }

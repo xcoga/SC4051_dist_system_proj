@@ -12,8 +12,6 @@
 #include "RequestMessage.hpp"
 #include "Socket.hpp"
 
-#define BUFFER_SIZE 1024
-
 class Client
 {
 private:

@@ -1,5 +1,4 @@
-// #include "ByteReader.hpp"
-#include "../include/ByteReader.hpp"
+#include "ByteReader.hpp"
 
 #include <iostream>
 #include <vector>
