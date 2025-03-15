@@ -86,7 +86,7 @@ public class RequestHistory {
   public String toString() {
     String str = "Request History: ";
     for (RequestInfo r : this.requestHistory) {
-      str += r.toString() + "; ";
+      str += r.toString() + ";\n";
     }
     return str;
   }

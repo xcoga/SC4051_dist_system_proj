@@ -13,7 +13,6 @@ public class Availability {
   private int[] endMinute;
   private List<TimeSlot>[] bookedSlots;
 
-  @SuppressWarnings("unchecked")
   public Availability() {
     this.days = new boolean[7];
     this.startHour = new int[7];
@@ -84,7 +83,8 @@ public class Availability {
     return true;
   }
 
-  public String bookTimeSlot(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute, String userInfo) {
+  public String bookTimeSlot(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute,
+      String userInfo) {
     int dayIndex = day.getValue() - 1;
     String confirmationID = UUID.randomUUID().toString();
     this.bookedSlots[dayIndex].add(new TimeSlot(startHour, startMinute, endHour, endMinute, confirmationID, userInfo));
@@ -96,33 +96,35 @@ public class Availability {
     List<TimeSlot> availableSlots = new ArrayList<>();
 
     if (!this.days[dayIndex]) {
-        return availableSlots; // Return empty list if the facility is closed on this day
+      return availableSlots; // Return empty list if the facility is closed on this day
     }
 
     int currentStartHour = this.startHour[dayIndex];
     int currentStartMinute = this.startMinute[dayIndex];
 
     for (TimeSlot bookedSlot : this.bookedSlots[dayIndex]) {
-        // Add available slot before the booked slot
-        if (currentStartHour < bookedSlot.startHour || 
-            (currentStartHour == bookedSlot.startHour && currentStartMinute < bookedSlot.startMinute)) {
-            availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute, bookedSlot.startHour, bookedSlot.startMinute));
-        }
-        // Update the start time to the end of the booked slot
-        currentStartHour = bookedSlot.endHour;
-        currentStartMinute = bookedSlot.endMinute;
+      // Add available slot before the booked slot
+      if (currentStartHour < bookedSlot.startHour ||
+          (currentStartHour == bookedSlot.startHour && currentStartMinute < bookedSlot.startMinute)) {
+        availableSlots
+            .add(new TimeSlot(currentStartHour, currentStartMinute, bookedSlot.startHour, bookedSlot.startMinute));
+      }
+      // Update the start time to the end of the booked slot
+      currentStartHour = bookedSlot.endHour;
+      currentStartMinute = bookedSlot.endMinute;
     }
 
     // Add the remaining available slot after the last booked slot
-    if (currentStartHour < this.endHour[dayIndex] || 
+    if (currentStartHour < this.endHour[dayIndex] ||
         (currentStartHour == this.endHour[dayIndex] && currentStartMinute < this.endMinute[dayIndex])) {
-        availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute, this.endHour[dayIndex], this.endMinute[dayIndex]));
+      availableSlots
+          .add(new TimeSlot(currentStartHour, currentStartMinute, this.endHour[dayIndex], this.endMinute[dayIndex]));
     }
 
     return availableSlots;
   }
 
-  private class TimeSlot {
+  public class TimeSlot {
     int startHour;
     int startMinute;
     int endHour;
@@ -136,7 +138,7 @@ public class Availability {
       this.endHour = endHour;
       this.endMinute = endMinute;
     }
-    
+
     TimeSlot(int startHour, int startMinute, int endHour, int endMinute, String confirmationID, String userInfo) {
       this.startHour = startHour;
       this.startMinute = startMinute;
@@ -154,6 +156,11 @@ public class Availability {
         return false;
       }
       return true;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%02d:%02d - %02d:%02d", this.startHour, this.startMinute, this.endHour, this.endMinute);
     }
   }
 }

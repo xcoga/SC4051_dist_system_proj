@@ -5,6 +5,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.time.DayOfWeek;
+import java.util.List;
 import java.util.UUID;
 
 import Server.models.Availability;
@@ -122,12 +123,11 @@ public class Server {
       responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: bad request");
       return responseMessage;
     }
-    // do nothing if requested server to echo 
+    // do nothing if requested server to echo
     if (requestMessage.getOperation() == Operation.ECHO) {
       System.out.println("Echo request received");
       return requestMessage;
     }
-
 
     // TODO uncomment
     // responseMessage = new RequestMessage(0, 0, "Good: good request");
@@ -151,7 +151,7 @@ public class Server {
     // Process request
     switch (requestMessage.getOperation()) {
       case READ:
-        // read facility infomation
+        // read facility information
         String requestString = requestMessage.getData();
         // different behaviour based on string in request
         switch (requestString) {
@@ -169,23 +169,34 @@ public class Server {
             System.out.println("handleRequest: Requested facility: " + requestString);
             Facility requestedFacility = facilityFactory.getFacility(requestString);
             if (requestedFacility != null) {
+              // Get available timeslots for the requested facility
+              Availability availability = requestedFacility.getAvailability();
+              String availableTimeslots = "Available timeslots: ";
+              for (DayOfWeek day : DayOfWeek.values()) {
+                List<Availability.TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
+                if (!timeslots.isEmpty()) {
+                  availableTimeslots += day.toString() + ": ";
+                  for (Availability.TimeSlot slot : timeslots) {
+                    availableTimeslots += slot.toString() + ", ";
+                  }
+                }
+              }
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                  requestedFacility.toString());
+                  availableTimeslots);
             } else {
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                   "ERROR: facility not found");
             }
             break;
         }
-
         break;
       case WRITE:
         // Extract booking details from the request message
         String[] bookingDetails = requestMessage.getData().split(",");
         if (bookingDetails.length != 6) {
-            responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
-                "ERROR: invalid booking request format");
-            break;
+          responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+              "ERROR: invalid booking request format");
+          break;
         }
 
         String facilityName = bookingDetails[0];
@@ -193,19 +204,20 @@ public class Server {
         int startHour, startMinute, endHour, endMinute;
 
         try {
-            day = DayOfWeek.valueOf(bookingDetails[1].toUpperCase());
-            startHour = Integer.parseInt(bookingDetails[2]);
-            startMinute = Integer.parseInt(bookingDetails[3]);
-            endHour = Integer.parseInt(bookingDetails[4]);
-            endMinute = Integer.parseInt(bookingDetails[5]);
+          day = DayOfWeek.valueOf(bookingDetails[1].toUpperCase());
+          startHour = Integer.parseInt(bookingDetails[2]);
+          startMinute = Integer.parseInt(bookingDetails[3]);
+          endHour = Integer.parseInt(bookingDetails[4]);
+          endMinute = Integer.parseInt(bookingDetails[5]);
         } catch (Exception e) {
-            responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
-                "ERROR: invalid booking request parameters");
-            break;
+          responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+              "ERROR: invalid booking request parameters");
+          break;
         }
 
         // Book the facility
-        String bookingResult = bookFacility(facilityName, day, startHour, startMinute, endHour, endMinute, request.getAddress(), request.getPort());
+        String bookingResult = bookFacility(facilityName, day, startHour, startMinute, endHour, endMinute,
+            request.getAddress(), request.getPort());
         responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(), bookingResult);
         break;
       case UPDATE:
@@ -257,15 +269,16 @@ public class Server {
     }
   }
 
-  private static String bookFacility(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute, InetAddress userAddress, int userPort) {
+  private static String bookFacility(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour,
+      int endMinute, InetAddress userAddress, int userPort) {
     Facility facility = facilityFactory.getFacility(facilityName);
     if (facility == null) {
-        return "ERROR: facility not found";
+      return "ERROR: facility not found";
     }
 
     Availability availability = facility.getAvailability();
     if (availability == null || !availability.isAvailable(day, startHour, startMinute, endHour, endMinute)) {
-        return "ERROR: facility not available at the requested time";
+      return "ERROR: facility not available at the requested time";
     }
 
     // Capture user information
