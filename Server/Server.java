@@ -2,9 +2,10 @@ package Server;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.time.DayOfWeek;
-import java.util.Arrays;
+import java.util.UUID;
 
 import Server.models.Availability;
 import Server.models.Facility;
@@ -179,7 +180,33 @@ public class Server {
 
         break;
       case WRITE:
-        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        // Extract booking details from the request message
+        String[] bookingDetails = requestMessage.getData().split(",");
+        if (bookingDetails.length != 6) {
+            responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+                "ERROR: invalid booking request format");
+            break;
+        }
+
+        String facilityName = bookingDetails[0];
+        DayOfWeek day;
+        int startHour, startMinute, endHour, endMinute;
+
+        try {
+            day = DayOfWeek.valueOf(bookingDetails[1].toUpperCase());
+            startHour = Integer.parseInt(bookingDetails[2]);
+            startMinute = Integer.parseInt(bookingDetails[3]);
+            endHour = Integer.parseInt(bookingDetails[4]);
+            endMinute = Integer.parseInt(bookingDetails[5]);
+        } catch (Exception e) {
+            responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+                "ERROR: invalid booking request parameters");
+            break;
+        }
+
+        // Book the facility
+        String bookingResult = bookFacility(facilityName, day, startHour, startMinute, endHour, endMinute, request.getAddress(), request.getPort());
+        responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(), bookingResult);
         break;
       case UPDATE:
         responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
@@ -228,6 +255,26 @@ public class Server {
       System.err.println("Error serializing request: " + e.getMessage());
       e.printStackTrace();
     }
+  }
+
+  private static String bookFacility(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute, InetAddress userAddress, int userPort) {
+    Facility facility = facilityFactory.getFacility(facilityName);
+    if (facility == null) {
+        return "ERROR: facility not found";
+    }
+
+    Availability availability = facility.getAvailability();
+    if (availability == null || !availability.isAvailable(day, startHour, startMinute, endHour, endMinute)) {
+        return "ERROR: facility not available at the requested time";
+    }
+
+    // Capture user information
+    String userInfo = userAddress.toString() + ":" + userPort;
+
+    // Book the facility and get the confirmation ID
+    String confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+
+    return "Booking_ID: " + confirmationID + " by " + userInfo;
   }
 
 }

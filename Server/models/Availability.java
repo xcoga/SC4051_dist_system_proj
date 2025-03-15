@@ -1,6 +1,9 @@
 package Server.models;
 
 import java.time.DayOfWeek;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class Availability {
   private boolean[] days;
@@ -8,13 +11,19 @@ public class Availability {
   private int[] startMinute;
   private int[] endHour;
   private int[] endMinute;
+  private List<TimeSlot>[] bookedSlots;
 
+  @SuppressWarnings("unchecked")
   public Availability() {
     this.days = new boolean[7];
     this.startHour = new int[7];
     this.startMinute = new int[7];
     this.endHour = new int[7];
     this.endMinute = new int[7];
+    this.bookedSlots = (List<TimeSlot>[]) new ArrayList[7];
+    for (int i = 0; i < 7; i++) {
+      this.bookedSlots[i] = new ArrayList<>();
+    }
   }
 
   public String toString() {
@@ -58,5 +67,93 @@ public class Availability {
 
   public int getEndMinute(DayOfWeek day) {
     return this.endMinute[day.getValue() - 1];
+  }
+
+  public boolean isAvailable(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
+    int dayIndex = day.getValue() - 1;
+    if (!this.days[dayIndex]) {
+      return false;
+    }
+
+    for (TimeSlot slot : this.bookedSlots[dayIndex]) {
+      if (slot.conflictsWith(startHour, startMinute, endHour, endMinute)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public String bookTimeSlot(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute, String userInfo) {
+    int dayIndex = day.getValue() - 1;
+    String confirmationID = UUID.randomUUID().toString();
+    this.bookedSlots[dayIndex].add(new TimeSlot(startHour, startMinute, endHour, endMinute, confirmationID, userInfo));
+    return confirmationID;
+  }
+
+  public List<TimeSlot> getAvailableTimeSlots(DayOfWeek day) {
+    int dayIndex = day.getValue() - 1;
+    List<TimeSlot> availableSlots = new ArrayList<>();
+
+    if (!this.days[dayIndex]) {
+        return availableSlots; // Return empty list if the facility is closed on this day
+    }
+
+    int currentStartHour = this.startHour[dayIndex];
+    int currentStartMinute = this.startMinute[dayIndex];
+
+    for (TimeSlot bookedSlot : this.bookedSlots[dayIndex]) {
+        // Add available slot before the booked slot
+        if (currentStartHour < bookedSlot.startHour || 
+            (currentStartHour == bookedSlot.startHour && currentStartMinute < bookedSlot.startMinute)) {
+            availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute, bookedSlot.startHour, bookedSlot.startMinute));
+        }
+        // Update the start time to the end of the booked slot
+        currentStartHour = bookedSlot.endHour;
+        currentStartMinute = bookedSlot.endMinute;
+    }
+
+    // Add the remaining available slot after the last booked slot
+    if (currentStartHour < this.endHour[dayIndex] || 
+        (currentStartHour == this.endHour[dayIndex] && currentStartMinute < this.endMinute[dayIndex])) {
+        availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute, this.endHour[dayIndex], this.endMinute[dayIndex]));
+    }
+
+    return availableSlots;
+  }
+
+  private class TimeSlot {
+    int startHour;
+    int startMinute;
+    int endHour;
+    int endMinute;
+    String confirmationID;
+    String userInfo;
+
+    TimeSlot(int startHour, int startMinute, int endHour, int endMinute) {
+      this.startHour = startHour;
+      this.startMinute = startMinute;
+      this.endHour = endHour;
+      this.endMinute = endMinute;
+    }
+    
+    TimeSlot(int startHour, int startMinute, int endHour, int endMinute, String confirmationID, String userInfo) {
+      this.startHour = startHour;
+      this.startMinute = startMinute;
+      this.endHour = endHour;
+      this.endMinute = endMinute;
+      this.confirmationID = confirmationID;
+      this.userInfo = userInfo;
+    }
+
+    boolean conflictsWith(int startHour, int startMinute, int endHour, int endMinute) {
+      if (this.endHour < startHour || (this.endHour == startHour && this.endMinute <= startMinute)) {
+        return false;
+      }
+      if (this.startHour > endHour || (this.startHour == endHour && this.startMinute >= endMinute)) {
+        return false;
+      }
+      return true;
+    }
   }
 }
