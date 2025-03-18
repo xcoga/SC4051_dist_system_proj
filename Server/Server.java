@@ -113,7 +113,9 @@ public class Server {
     RequestMessage responseMessage = null;
     // Deserialize request
     try {
-      requestMessage = (RequestMessage) Serializer.deserialize(request.getData());
+      byte[] receivedData = new byte[request.getLength()];
+      System.arraycopy(request.getData(), request.getOffset(), receivedData, 0, request.getLength());
+      requestMessage = (RequestMessage) Serializer.deserialize(receivedData);
       System.out.println("Request: " + requestMessage.toString());
     } catch (Exception e) {
       System.err.println("Error deserializing request: " + e.getMessage());
@@ -121,12 +123,11 @@ public class Server {
       responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: bad request");
       return responseMessage;
     }
-    // do nothing if requested server to echo 
+    // do nothing if requested server to echo
     if (requestMessage.getOperation() == Operation.ECHO) {
       System.out.println("Echo request received");
       return requestMessage;
     }
-
 
     // TODO uncomment
     // responseMessage = new RequestMessage(0, 0, "Good: good request");
