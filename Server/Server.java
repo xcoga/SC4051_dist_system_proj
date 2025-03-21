@@ -113,6 +113,8 @@ public class Server {
     RequestMessage responseMessage = null;
     // Deserialize request
     try {
+      byte[] receivedData = new byte[request.getLength()];
+      System.arraycopy(request.getData(), request.getOffset(), receivedData, 0, request.getLength());
       requestMessage = (RequestMessage) Serializer.deserialize(request.getData());
       System.out.println("Request: " + requestMessage.toString());
     } catch (Exception e) {

@@ -131,10 +131,11 @@ std::string Client::receiveResponse()
     int senderAddrLen = sizeof(senderAddr);
 
     int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
+    std::cout<<"Bytes received: "<<bytesReceived<<std::endl;
 
     try
     {
-        int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
+        // int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
 
         // Parity
 
