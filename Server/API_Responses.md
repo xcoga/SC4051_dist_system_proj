@@ -2,19 +2,23 @@
 ## Generic Responses
 
 Generic success response
+```json
 {
   "operation": <as_per_requestType_in_request>,
   "requestID": <as_per_requestID_in_request>,
   "data": "status: SUCCESS\n<data_string>"
 }
+```
 See below for `data_string` formats for each of the available functions.
 
 Generic error response
+```json
 {
   "operation": <as_per_requestType_in_request>,
   "requestID": <as_per_requestID_in_request>,
   "data": "status: ERROR\nmessage: <error_message>"
 }
+```
 
 ## Query Facility Availability
 
