@@ -151,43 +151,71 @@ public class Server {
     // Process request
     switch (requestMessage.getOperation()) {
       case READ:
-        // read facility information
-        String requestString = requestMessage.getData();
-        // different behaviour based on string in request
-        switch (requestString) {
-          case "ALL":
-            // return all facility names
-            String facilityNames = "";
-            for (Facility facility : facilityFactory.getFacilities()) {
-              facilityNames += "Facility: " + facility.getName() + " ";
-            }
-            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                facilityNames);
-            break;
-          default:
-            // return specified facility information
-            System.out.println("handleRequest: Requested facility: " + requestString);
-            Facility requestedFacility = facilityFactory.getFacility(requestString);
-            if (requestedFacility != null) {
-              // Get available timeslots for the requested facility
-              Availability availability = requestedFacility.getAvailability();
-              String availableTimeslots = "Available timeslots: ";
-              for (DayOfWeek day : DayOfWeek.values()) {
-                List<Availability.TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
-                if (!timeslots.isEmpty()) {
-                  availableTimeslots += day.toString() + ": ";
-                  for (Availability.TimeSlot slot : timeslots) {
-                    availableTimeslots += slot.toString() + ", ";
-                  }
-                }
+        // example requests format: facility,Weekday1
+        String[] requestString = requestMessage.getData().split(",");
+        if (requestString == null || requestString.length == 1) {
+          responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+              "ERROR: invalid request format");
+          break;
+        }
+
+        if (requestString[0] == "facility") {
+          // read facility information
+          // different behaviour based on string in request
+          switch (requestString[1]) {
+            case "ALL":
+              // return all facility names
+              String facilityNames = "";
+              for (Facility facility : facilityFactory.getFacilities()) {
+                facilityNames += "Facility: " + facility.getName() + " ";
               }
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                  availableTimeslots);
-            } else {
-              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                  "ERROR: facility not found");
+                  facilityNames);
+              break;
+            default:
+              // return specified facility information
+              System.out.println("handleRequest: Requested facility: " + requestString[1]);
+              Facility requestedFacility = facilityFactory.getFacility(requestString[1]);
+              if (requestedFacility != null) {
+                // Get available timeslots for the requested facility
+                Availability availability = requestedFacility.getAvailability();
+                String availableTimeslots = "Available timeslots: ";
+                for (DayOfWeek day : DayOfWeek.values()) {
+                  List<Availability.TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
+                  if (!timeslots.isEmpty()) {
+                    availableTimeslots += day.toString() + ": ";
+                    for (Availability.TimeSlot slot : timeslots) {
+                      availableTimeslots += slot.toString() + ", ";
+                    }
+                  }
+                }
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                    availableTimeslots);
+              } else {
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                    "ERROR: facility not found");
+              }
+              break;
+          }
+        } else if (requestString[0] == "booking") {
+          // read booking information based on booking id string in request
+          // example requests format: booking,booking_id
+          String bookingID = requestString[1];
+          for (Facility facility : facilityFactory.getFacilities()) {
+            Availability availability = facility.getAvailability();
+            if (availability != null) {
+              String bookingInfo = availability.getBookingInfo(bookingID).toString();
+              if (bookingInfo != null) {
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                    "status: SUCCESS\n" + bookingInfo);
+                break;
+              }
             }
-            break;
+          }
+          if (responseMessage == null) {
+            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                "status: ERROR\nmessage: booking not found");
+          }
         }
         break;
       case WRITE:

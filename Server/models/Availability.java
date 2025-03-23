@@ -91,6 +91,17 @@ public class Availability {
     return confirmationID;
   }
 
+  public TimeSlot getBookingInfo(String confirmationID) {
+    for (int i = 0; i < 7; i++) {
+      for (TimeSlot slot : this.bookedSlots[i]) {
+        if (slot.confirmationID.equals(confirmationID)) {
+          return slot;
+        }
+      }
+    }
+    return null;
+  }
+
   public List<TimeSlot> getAvailableTimeSlots(DayOfWeek day) {
     int dayIndex = day.getValue() - 1;
     List<TimeSlot> availableSlots = new ArrayList<>();
