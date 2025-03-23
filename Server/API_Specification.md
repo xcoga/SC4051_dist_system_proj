@@ -11,6 +11,28 @@ Requests to the server are structured as serialized objects containing the follo
 
 - **data (string)** – Additional parameters required for the request.
 
+## Response Structures
+### Generic Responses
+
+Generic success response
+```json
+{
+  "operation": <as_per_requestType_in_request>,
+  "requestID": <as_per_requestID_in_request>,
+  "data": "status: SUCCESS\n<data_string>"
+}
+```
+See below for `data_string` formats for each of the available functions.
+
+Generic error response
+```json
+{
+  "operation": <as_per_requestType_in_request>,
+  "requestID": <as_per_requestID_in_request>,
+  "data": "status: ERROR\nmessage: <error_message>"
+}
+```
+
 ## Operations
 This section explains how `requestType` values correspond to server operations.
 
@@ -43,14 +65,13 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 }
 ```
 
-
 ### Retrieve All Facility Names
 #### Request:
 ```json
 {
   "operation": 0,
   "requestID": 0,
-  "data": "ALL"
+  "data": "facility,ALL"
 }
 ```
 #### Response:
@@ -58,7 +79,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 0,
   "requestID": 0,
-  "data": "Facility: Weekday1 Facility: Weekday2 Facility: Weekends"
+  "data": "status: SUCCESS\nWeekday1,Weekday2,Weekends,"
 }
 ```
 
@@ -68,7 +89,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 0,
   "requestID": 1,
-  "data": "Weekday1"
+  "data": "facility,Weekday1"
 }
 ```
 #### Response:
@@ -76,17 +97,56 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 0,
   "requestID": 1,
-  "data": "Facility: Weekday1, Availability: Day MONDAY: Open Start: 08:00h End: 17:00h Day TUESDAY: Open Start: 08:00h End: 17:00h Day WEDNESDAY: Open Start: 08:00h End: 17:00h Day THURSDAY: Closed Day FRIDAY: Closed Day SATURDAY: Closed Day SUNDAY: Closed"
+  "data": "status: SUCCESS\nAvailable timeslots: \nMONDAY: 08:00 - 17:00, \nTUESDAY: 08:00 - 17:00, \nWEDNESDAY: 08:00 - 17:00, \nTHURSDAY: Closed, \nFRIDAY: Closed, \nSATURDAY: Closed, \nSUNDAY: Closed"
 }
 ```
 
+### Query a booking
+#### Request:
+```json
+{
+  "operation": 0,
+  "requestID": 1,
+  "data": "booking,<booking id>"
+}
+```
+#### Response:
+```json
+{
+  "operation": 1,
+  "requestID": 1,
+  "data": "status: SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
+}
+```
+
+### Book Facility
+#### Request:
+```json
+{
+  "operation": 1,
+  "requestID": 1,
+  "data": "Weekday1,MONDAY,10,0,12,0"
+}
+```
+#### Response:
+```json
+{
+  "operation": 1,
+  "requestID": 1,
+  "data": "status: SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
+}
+```
 
 ## Error Handling
+The server returns error messages in the format of "status: ERROR\nmessage: <error_message>".
 The server may return the following errors:
 
 | Error Message	| Description |
 | ------------- | ----------- |
-| ERROR: facility not found | Returned when the requested facility does not exist. |
-| ERROR: unimplemented operation | Returned when a requested operation is not yet supported. |
-| ERROR: unknown operation | Returned when the requestType is invalid. |
-| ERROR: bad request | Returned when the request is malformed or incorrectly formatted. |
+| facility not found | Returned when the requested facility does not exist. |
+| unimplemented operation | Returned when a requested operation is not yet supported. |
+| unknown operation | Returned when the requestType is invalid. |
+| bad request | Returned when the request is malformed or incorrectly formatted. |
+| invalid booking request format | Returned when the booking request format is invalid. |
+| invalid booking request parameters | Returned when the booking request parameters are invalid. |
+| facility not available at the requested time | Returned when the facility is not available at the requested time. |
