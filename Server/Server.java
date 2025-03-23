@@ -2,9 +2,11 @@ package Server;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.time.DayOfWeek;
-import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 import Server.models.Availability;
 import Server.models.Facility;
@@ -120,7 +122,7 @@ public class Server {
     } catch (Exception e) {
       System.err.println("Error deserializing request: " + e.getMessage());
 
-      responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: bad request");
+      responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "status: ERROR\nmessage: bad request");
       return responseMessage;
     }
     // do nothing if requested server to echo
@@ -151,48 +153,118 @@ public class Server {
     // Process request
     switch (requestMessage.getOperation()) {
       case READ:
-        // read facility infomation
-        String requestString = requestMessage.getData();
-        // different behaviour based on string in request
-        switch (requestString) {
-          case "ALL":
-            // return all facility names
-            String facilityNames = "";
-            for (Facility facility : facilityFactory.getFacilities()) {
-              facilityNames += "Facility: " + facility.getName() + " ";
-            }
-            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                facilityNames);
-            break;
-          default:
-            // return specified facility information
-            System.out.println("handleRequest: Requested facility: " + requestString);
-            Facility requestedFacility = facilityFactory.getFacility(requestString);
-            if (requestedFacility != null) {
-              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                  requestedFacility.toString());
-            } else {
-              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                  "ERROR: facility not found");
-            }
-            break;
+        // example requests format: facility,Weekday1
+        String[] requestString = requestMessage.getData().split(",");
+        if (requestString == null || requestString.length == 1) {
+          responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: invalid request format");
+          break;
         }
 
+        if (requestString[0].equals("facility")) {
+          // read facility information
+          // different behaviour based on string in request
+          switch (requestString[1]) {
+            case "ALL":
+              // return all facility names
+              String facilityNames = "";
+              for (Facility facility : facilityFactory.getFacilities()) {
+                facilityNames += facility.getName() + ",";
+              }
+              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                  "status: SUCCESS\n" + facilityNames);
+              break;
+            default:
+              // return specified facility information
+              System.out.println("handleRequest: Requested facility: " + requestString[1]);
+              Facility requestedFacility = facilityFactory.getFacility(requestString[1]);
+              if (requestedFacility != null) {
+                // Get available timeslots for the requested facility
+                Availability availability = requestedFacility.getAvailability();
+                String availableTimeslots = "Available timeslots: ";
+                for (DayOfWeek day : DayOfWeek.values()) {
+                  List<Availability.TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
+                  if (!timeslots.isEmpty()) {
+                    availableTimeslots += day.toString() + ": ";
+                    for (Availability.TimeSlot slot : timeslots) {
+                      availableTimeslots += slot.toString() + ", ";
+                    }
+                  }
+                }
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                    "status: SUCCESS\n" + availableTimeslots);
+              } else {
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                    "status: ERROR\nmessage: facility not found");
+              }
+              break;
+          }
+        } else if (requestString[0].equals("booking")) {
+          // read booking information based on booking id string in request
+          // example requests format: booking,booking_id
+          String bookingID = requestString[1];
+          for (Facility facility : facilityFactory.getFacilities()) {
+            Availability availability = facility.getAvailability();
+            if (availability != null) {
+              String bookingInfo = availability.getBookingInfo(bookingID).toString();
+              if (bookingInfo != null) {
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                    "status: SUCCESS\n" + bookingInfo);
+                break;
+              }
+            }
+          }
+          if (responseMessage == null) {
+            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                "status: ERROR\nmessage: booking not found");
+          }
+        }
         break;
       case WRITE:
-        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        // Extract booking details from the request message
+        String[] bookingDetails = requestMessage.getData().split(",");
+        if (bookingDetails.length != 6) {
+          responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: invalid booking request format");
+          break;
+        }
+
+        String facilityName = bookingDetails[0];
+        DayOfWeek day;
+        int startHour, startMinute, endHour, endMinute;
+
+        try {
+          day = DayOfWeek.valueOf(bookingDetails[1].toUpperCase());
+          startHour = Integer.parseInt(bookingDetails[2]);
+          startMinute = Integer.parseInt(bookingDetails[3]);
+          endHour = Integer.parseInt(bookingDetails[4]);
+          endMinute = Integer.parseInt(bookingDetails[5]);
+        } catch (Exception e) {
+          responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: invalid booking request parameters");
+          break;
+        }
+
+        // Book the facility
+        String bookingResult = bookFacility(facilityName, day, startHour, startMinute, endHour, endMinute,
+            request.getAddress(), request.getPort());
+        responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(), bookingResult);
         break;
       case UPDATE:
-        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        responseMessage = new RequestMessage(Operation.UPDATE.getOpCode(), requestMessage.getRequestID(),
+            "status: ERROR\nmessage: unimplemented operation");
         break;
       case DELETE:
-        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        responseMessage = new RequestMessage(Operation.DELETE.getOpCode(), requestMessage.getRequestID(),
+            "status: ERROR\nmessage: unimplemented operation");
         break;
       case MONITOR:
-        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unimplemented operation");
+        responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
+            "status: ERROR\nmessage: unimplemented operation");
         break;
       default:
-        responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ERROR: unknown operation");
+        responseMessage = new RequestMessage(Operation.NONE.getOpCode(), requestMessage.getRequestID(),
+            "status: ERROR\nmessage: unknown operation");
         break;
     }
 
@@ -229,6 +301,27 @@ public class Server {
       System.err.println("Error serializing request: " + e.getMessage());
       e.printStackTrace();
     }
+  }
+
+  private static String bookFacility(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour,
+      int endMinute, InetAddress userAddress, int userPort) {
+    Facility facility = facilityFactory.getFacility(facilityName);
+    if (facility == null) {
+      return "status: ERROR\nmessage: facility not found";
+    }
+
+    Availability availability = facility.getAvailability();
+    if (availability == null || !availability.isAvailable(day, startHour, startMinute, endHour, endMinute)) {
+      return "status: ERROR\nmessage: facility not available at the requested time";
+    }
+
+    // Capture user information
+    String userInfo = userAddress.toString() + ":" + userPort;
+
+    // Book the facility and get the confirmation ID
+    String confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+
+    return "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo;
   }
 
 }

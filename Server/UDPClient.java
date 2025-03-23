@@ -17,8 +17,8 @@ public class UDPClient {
     DatagramSocket aSocket = null;
     System.out.println("");
     try {
-      aSocket = new DatagramSocket(clientPort); // use a free local port
-      RequestMessage requestMessage = new RequestMessage(Operation.READ.getOpCode(), 2, "ALL");
+      aSocket = new DatagramSocket(clientPort);
+      RequestMessage requestMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "ALL");
       byte[] m = Serializer.serialize(requestMessage);
 
       // translate user-specified hostname to Internet address
