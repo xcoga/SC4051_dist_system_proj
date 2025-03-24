@@ -244,15 +244,59 @@ public class Server {
               "status: ERROR\nmessage: invalid booking request parameters");
           break;
         }
-
+        
         // Book the facility
         String bookingResult = bookFacility(facilityName, day, startHour, startMinute, endHour, endMinute,
             request.getAddress(), request.getPort());
         responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(), bookingResult);
         break;
+
+
       case UPDATE:
         responseMessage = new RequestMessage(Operation.UPDATE.getOpCode(), requestMessage.getRequestID(),
             "status: ERROR\nmessage: unimplemented operation");
+
+            
+
+        // Extract booking details from the request message.
+        // 1. Booking details to delete
+        // 2. Booking details to add
+        String[] bookingDetails = requestMessage.getData().split(",");
+        if (bookingDetails.length != 6) {
+          responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: invalid booking request format");
+          break;
+        }
+
+        String facilityName = bookingDetails[0];
+        DayOfWeek prev_day;
+        DayOfWeek new_day;
+        int prev_startHour, prev_startMinute, prev_endHour, prev_endMinute;
+        int new_startHour, new_startMinute, new_endHour, new_endMinute;
+
+        try {
+          prev_day = DayOfWeek.valueOf(bookingDetails[1].toUpperCase());
+          prev_startHour = Integer.parseInt(bookingDetails[2]);
+          prev_startMinute = Integer.parseInt(bookingDetails[3]);
+          prev_endHour = Integer.parseInt(bookingDetails[4]);
+          prev_endMinute = Integer.parseInt(bookingDetails[5]);
+
+          new_day = DayOfWeek.valueOf(bookingDetails[6].toUpperCase());
+          new_startHour = Integer.parseInt(bookingDetails[7]);
+          new_startMinute = Integer.parseInt(bookingDetails[8]);
+          new_endHour = Integer.parseInt(bookingDetails[9]);
+          new_endMinute = Integer.parseInt(bookingDetails[10]);
+        } catch (Exception e) {
+          responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: invalid booking request parameters");
+          break;
+        }
+
+        // UPDATE the booking the facility
+        String bookingResult = updateBooking(facilityName, prev_day, prev_startHour, prev_startMinute, prev_endHour, prev_endMinute, new_day, new_startHour, new_startMinute, new_endHour, new_endMinute,
+            request.getAddress(), request.getPort());
+        responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(), bookingResult);
+
         break;
       case DELETE:
         responseMessage = new RequestMessage(Operation.DELETE.getOpCode(), requestMessage.getRequestID(),
@@ -320,6 +364,61 @@ public class Server {
 
     // Book the facility and get the confirmation ID
     String confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+
+    return "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo;
+  }
+
+  //Update booking. 1. Remove the previous booking 2. Add the new booking
+  private static String updateBooking(String facilityName, DayOfWeek prev_day, int prev_startHour, int prev_startMinute, int prev_endHour,
+      int prev_endMinute, DayOfWeek new_day, int new_startHour, int new_startMinute, int new_endHour,
+      int new_endMinute, InetAddress userAddress, int userPort){
+
+    Facility facility = facilityFactory.getFacility(facilityName);
+    if (facility == null) {
+      return "status: ERROR\nmessage: facility not found";
+    }
+
+    Availability availability = facility.getAvailability();
+    if (availability == null || !availability.isAvailable(new_day, new_startHour, new_startMinute, new_endHour, new_endMinute)) {
+      return "status: ERROR\nmessage: facility not available at the requested time";
+    }
+
+    // Capture user information
+    String userInfo = userAddress.toString() + ":" + userPort;
+
+    // Book the facility and get the confirmation ID
+    try{
+      String booking_confirmationID = availability.bookTimeSlot(new_day, new_startHour, new_startMinute, new_endHour, new_endMinute, userInfo);
+      String delete_confirmationID = availability.removeTimeSlot(prev_day, prev_startHour, prev_startMinute, prev_endHour, prev_endMinute, userInfo);
+    } catch (Exception e) {
+      return "status: ERROR\nmessage: booking not successful or booking not found" + booking_confirmationID + " by " + userInfo; 
+    }
+
+
+    return "status: SUCCESS\nBooking_ID: " + booking_confirmationID + " by " + userInfo;    
+  }
+
+
+
+  private static String deleteBooking(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour,
+      int endMinute, InetAddress userAddress, int userPort) {
+
+    Facility facility = facilityFactory.getFacility(facilityName);
+    if (facility == null) {
+      return "status: ERROR\nmessage: facility not found";
+    }
+
+    // Capture user information
+    String userInfo = userAddress.toString() + ":" + userPort;
+
+
+    try{
+      //Remove the booking for that facility and get the confirmation ID
+      String confirmationID = availability.removeTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+    } catch (Exception e) {
+      return "status: ERROR\nmessage: booking not found";
+    }
+
 
     return "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo;
   }

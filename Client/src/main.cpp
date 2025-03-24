@@ -14,6 +14,8 @@ int main()
     std::string serverIp;
     int serverPort;
 
+    registerClasses();
+
     std::cout << "Enter server IP: ";
     std::cin >> serverIp;
 

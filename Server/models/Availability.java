@@ -13,6 +13,7 @@ public class Availability {
   private int[] endMinute;
   private List<TimeSlot>[] bookedSlots;
 
+  @SuppressWarnings("unchecked")
   public Availability() {
     this.days = new boolean[7];
     this.startHour = new int[7];
@@ -91,6 +92,19 @@ public class Availability {
     return confirmationID;
   }
 
+  public String removeTimeSlot(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute,
+      String userInfo){
+    int dayIndex = day.getValue() - 1;
+    for (TimeSlot slot : this.bookedSlots[dayIndex]) {
+      if (slot.startHour == startHour && slot.startMinute == startMinute && slot.endHour == endHour && slot.endMinute == endMinute && slot.userInfo.equals(userInfo)) {
+        this.bookedSlots[dayIndex].remove(slot);
+        return slot.confirmationID;
+      }
+    }
+    return null;
+  }
+
+  
   public TimeSlot getBookingInfo(String confirmationID) {
     for (int i = 0; i < 7; i++) {
       for (TimeSlot slot : this.bookedSlots[i]) {
