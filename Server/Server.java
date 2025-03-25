@@ -299,10 +299,40 @@ public class Server {
         }
         break;
 
+
+
       case DELETE:
-        responseMessage = new RequestMessage(Operation.DELETE.getOpCode(), requestMessage.getRequestID(),
-            "status: ERROR\nmessage: unimplemented operation");
+          // Parse booking details using the Parser class
+          BookingDetails booking = Parser.parseBookingDetails(requestMessage.getData());
+        try{  
+            // Book the facility using the parsed details
+            String bookingResult = deleteBooking(
+                booking.getFacilityName(), 
+                booking.getDay(), 
+                booking.getStartHour(), 
+                booking.getStartMinute(), 
+                booking.getEndHour(), 
+                booking.getEndMinute(),
+                request.getAddress(), 
+                request.getPort()
+            );
+            
+            responseMessage = new RequestMessage(
+                Operation.DELETE.getOpCode(), 
+                requestMessage.getRequestID(), 
+                bookingResult
+            );
+          } catch (Exception e) {
+            responseMessage = new RequestMessage(
+                Operation.DELETE.getOpCode(), 
+                requestMessage.getRequestID(),
+                "status: ERROR\nmessage: " + e.getMessage()
+            );
+          }
         break;
+
+
+
       case MONITOR:
         responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
             "status: ERROR\nmessage: unimplemented operation");
