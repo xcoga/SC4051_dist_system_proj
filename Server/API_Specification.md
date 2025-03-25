@@ -137,6 +137,26 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 }
 ```
 
+
+### Update Facility
+**Note: The Facility must be booked by the user first, then he can update the booking.
+#### Request:
+```json
+{
+  "operation": 2,
+  "requestID": 1,
+  "data": "Weekday1,MONDAY,10,0,12,0,MONDAY,13,0,15,0"
+}
+```
+#### Response:
+```json
+{
+  "operation": 2,
+  "requestID": 2,
+  "data": "status: SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
+}
+```
+
 ## Error Handling
 The server returns error messages in the format of "status: ERROR\nmessage: <error_message>".
 The server may return the following errors:
