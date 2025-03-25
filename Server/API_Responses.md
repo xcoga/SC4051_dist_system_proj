@@ -27,7 +27,7 @@ Sample response for successful query
 {
   "operation": 0,
   "requestID": 1,
-  "data": "status: SUCCESS\nfacility: Gym\navailability:\n  2025-01-01: Open 0800 to 1700\n  2025-01-02: Open 0800 to 1700\n  2025-01-03: Open 0800 to 1200, 1300 to 1700\n  2025-01-04: Closed\n  2025-01-05: Closed\n  2025-01-06: Closed\n  2025-01-07: Closed"
+  "data": "status: SUCCESS\nfacility: Gym\navailability:\n  MONDAY: Open 0800 to 1700\n  TUESDAY: Open 0800 to 1700\n  WEDNESDAY: Open 0800 to 1200, 1300 to 1700\n  THURSDAY: Closed\n  FRIDAY: Closed\n  SATURDAY: Closed\n  SUNDAY: Closed"
 }
 ```
 
@@ -36,13 +36,13 @@ Human-readable format
 status: SUCCESS
 facility: Gym
 availability:
-  2025-01-01: Open 0800 to 1700
-  2025-01-02: Open 0800 to 1700
-  2025-01-03: Open 0800 to 1200, 1300 to 1700
-  2025-01-04: Closed
-  2025-01-05: Closed
-  2025-01-06: Closed
-  2025-01-07: Closed
+  MONDAY: Open 0800 to 1700
+  TUESDAY: Open 0800 to 1700
+  WEDNESDAY: Open 0800 to 1200, 1300 to 1700
+  THURSDAY: Closed
+  FRIDAY: Closed
+  SATURDAY: Closed
+  SUNDAY: Closed
 ```
 
 Error response
@@ -61,7 +61,7 @@ Sample response for successful booking
 {
   "operation": 1,
   "requestID": 1,
-  "data": "status: SUCCESS\nfacility: Gym\nbooking_date: 2025-01-01\nbooking_start: 1000\nbooking_end: 1200\nconfirmation_id: abc123"
+  "data": "status: SUCCESS\nfacility: Gym\nbooking_date: MONDAY\nbooking_start: 1000\nbooking_end: 1200\nconfirmation_id: abc123"
 }
 ```
 
@@ -69,7 +69,7 @@ Human-readable format
 ```
 status: SUCCESS
 facility: Gym
-booking_date: 2025-01-01
+booking_date: MONDAY
 booking_start: 1000
 booking_end: 1200
 confirmation_id: abc123
@@ -99,7 +99,7 @@ Human-readable format
 ```
 status: SUCCESS
 confimration_id: xyz789
-new_booking_date: 2025-01-01
+new_booking_date: MONDAY
 new_booking_start: 1100
 new_booking_end: 1300
 ```
@@ -145,13 +145,13 @@ Human-readable response
 status: UPDATE
 facility: Gym
 availability:
-  2025-01-01: Open 0800 to 1100, 1300 to 1700
-  2025-01-02: Open 0800 to 1700
-  2025-01-03: Open 0800 to 1200, 1300 to 1700
-  2025-01-04: Closed
-  2025-01-05: Closed
-  2025-01-06: Closed
-  2025-01-07: Closed
+  MONDAY: Open 0800 to 1100, 1300 to 1700
+  TUESDAY: Open 0800 to 1700
+  WEDNESDAY: Open 0800 to 1200, 1300 to 1700
+  THURSDAY: Closed
+  FRIDAY: Closed
+  SATURDAY: Closed
+  SUNDAY: Closed
 ```
 
 Sample response for monitoring expiry
