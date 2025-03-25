@@ -27,7 +27,7 @@ Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
     }
 
     printBoundSocketInfo();
-    
+
     makeRemoteSocketAddress(&serverAddr, const_cast<char *>(serverIp.c_str()), serverPort);
 }
 
@@ -36,40 +36,63 @@ Client::~Client()
     socket.closeSocket();
 }
 
-void Client::queryAvailability()
+std::string Client::queryAvailability(std::string facilityName)
 {
-    // TODO: Implement query availability functionality
+    std::string messageData = "facility," + facilityName;
+
+    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    // TODO: Parse response then return
+    return receiveResponse();
 }
 
-void Client::bookFacility()
+std::string Client::bookFacility(std::string facilityName, std::string dayOfWeek, std::string startTime, std::string endTime)
 {
-    // TODO: Implement book facility functionality
+    std::string startTimeHour, startTimeMinute, endTimeHour, endTimeMinute;
+    startTimeHour = startTime.substr(0, 2);
+    startTimeMinute = startTime.substr(2, 2);
+    endTimeHour = endTime.substr(0, 2);
+    endTimeMinute = endTime.substr(2, 2);
+
+    std::string messageData = "facility," + facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
+
+    RequestMessage requestMessage(RequestMessage::WRITE, requestID++, messageData);
+
+    return receiveResponse();
 }
 
-void Client::changeBooking()
+std::string Client::queryBooking(std::string bookingID)
+{
+    // TODO: Implement query booking functionality
+    return "";
+}
+
+std::string Client::changeBooking(std::string bookingID, std::string newDayOfWeek, std::string newStartTime, std::string newEndTime)
 {
     // TODO: Implement change booking functionality
+    return "";
 }
 
-void Client::monitorAvailability()
+std::string Client::monitorAvailability(std::string facilityName)
 {
     // TODO: Implement monitor availability functionality
+    return "";
 }
 
 // TODO: Implement idempotent and non-idempotent operations
+// TODO: Repeated request operations, so requestID should not increment
 
-void Client::sendCustomMessage()
+std::string Client::sendCustomMessage(std::string messageData)
 {
-    std::string messageData;
-
-    std::cout << "Enter message to send: ";
-    std::cin.ignore();
-    std::getline(std::cin, messageData);
+    std::cout << RequestMessage::ECHO << std::endl;
+    std::cout << requestID + 1 << std::endl;
+    std::cout << messageData << std::endl;
 
     RequestMessage requestMessage(RequestMessage::ECHO, requestID++, messageData);
     sendRequest(requestMessage);
 
-    receiveResponse();
+    return receiveResponse();
 }
 
 void Client::makeLocalSocketAddress(struct sockaddr_in *sa)
@@ -111,7 +134,7 @@ void Client::printBoundSocketInfo()
     // Print the bound IP address and port
     char ipStr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
-    std::cout << "Client socket bound to IP: " << ipStr << ", Port: " << ntohs(clientAddr.sin_port) << std::endl;
+    std::cout << "Client socket bound to IP " << ipStr << " and port " << ntohs(clientAddr.sin_port) << std::endl;
 }
 
 void Client::sendRequest(const RequestMessage &request)
@@ -132,18 +155,14 @@ void Client::sendRequest(const RequestMessage &request)
 std::string Client::receiveResponse()
 {
     char recvBuffer[BUFFER_SIZE];
-
     struct sockaddr_in senderAddr;
-    int senderAddrLen = sizeof(senderAddr);
-
-    int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
-    std::cout<<"Bytes received: "<<bytesReceived<<std::endl;
+    std::string messageData;
 
     try
     {
-        // int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
+        int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
 
-        // Parity
+        // Check parity
 
         // Deserialize response
         std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
@@ -151,16 +170,17 @@ std::string Client::receiveResponse()
 
         std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
 
-        // Display deserialized message
-        std::cout << "Deserialized message:" << std::endl;
-        std::cout << "Request ID: " << responseMessage->getRequestID() << std::endl;
-        std::cout << "Message Type: " << responseMessage->getRequestType() << std::endl;
-        std::cout << "Message: " << responseMessage->getData() << std::endl;
-
-        return responseMessage->getData();
+        // // Display deserialized message
+        // std::cout << "Deserialized message:" << std::endl;
+        // std::cout << "Request ID: " << responseMessage->getRequestID() << std::endl;
+        // std::cout << "Message Type: " << responseMessage->getRequestType() << std::endl;
+        // std::cout << "Message: " << responseMessage->getData() << std::endl;
+        messageData = responseMessage->getData();
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
     }
+
+    return messageData;
 }
