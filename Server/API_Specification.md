@@ -139,7 +139,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 
 
 ### Update Facility
-**Note: The Facility must be booked by the user first, then he can update the booking.
+**Note: The First few fields after the FacilityName are details of the previous booking. The later fields are the new booking details to write.
 #### Request:
 ```json
 {
