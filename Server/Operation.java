@@ -11,7 +11,8 @@ public enum Operation {
   UPDATE(2), 
   DELETE(3), 
   MONITOR(4),
-  ECHO(5);
+  ECHO(5),
+  RATING(6);
 
   private int op;
 

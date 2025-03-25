@@ -307,6 +307,44 @@ public class Server {
         responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
             "status: ERROR\nmessage: unimplemented operation");
         break;
+
+
+
+      case RATING:
+        //1. Parse the request
+        //2. Decide if it is a get or add request
+        //3. Perform the operation
+        //RequestMessage format: get or add, facilityName, rating (if add operation)
+        try{
+          String facilityName = requestMessage.getData().split(",")[0];
+          String requestType = requestMessage.getData().split(",")[1]; 
+          
+
+          Facility facility = facilityFactory.getFacility(facilityName);
+
+          if ("get".equals(requestType)){
+            String result = getRating(facility);
+            responseMessage = new RequestMessage(Operation.RATING.getOpCode(), requestMessage.getRequestID(),
+                getRating(facility));
+          } 
+          else if ("add".equals(requestType)){
+            //Get the field from the request
+            double rating = Double.parseDouble(requestMessage.getData().split(",")[2]);
+
+            String result = addRating(facility, rating);
+            responseMessage = new RequestMessage(Operation.RATING.getOpCode(), requestMessage.getRequestID(),
+                result);
+          }
+        } catch (Exception e) {
+          responseMessage = new RequestMessage(Operation.RATING.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: " + e.getMessage());
+        }
+
+        break;
+
+
+
+
       default:
         responseMessage = new RequestMessage(Operation.NONE.getOpCode(), requestMessage.getRequestID(),
             "status: ERROR\nmessage: unknown operation");
@@ -431,7 +469,14 @@ public class Server {
   }
 
 
+  private static String getRating(Facility facility) {
+    return "status: SUCCESS\nGet Rating: " + facility.getRating().getAverageRating();
+  }
 
+  private static String addRating(Facility facility, double rating) {
+    facility.addRating(rating);
+    return "status: SUCCESS\n Add Rating: " + facility.getRating().getAverageRating();
+  }
 
 
 }

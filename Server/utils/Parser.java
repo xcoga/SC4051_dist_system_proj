@@ -9,6 +9,8 @@ public class Parser{
         return new BookingDetails(details[0], DayOfWeek.valueOf(details[1]), Integer.parseInt(details[2]), Integer.parseInt(details[3]), Integer.parseInt(details[4]), Integer.parseInt(details[5]));
     }
 
+
+
     /**
      * Parses a comma-separated string of booking details into two BookingDetails objects:
      * one for the previous booking and one for the new booking.

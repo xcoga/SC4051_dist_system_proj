@@ -25,18 +25,18 @@ public class UDPClient {
       
       while (continueRunning) {
         // Get operation input as integer
-        System.out.println("\nEnter operation code (integer) (1=WRITE, 2=UPDATE, 3=DELETE, 4=MONITOR, 0=EXIT): ");
+        System.out.println("\nEnter operation code (integer) (-1=NONE, 0=READ, 1=WRITE, 2=UPDATE, 3=DELETE, 4=MONITOR, 5=ECHO, 6=RATING,7=EXIT): ");
         int opCode;
         try {
           opCode = Integer.parseInt(scanner.nextLine());
           // Check for exit condition
-          if (opCode == 0) {
+          if (opCode == 7) {
             System.out.println("Exiting client...");
             continueRunning = false;
             continue;
           }
           // Validate operation code is in range
-          if (opCode < 1 || opCode > 4) {
+          if (opCode < -1 || opCode > 7) {
             System.err.println("Invalid operation code. Using READ (2) as default.");
             opCode = Operation.READ.getOpCode();
           }
