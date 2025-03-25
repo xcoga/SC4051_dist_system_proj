@@ -10,6 +10,13 @@ public class Parser{
     }
 
 
+    public static String parseUpdateType(String updateType){
+        String[] parts = updateType.split(",");
+
+        return parts[0];
+    }
+
+
 
     /**
      * Parses a comma-separated string of booking details into two BookingDetails objects:
@@ -36,7 +43,7 @@ public class Parser{
         }
         
         // Extract the facility name
-        String facilityName = parts[0];
+        String facilityName = parts[1];
         
         try {
             // Create array to hold both booking details objects
@@ -45,21 +52,21 @@ public class Parser{
             // Parse the previous booking details (indices 1-5)
             bookings[0] = new BookingDetails(
                 facilityName,
-                DayOfWeek.valueOf(parts[1].toUpperCase()),
-                Integer.parseInt(parts[2]),
+                DayOfWeek.valueOf(parts[2].toUpperCase()),
                 Integer.parseInt(parts[3]),
                 Integer.parseInt(parts[4]),
-                Integer.parseInt(parts[5])
+                Integer.parseInt(parts[5]),
+                Integer.parseInt(parts[6])
             );
             
             // Parse the new booking details (indices 6-10)
             bookings[1] = new BookingDetails(
                 facilityName,
-                DayOfWeek.valueOf(parts[6].toUpperCase()),
-                Integer.parseInt(parts[7]),
+                DayOfWeek.valueOf(parts[7].toUpperCase()),
                 Integer.parseInt(parts[8]),
                 Integer.parseInt(parts[9]),
-                Integer.parseInt(parts[10])
+                Integer.parseInt(parts[10]),
+                Integer.parseInt(parts[11])
             );
             
             return bookings;

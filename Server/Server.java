@@ -221,50 +221,76 @@ public class Server {
             responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                 "status: ERROR\nmessage: booking not found");
           }
+        } else if (requestString[0].equals("rating")){
+          // read rating information based on facility name string in request
+          // Expected request format: "rating",facility_name
+
+          Facility facility = facilityFactory.getFacility(requestString[1]);
+          if (facility != null) {
+            String rating = getRating(facility);
+            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(), rating);
+          } else {
+            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                "status: ERROR\nmessage: facility not found");
+          }
+        } else {
+          responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: invalid request format");
         }
         break;
 
 
       case WRITE:
-        try {
-          // Parse booking details using the Parser class
-          BookingDetails booking = Parser.parseBookingDetails(requestMessage.getData());
-          
-          // Book the facility using the parsed details
-          String bookingResult = bookFacility(
-              booking.getFacilityName(), 
-              booking.getDay(), 
-              booking.getStartHour(), 
-              booking.getStartMinute(), 
-              booking.getEndHour(), 
-              booking.getEndMinute(),
-              request.getAddress(), 
-              request.getPort()
-          );
-          
-          responseMessage = new RequestMessage(
-              Operation.WRITE.getOpCode(), 
-              requestMessage.getRequestID(), 
-              bookingResult
-          );
-          } catch (Exception e) {
-          responseMessage = new RequestMessage(
-              Operation.WRITE.getOpCode(), 
-              requestMessage.getRequestID(),
-              "status: ERROR\nmessage: " + e.getMessage()
-          );
+
+        //For book facility request, format: facilityName,day,startHour,startMinute,endHour,endMinute
+        try{
+            // Parse booking details using the Parser class
+            BookingDetails booking = Parser.parseBookingDetails(requestMessage.getData());
+            
+            // Book the facility using the parsed details
+            String result = bookFacility(
+                booking.getFacilityName(), 
+                booking.getDay(), 
+                booking.getStartHour(), 
+                booking.getStartMinute(), 
+                booking.getEndHour(), 
+                booking.getEndMinute(),
+                request.getAddress(), 
+                request.getPort()
+            );
+            
+            responseMessage = new RequestMessage(
+                Operation.WRITE.getOpCode(), 
+                requestMessage.getRequestID(), 
+                result
+            );
+        } catch (Exception e) {
+          responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
+              "status: ERROR\nmessage: " + e.getMessage());
         }
+
         break;
 
-
+      
+      //UPDATE has 2 cases: 1. Update booking 2. Add a rating
+      //1. Update Booking, Expected format: "book",facilityName,day1,startHour1,startMin1,endHour1,endMin1,day2,startHour2,startMin2,endHour2,endMin2
+      //2. Add Rating, Expected format: "rating",facilityName,rating
       case UPDATE:
 
-        // Extract booking details from the request message.
-        // 1. Booking details to delete
-        // 2. Booking details to add
+
         try {
+          // Parse the request to get the type of update
+          String bookingType = Parser.parseUpdateType(requestMessage.getData());
+
+
+          //Updating an existing booking
+          if (bookingType.equals("book")){
             // Parse the booking details string into previous and new BookingDetails objects
             BookingDetails[] bookings = Parser.parseUpdateBookingDetails(requestMessage.getData());
+
+            // Extract booking details from the request message.
+            // 1. Booking details to delete
+            // 2. Booking details to add
             BookingDetails previousBooking = bookings[0];
             BookingDetails newBooking = bookings[1];
             
@@ -290,13 +316,40 @@ public class Server {
                 requestMessage.getRequestID(),
                 bookingResult
             );
-        } catch (IllegalArgumentException e) {
+          }
+
+
+          //Updating a Facility rating
+          else if (bookingType.equals("rating")){
+            String facilityName = requestMessage.getData().split(",")[1];
+            Facility facility = facilityFactory.getFacility(facilityName);
+
+            double rating = Double.parseDouble(requestMessage.getData().split(",")[2]);
+            String result = addRating(facility, rating);
+
+            responseMessage = new RequestMessage(
+                    Operation.UPDATE.getOpCode(),
+                    requestMessage.getRequestID(),
+                    result);
+          }
+
+
+          //Invalid update type
+          else{
+            responseMessage = new RequestMessage(
+                Operation.UPDATE.getOpCode(),
+                requestMessage.getRequestID(),
+                "status: ERROR\nmessage: " + "Invalid update type"
+            );
+          }
+        } catch (Exception e) {
             responseMessage = new RequestMessage(
                 Operation.UPDATE.getOpCode(),
                 requestMessage.getRequestID(),
                 "status: ERROR\nmessage: " + e.getMessage()
             );
         }
+
         break;
 
 
@@ -338,39 +391,6 @@ public class Server {
             "status: ERROR\nmessage: unimplemented operation");
         break;
 
-
-
-      case RATING:
-        //1. Parse the request
-        //2. Decide if it is a get or add request
-        //3. Perform the operation
-        //RequestMessage format: get or add, facilityName, rating (if add operation)
-        try{
-          String facilityName = requestMessage.getData().split(",")[0];
-          String requestType = requestMessage.getData().split(",")[1]; 
-          
-
-          Facility facility = facilityFactory.getFacility(facilityName);
-
-          if ("get".equals(requestType)){
-            String result = getRating(facility);
-            responseMessage = new RequestMessage(Operation.RATING.getOpCode(), requestMessage.getRequestID(),
-                getRating(facility));
-          } 
-          else if ("add".equals(requestType)){
-            //Get the field from the request
-            double rating = Double.parseDouble(requestMessage.getData().split(",")[2]);
-
-            String result = addRating(facility, rating);
-            responseMessage = new RequestMessage(Operation.RATING.getOpCode(), requestMessage.getRequestID(),
-                result);
-          }
-        } catch (Exception e) {
-          responseMessage = new RequestMessage(Operation.RATING.getOpCode(), requestMessage.getRequestID(),
-              "status: ERROR\nmessage: " + e.getMessage());
-        }
-
-        break;
 
 
 
