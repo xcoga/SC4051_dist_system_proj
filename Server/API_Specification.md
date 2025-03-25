@@ -101,6 +101,24 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 }
 ```
 
+### Query Rating of a Specific Facility
+#### Request:
+```json
+{
+  "operation": 0,
+  "requestID": 1,
+  "data": "rating,Weekday1"
+}
+```
+#### Response:
+```json
+{
+  "operation": 0,
+  "requestID": 1,
+  "data": "status: SUCCESS\nGet Rating: <rating>"
+}
+```
+
 ### Query a booking
 #### Request:
 ```json
@@ -145,7 +163,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 2,
   "requestID": 1,
-  "data": "Weekday1,MONDAY,10,0,12,0,MONDAY,13,0,15,0"
+  "data": "book,Weekday1,MONDAY,10,0,12,0,MONDAY,13,0,15,0"
 }
 ```
 #### Response:
@@ -154,6 +172,25 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
   "operation": 2,
   "requestID": 2,
   "data": "status: SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
+}
+```
+
+
+### (Update) Add a rating
+#### Request:
+```json
+{
+  "operation": 2,
+  "requestID": 2,
+  "data": "rating,Weekday1,5.0"
+}
+```
+#### Response:
+```json
+{
+  "operation": 2,
+  "requestID": 2,
+  "data": "status: SUCCESS\n Add Rating: <rating>"
 }
 ```
 
