@@ -3,6 +3,8 @@
 
 #include "Client.hpp"
 
+#include <memory>
+
 class UserInterface
 {
 private:
@@ -11,8 +13,9 @@ private:
 
 public:
     UserInterface(Client &client);
-
     void displayMenu();
+    static std::string promptServerIP();
+    static int promptServerPort();
 };
 
 #endif // USER_INTERFACE_HPP
