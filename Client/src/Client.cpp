@@ -2,7 +2,7 @@
 
 #include "Serializer.hpp"
 
-Client::Client(const std::string &serverIp, int serverPort)
+Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 {
     try
     {
@@ -36,14 +36,6 @@ Client::~Client()
     socket.closeSocket();
 }
 
-void Client::sendMessage()
-{
-    RequestMessage requestMessage(5, 0, "Hello from client");
-    sendRequest(requestMessage);
-
-    receiveResponse();
-}
-
 void Client::queryAvailability()
 {
     // TODO: Implement query availability functionality
@@ -65,6 +57,20 @@ void Client::monitorAvailability()
 }
 
 // TODO: Implement idempotent and non-idempotent operations
+
+void Client::sendCustomMessage()
+{
+    std::string messageData;
+
+    std::cout << "Enter message to send: ";
+    std::cin.ignore();
+    std::getline(std::cin, messageData);
+
+    RequestMessage requestMessage(RequestMessage::ECHO, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    receiveResponse();
+}
 
 void Client::makeLocalSocketAddress(struct sockaddr_in *sa)
 {

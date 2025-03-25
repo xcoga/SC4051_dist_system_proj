@@ -18,6 +18,7 @@ private:
     Socket socket;
     struct sockaddr_in clientAddr, serverAddr;
     std::vector<uint8_t> buffer;
+    int requestID;
 
 public:
     Client(const std::string &serverIp, int serverPort);
@@ -29,8 +30,7 @@ public:
     void monitorAvailability();
     // TODO: idempotentOperation();
     // TODO: nonIdempotentOperation();
-
-    void sendMessage();
+    void sendCustomMessage();
 
 private:
     void makeLocalSocketAddress(struct sockaddr_in *sa);
