@@ -14,8 +14,11 @@ void registerClasses()
 
 int main()
 {
-    std::string serverIP = UserInterface::promptServerIP();
-    int serverPort = UserInterface::promptServerPort();
+    std::string serverIP;
+    int serverPort;
+
+    serverIP = UserInterface::promptServerIP("Enter server IP (IPv4 format or 'localhost'): ");
+    serverPort = UserInterface::promptServerPort("Enter server port: ");
 
     registerClasses();
 
