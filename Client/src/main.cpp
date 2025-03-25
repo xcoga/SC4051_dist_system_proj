@@ -6,24 +6,22 @@
 
 void registerClasses()
 {
-    ObjectFactory::registerClass<RequestMessage>("Server.RequestMessage");
+    ObjectFactory::creators["Server.RequestMessage"] = []()
+    {
+        return std::make_shared<RequestMessage>();
+    };
 }
 
 int main()
 {
-    std::string serverIp;
-    int serverPort;
+    std::string serverIP = UserInterface::promptServerIP();
+    int serverPort = UserInterface::promptServerPort();
 
     registerClasses();
-    std::cout << "Enter server IP: ";
-    std::cin >> serverIp;
-
-    std::cout << "Enter server port: ";
-    std::cin >> serverPort;
 
     try
     {
-        Client client(serverIp, serverPort);
+        Client client(serverIP, serverPort);
         UserInterface ui(client);
         ui.displayMenu();
     }
