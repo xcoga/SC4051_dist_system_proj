@@ -525,7 +525,7 @@ public class Server {
 
   private static String addRating(Facility facility, double rating) {
     facility.addRating(rating);
-    return "status: SUCCESS\n Add Rating: " + facility.getRating().getAverageRating();
+    return "status: SUCCESS\n Added Rating: " + rating;
   }
 
 
