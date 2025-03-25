@@ -13,6 +13,17 @@ private:
     std::string data;
 
 public:
+    enum RequestType
+    {
+        INVALID = -1,
+        READ = 0,
+        WRITE = 1,
+        UPDATE = 2,
+        DELETE = 3,
+        MONITOR = 4,
+        ECHO = 5
+    };
+
     RequestMessage();
     RequestMessage(int requestType, int requestID, const std::string &data);
 

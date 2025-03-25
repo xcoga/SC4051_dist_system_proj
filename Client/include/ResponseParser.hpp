@@ -6,11 +6,15 @@
 class ResponseParser
 {
 public:
+    static void parseResponse(const std::string &response);
     // static void parseQueryAvailabilityResponse(const std::string &response);
     // static void parseBookFacilityResponse(const std::string &response);
     // static void parseChangeBookingResponse(const std::string &response);
     // static void parseMonitorAvailabilityResponse(const std::string &response);
     // TODO: Parse idempotent and non-idempotent operation responses
+
+// private:
+    // static void checkResponseParity(const std::string &response);
 };
 
 #endif // RESPONSE_PARSER_HPP

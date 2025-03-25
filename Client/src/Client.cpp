@@ -2,7 +2,7 @@
 
 #include "Serializer.hpp"
 
-Client::Client(const std::string &serverIp, int serverPort)
+Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 {
     try
     {
@@ -27,7 +27,7 @@ Client::Client(const std::string &serverIp, int serverPort)
     }
 
     printBoundSocketInfo();
-    
+
     makeRemoteSocketAddress(&serverAddr, const_cast<char *>(serverIp.c_str()), serverPort);
 }
 
@@ -36,35 +36,64 @@ Client::~Client()
     socket.closeSocket();
 }
 
-void Client::sendMessage()
+std::string Client::queryAvailability(std::string facilityName)
 {
-    RequestMessage requestMessage(1, 0, "Hello from client");
+    std::string messageData = "facility," + facilityName;
+
+    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
     sendRequest(requestMessage);
 
-    std::string response = receiveResponse();
+    // TODO: Parse response then return
+    return receiveResponse();
 }
 
-void Client::queryAvailability()
+std::string Client::bookFacility(std::string facilityName, std::string dayOfWeek, std::string startTime, std::string endTime)
 {
-    // TODO: Implement query availability functionality
+    std::string startTimeHour, startTimeMinute, endTimeHour, endTimeMinute;
+    startTimeHour = startTime.substr(0, 2);
+    startTimeMinute = startTime.substr(2, 2);
+    endTimeHour = endTime.substr(0, 2);
+    endTimeMinute = endTime.substr(2, 2);
+
+    std::string messageData = "facility," + facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
+
+    RequestMessage requestMessage(RequestMessage::WRITE, requestID++, messageData);
+
+    return receiveResponse();
 }
 
-void Client::bookFacility()
+std::string Client::queryBooking(std::string bookingID)
 {
-    // TODO: Implement book facility functionality
+    // TODO: Implement query booking functionality
+    return "";
 }
 
-void Client::changeBooking()
+std::string Client::changeBooking(std::string bookingID, std::string newDayOfWeek, std::string newStartTime, std::string newEndTime)
 {
     // TODO: Implement change booking functionality
+    return "";
 }
 
-void Client::monitorAvailability()
+std::string Client::monitorAvailability(std::string facilityName)
 {
     // TODO: Implement monitor availability functionality
+    return "";
 }
 
 // TODO: Implement idempotent and non-idempotent operations
+// TODO: Repeated request operations, so requestID should not increment
+
+std::string Client::sendCustomMessage(std::string messageData)
+{
+    std::cout << RequestMessage::ECHO << std::endl;
+    std::cout << requestID + 1 << std::endl;
+    std::cout << messageData << std::endl;
+
+    RequestMessage requestMessage(RequestMessage::ECHO, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    return receiveResponse();
+}
 
 void Client::makeLocalSocketAddress(struct sockaddr_in *sa)
 {
@@ -105,7 +134,7 @@ void Client::printBoundSocketInfo()
     // Print the bound IP address and port
     char ipStr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
-    std::cout << "Client socket bound to IP: " << ipStr << ", Port: " << ntohs(clientAddr.sin_port) << std::endl;
+    std::cout << "Client socket bound to IP " << ipStr << " and port " << ntohs(clientAddr.sin_port) << std::endl;
 }
 
 void Client::sendRequest(const RequestMessage &request)
@@ -125,45 +154,33 @@ void Client::sendRequest(const RequestMessage &request)
 
 std::string Client::receiveResponse()
 {
-
-    int bytesReceived = 0;
+    char recvBuffer[BUFFER_SIZE];
+    struct sockaddr_in senderAddr;
+    std::string messageData;
 
     try
     {
-        buffer.resize(BUFFER_SIZE);
-        bytesReceived = socket.receiveDataFrom(buffer, serverAddr);
+        int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
+
+        // Check parity
+
+        // Deserialize response
+        std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
+        std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
+
+        std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
+
+        // // Display deserialized message
+        // std::cout << "Deserialized message:" << std::endl;
+        // std::cout << "Request ID: " << responseMessage->getRequestID() << std::endl;
+        // std::cout << "Message Type: " << responseMessage->getRequestType() << std::endl;
+        // std::cout << "Message: " << responseMessage->getData() << std::endl;
+        messageData = responseMessage->getData();
     }
-    catch (const std::runtime_error &e)
+    catch(const std::exception& e)
     {
-        std::cerr << "Error receiving data: " << e.what() << std::endl;
-        exit(1);
+        std::cerr << e.what() << '\n';
     }
 
-    std::vector<uint8_t> receivedData(buffer.begin(), buffer.begin() + bytesReceived);
-    auto deserializedObject = JavaDeserializer::deserialize(receivedData);
-
-    // Process the deserialized object (for example, print out some fields)
-    if (deserializedObject)
-    {
-        std::cout << "Received Object of Class: " 
-                  << deserializedObject->getJavaClassName() << std::endl;
-
-        // Cast to your specific class (e.g., RequestMessage)
-        RequestMessage *response = dynamic_cast<RequestMessage *>(deserializedObject.get());
-        if (response)
-        {
-            std::cout << "Request ID: " << response->getRequestID() << std::endl;
-            std::cout << "Request Data: " << response->getData() << std::endl;
-        }
-        else
-        {
-            std::cout << "Failed to cast to RequestMessage" << std::endl;
-        }
-    }
-    else
-    {
-        std::cerr << "Failed to deserialize the received data" << std::endl;
-    }
-
-    return "";
+    return messageData;
 }

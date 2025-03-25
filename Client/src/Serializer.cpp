@@ -1,8 +1,8 @@
-#include "../include/Serializer.hpp"
+#include "Serializer.hpp"
 
-#include "../include/ByteBuffer.hpp"
-#include "../include/ByteReader.hpp"
-#include "../include/Parity.hpp"
+#include "ByteBuffer.hpp"
+#include "ByteReader.hpp"
+#include "Parity.hpp"
 
 #include <iostream>
 #include <vector>
