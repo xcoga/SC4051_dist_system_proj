@@ -12,6 +12,7 @@ public:
     // static void parseChangeBookingResponse(const std::string &response);
     // static void parseMonitorAvailabilityResponse(const std::string &response);
     // TODO: Parse idempotent and non-idempotent operation responses
+    static std::vector<std::string> parseEchoResponse(const std::string &response);
 
 // private:
     // static void checkResponseParity(const std::string &response);
