@@ -163,7 +163,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 2,
   "requestID": 1,
-  "data": "book,Weekday1,MONDAY,10,0,12,0,MONDAY,13,0,15,0"
+  "data": "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
 }
 ```
 #### Response:
@@ -201,7 +201,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 3,
   "requestID": 2,
-  "data": "Weekday1,MONDAY,10,0,12,0"
+  "data": "<bookingId_to_delete>,<facilityName>"
 }
 ```
 #### Response:

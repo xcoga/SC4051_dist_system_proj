@@ -28,7 +28,7 @@ public class Parser{
      * @return An array of BookingDetails objects: [previousBooking, newBooking]
      * @throws IllegalArgumentException If the input string is invalid or cannot be parsed
      */
-    public static BookingDetails[] parseUpdateBookingDetails(String bookingDetailsStr) {
+    public static BookingDetails parseUpdateBookingDetails(String bookingDetailsStr) {
         if (bookingDetailsStr == null || bookingDetailsStr.trim().isEmpty()) {
             throw new IllegalArgumentException("Booking details string cannot be null or empty");
         }
@@ -37,39 +37,27 @@ public class Parser{
         String[] parts = bookingDetailsStr.split(",");
         
         // Check if we have the correct number of elements
-        if (parts.length != 12) {
+        if (parts.length != 8) {
             throw new IllegalArgumentException(
                 "Invalid booking details format. Expected 12 comma-separated values, found: " + parts.length);
         }
         
-        // Extract the facility name
-        String facilityName = parts[1];
+
         
         try {
-            // Create array to hold both booking details objects
-            BookingDetails[] bookings = new BookingDetails[2];
             
             // Parse the previous booking details (indices 1-5)
-            bookings[0] = new BookingDetails(
-                facilityName,
-                DayOfWeek.valueOf(parts[2].toUpperCase()),
-                Integer.parseInt(parts[3]),
+            BookingDetails booking = new BookingDetails(
+                parts[1], //Previous bookingID
+                parts[2], //Facility name
+                DayOfWeek.valueOf(parts[3].toUpperCase()),
                 Integer.parseInt(parts[4]),
                 Integer.parseInt(parts[5]),
-                Integer.parseInt(parts[6])
+                Integer.parseInt(parts[6]),
+                Integer.parseInt(parts[7])
             );
             
-            // Parse the new booking details (indices 6-10)
-            bookings[1] = new BookingDetails(
-                facilityName,
-                DayOfWeek.valueOf(parts[7].toUpperCase()),
-                Integer.parseInt(parts[8]),
-                Integer.parseInt(parts[9]),
-                Integer.parseInt(parts[10]),
-                Integer.parseInt(parts[11])
-            );
-            
-            return bookings;
+            return booking;
         } catch (Exception e) {
             throw new IllegalArgumentException("Error parsing booking details: " + e.getMessage(), e);
         }

@@ -12,6 +12,7 @@ public class BookingDetails{
     private int startMinute;
     private int endHour;
     private int endMinute;
+    private String prev_bookingId; //Only used for update booking
     /**
      * Default constructor
      */
@@ -20,6 +21,16 @@ public class BookingDetails{
 
 
     public BookingDetails(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
+        this.facilityName = facilityName;
+        this.day = day;
+        this.startHour = startHour;
+        this.startMinute = startMinute;
+        this.endHour = endHour;
+        this.endMinute = endMinute;
+    }
+
+    public BookingDetails(String prev_bookingId, String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
+        this.prev_bookingId = prev_bookingId;
         this.facilityName = facilityName;
         this.day = day;
         this.startHour = startHour;
@@ -79,5 +90,13 @@ public class BookingDetails{
     public String toString() {
         return String.format("%s %s %02d:%02d-%02d:%02d", 
             facilityName, day.toString(), startHour, startMinute, endHour, endMinute);
+    }
+
+    public String getPrev_bookingId() {
+        return prev_bookingId;
+    }
+
+    public void setPrev_bookingId(String prev_bookingId) {
+        this.prev_bookingId = prev_bookingId;
     }
 }

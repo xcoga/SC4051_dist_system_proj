@@ -254,7 +254,7 @@ public class Server {
 
       
       //UPDATE has 2 cases: 1. Update booking 2. Add a rating
-      //1. Update Booking, Expected format: "book",facilityName,day1,startHour1,startMin1,endHour1,endMin1,day2,startHour2,startMin2,endHour2,endMin2
+      //1. Update Booking, Expected format: "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
       //2. Add Rating, Expected format: "rating",facilityName,rating
       case UPDATE:
 
@@ -296,7 +296,7 @@ public class Server {
       case DELETE:
 
         try{  
-            // Delete the facility booking
+            //Delete booking. Expected format: "<bookingId>,<facilityName>"
             responseMessage = deleteBooking(requestMessage,request.getAddress(), request.getPort());
             
           } catch (Exception e) {
@@ -408,7 +408,7 @@ public class Server {
     responseMessage = new RequestMessage(
         Operation.WRITE.getOpCode(), 
         request.getRequestID(), 
-        "status: SUCCESS\nBooking_ID: " + confirmationID + " deleted by " + userInfo
+        "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo
     );
 
     return responseMessage;
@@ -418,27 +418,22 @@ public class Server {
 
 
 
-  //Update booking. 1. Remove the previous booking 2. Add the new booking
+  //Update booking. Expected format: "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
   private static RequestMessage updateBooking(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
 
     // Extract booking details from the request message.
-    // 1. Booking details to delete
-    // 2. Booking details to add
-    BookingDetails[] bookings = Parser.parseUpdateBookingDetails(requestMessage.getData());
-    BookingDetails previousBooking = bookings[0];
-    BookingDetails newBooking = bookings[1];
-    
-    String facilityName = previousBooking.getFacilityName();
-    DayOfWeek prev_day = previousBooking.getDay();
-    int prev_startHour = previousBooking.getStartHour();
-    int prev_startMinute = previousBooking.getStartMinute();
-    int prev_endHour = previousBooking.getEndHour();
-    int prev_endMinute = previousBooking.getEndMinute();
-    DayOfWeek new_day = newBooking.getDay();
-    int new_startHour = newBooking.getStartHour();
-    int new_startMinute = newBooking.getStartMinute();
-    int new_endHour = newBooking.getEndHour();
-    int new_endMinute = newBooking.getEndMinute();
+    // 1. BookingID to delete
+    // 2. New booking details to book
+
+    BookingDetails booking = Parser.parseUpdateBookingDetails(requestMessage.getData());
+
+    String prev_bookingId = booking.getPrev_bookingId();
+    String facilityName = booking.getFacilityName();
+    DayOfWeek day = booking.getDay();
+    int startHour = booking.getStartHour();
+    int startMinute = booking.getStartMinute();
+    int endHour = booking.getEndHour();
+    int endMinute = booking.getEndMinute();
 
     RequestMessage responseMessage;
 
@@ -460,8 +455,8 @@ public class Server {
 
     // Book the facility and get the confirmation ID
     try{
-      String delete_confirmationID = availability.removeTimeSlot(prev_day, prev_startHour, prev_startMinute, prev_endHour, prev_endMinute, userInfo);
-      String booking_confirmationID = availability.bookTimeSlot(new_day, new_startHour, new_startMinute, new_endHour, new_endMinute, userInfo);
+      String delete_confirmationID = availability.removeTimeSlot(prev_bookingId, userInfo);
+      String booking_confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
 
       responseMessage = new RequestMessage(
           Operation.UPDATE.getOpCode(),
@@ -487,17 +482,12 @@ public class Server {
 
 
 
-
+  //Delete booking. Expected format: "<bookingId>,<facilityName>"
   private static RequestMessage deleteBooking(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
 
-    BookingDetails booking = Parser.parseBookingDetails(requestMessage.getData());
-
-    String facilityName = booking.getFacilityName();
-    DayOfWeek day = booking.getDay();
-    int startHour = booking.getStartHour();
-    int startMinute = booking.getStartMinute();
-    int endHour = booking.getEndHour();
-    int endMinute = booking.getEndMinute();
+    String[] parts = requestMessage.getData().split(",");
+    String bookingId = parts[0];
+    String facilityName = parts[1];
 
 
     Facility facility = facilityFactory.getFacility(facilityName);
@@ -517,11 +507,11 @@ public class Server {
 
     try{
       //Remove the booking for that facility and get the confirmation ID
-      String confirmationID = availability.removeTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+      String confirmationID = availability.removeTimeSlot(bookingId, userInfo);
       return new RequestMessage(
                 Operation.DELETE.getOpCode(), 
                 requestMessage.getRequestID(), 
-                "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo
+                "status: SUCCESS\nDeleted Booking_ID: " + confirmationID + " by " + userInfo
             );
     } catch (Exception e) {
       return new RequestMessage(

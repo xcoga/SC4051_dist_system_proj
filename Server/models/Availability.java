@@ -92,17 +92,30 @@ public class Availability {
     return confirmationID;
   }
 
-  public String removeTimeSlot(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute,
-      String userInfo){
-    int dayIndex = day.getValue() - 1;
-    for (TimeSlot slot : this.bookedSlots[dayIndex]) {
-      if (slot.startHour == startHour && slot.startMinute == startMinute && slot.endHour == endHour && slot.endMinute == endMinute && slot.userInfo.equals(userInfo)) {
-        this.bookedSlots[dayIndex].remove(slot);
-        return slot.confirmationID;
-      }
+  // public String removeTimeSlot(String prev_bookingId, String userInfo){
+  //   for (TimeSlot slot : this.bookedSlots[dayIndex]) {
+  //     if (slot.confirmationID.equals(prev_bookingId) && slot.userInfo.equals(userInfo)) {
+  //       this.bookedSlots[dayIndex].remove(slot);
+  //       return slot.confirmationID;
+  //     }
+  //   }
+  //   return null;
+  // }
+
+public String removeTimeSlot(String prev_bookingId, String userInfo) {
+    // Loop through each day
+    for (int dayIndex = 0; dayIndex < this.bookedSlots.length; dayIndex++) {
+        // Loop through each slot in the current day
+        for (int slotIndex = 0; slotIndex < this.bookedSlots[dayIndex].size(); slotIndex++) {
+            TimeSlot slot = this.bookedSlots[dayIndex].get(slotIndex);
+            if (slot.confirmationID.equals(prev_bookingId) && slot.userInfo.equals(userInfo)) {
+                this.bookedSlots[dayIndex].remove(slotIndex);
+                return slot.confirmationID;
+            }
+        }
     }
     return null;
-  }
+}
 
   
   public TimeSlot getBookingInfo(String confirmationID) {
