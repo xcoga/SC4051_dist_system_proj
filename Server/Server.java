@@ -244,26 +244,7 @@ public class Server {
 
         //For book facility request, format: facilityName,day,startHour,startMinute,endHour,endMinute
         try{
-            // Parse booking details using the Parser class
-            BookingDetails booking = Parser.parseBookingDetails(requestMessage.getData());
-            
-            // Book the facility using the parsed details
-            String result = bookFacility(
-                booking.getFacilityName(), 
-                booking.getDay(), 
-                booking.getStartHour(), 
-                booking.getStartMinute(), 
-                booking.getEndHour(), 
-                booking.getEndMinute(),
-                request.getAddress(), 
-                request.getPort()
-            );
-            
-            responseMessage = new RequestMessage(
-                Operation.WRITE.getOpCode(), 
-                requestMessage.getRequestID(), 
-                result
-            );
+          responseMessage = bookFacility(requestMessage, request.getAddress(), request.getPort());
         } catch (Exception e) {
           responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
               "status: ERROR\nmessage: " + e.getMessage());
@@ -282,57 +263,15 @@ public class Server {
           // Parse the request to get the type of update
           String bookingType = Parser.parseUpdateType(requestMessage.getData());
 
-
           //Updating an existing booking
-          if (bookingType.equals("book")){
-            // Parse the booking details string into previous and new BookingDetails objects
-            BookingDetails[] bookings = Parser.parseUpdateBookingDetails(requestMessage.getData());
-
-            // Extract booking details from the request message.
-            // 1. Booking details to delete
-            // 2. Booking details to add
-            BookingDetails previousBooking = bookings[0];
-            BookingDetails newBooking = bookings[1];
-            
-            // Update the booking for the facility
-            String bookingResult = updateBooking(
-                previousBooking.getFacilityName(),
-                previousBooking.getDay(), 
-                previousBooking.getStartHour(), 
-                previousBooking.getStartMinute(), 
-                previousBooking.getEndHour(), 
-                previousBooking.getEndMinute(),
-                newBooking.getDay(), 
-                newBooking.getStartHour(), 
-                newBooking.getStartMinute(), 
-                newBooking.getEndHour(), 
-                newBooking.getEndMinute(),
-                request.getAddress(),
-                request.getPort()
-            );
-            
-            responseMessage = new RequestMessage(
-                Operation.UPDATE.getOpCode(),
-                requestMessage.getRequestID(),
-                bookingResult
-            );
+          if (bookingType.equals("book")){           
+            responseMessage = updateBooking(requestMessage, request.getAddress(), request.getPort());
           }
-
 
           //Updating a Facility rating
           else if (bookingType.equals("rating")){
-            String facilityName = requestMessage.getData().split(",")[1];
-            Facility facility = facilityFactory.getFacility(facilityName);
-
-            double rating = Double.parseDouble(requestMessage.getData().split(",")[2]);
-            String result = addRating(facility, rating);
-
-            responseMessage = new RequestMessage(
-                    Operation.UPDATE.getOpCode(),
-                    requestMessage.getRequestID(),
-                    result);
+            responseMessage = addRating(requestMessage, request.getAddress(), request.getPort());
           }
-
 
           //Invalid update type
           else{
@@ -355,26 +294,11 @@ public class Server {
 
 
       case DELETE:
-          // Parse booking details using the Parser class
-          BookingDetails booking = Parser.parseBookingDetails(requestMessage.getData());
+
         try{  
-            // Book the facility using the parsed details
-            String bookingResult = deleteBooking(
-                booking.getFacilityName(), 
-                booking.getDay(), 
-                booking.getStartHour(), 
-                booking.getStartMinute(), 
-                booking.getEndHour(), 
-                booking.getEndMinute(),
-                request.getAddress(), 
-                request.getPort()
-            );
+            // Delete the facility booking
+            responseMessage = deleteBooking(requestMessage,request.getAddress(), request.getPort());
             
-            responseMessage = new RequestMessage(
-                Operation.DELETE.getOpCode(), 
-                requestMessage.getRequestID(), 
-                bookingResult
-            );
           } catch (Exception e) {
             responseMessage = new RequestMessage(
                 Operation.DELETE.getOpCode(), 
@@ -439,16 +363,38 @@ public class Server {
 
 
 
-  private static String bookFacility(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour,
-      int endMinute, InetAddress userAddress, int userPort) {
+  private static RequestMessage bookFacility(RequestMessage request, InetAddress userAddress, int userPort) {
+
+    BookingDetails booking = Parser.parseBookingDetails(request.getData());
+
+    String facilityName = booking.getFacilityName(); 
+    DayOfWeek day = booking.getDay(); 
+    int startHour = booking.getStartHour(); 
+    int startMinute = booking.getStartMinute(); 
+    int endHour = booking.getEndHour(); 
+    int endMinute = booking.getEndMinute();
+
+    RequestMessage responseMessage;
+
+    
+    //Check if facility is available for booking
     Facility facility = facilityFactory.getFacility(facilityName);
     if (facility == null) {
-      return "status: ERROR\nmessage: facility not found";
+      responseMessage = new RequestMessage(
+          Operation.WRITE.getOpCode(), 
+          request.getRequestID(), 
+          "status: ERROR\nmessage: facility not found"
+      );
+      return responseMessage;
     }
-
     Availability availability = facility.getAvailability();
     if (availability == null || !availability.isAvailable(day, startHour, startMinute, endHour, endMinute)) {
-      return "status: ERROR\nmessage: facility not available at the requested time";
+      responseMessage = new RequestMessage(
+          Operation.WRITE.getOpCode(), 
+          request.getRequestID(), 
+          "status: ERROR\nmessage: facility not available at the requested time"
+      );
+      return responseMessage;
     }
 
     // Capture user information
@@ -456,8 +402,16 @@ public class Server {
 
     // Book the facility and get the confirmation ID
     String confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+    
 
-    return "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo;
+    //Craft response message to send back to client
+    responseMessage = new RequestMessage(
+        Operation.WRITE.getOpCode(), 
+        request.getRequestID(), 
+        "status: SUCCESS\nBooking_ID: " + confirmationID + " deleted by " + userInfo
+    );
+
+    return responseMessage;
   }
 
 
@@ -465,13 +419,38 @@ public class Server {
 
 
   //Update booking. 1. Remove the previous booking 2. Add the new booking
-  private static String updateBooking(String facilityName, DayOfWeek prev_day, int prev_startHour, int prev_startMinute, int prev_endHour,
-      int prev_endMinute, DayOfWeek new_day, int new_startHour, int new_startMinute, int new_endHour,
-      int new_endMinute, InetAddress userAddress, int userPort){
+  private static RequestMessage updateBooking(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
+
+    // Extract booking details from the request message.
+    // 1. Booking details to delete
+    // 2. Booking details to add
+    BookingDetails[] bookings = Parser.parseUpdateBookingDetails(requestMessage.getData());
+    BookingDetails previousBooking = bookings[0];
+    BookingDetails newBooking = bookings[1];
+    
+    String facilityName = previousBooking.getFacilityName();
+    DayOfWeek prev_day = previousBooking.getDay();
+    int prev_startHour = previousBooking.getStartHour();
+    int prev_startMinute = previousBooking.getStartMinute();
+    int prev_endHour = previousBooking.getEndHour();
+    int prev_endMinute = previousBooking.getEndMinute();
+    DayOfWeek new_day = newBooking.getDay();
+    int new_startHour = newBooking.getStartHour();
+    int new_startMinute = newBooking.getStartMinute();
+    int new_endHour = newBooking.getEndHour();
+    int new_endMinute = newBooking.getEndMinute();
+
+    RequestMessage responseMessage;
+
 
     Facility facility = facilityFactory.getFacility(facilityName);
     if (facility == null) {
-      return "status: ERROR\nmessage: facility not found";
+      responseMessage = new RequestMessage(
+          Operation.UPDATE.getOpCode(),
+          requestMessage.getRequestID(),
+          "status: ERROR\nmessage: facility not found"
+      );
+      return responseMessage;
     }
 
     Availability availability = facility.getAvailability();
@@ -484,9 +463,22 @@ public class Server {
       String delete_confirmationID = availability.removeTimeSlot(prev_day, prev_startHour, prev_startMinute, prev_endHour, prev_endMinute, userInfo);
       String booking_confirmationID = availability.bookTimeSlot(new_day, new_startHour, new_startMinute, new_endHour, new_endMinute, userInfo);
 
-      return "status: SUCCESS\nBooking_ID: " + booking_confirmationID + " by " + userInfo;
+      responseMessage = new RequestMessage(
+          Operation.UPDATE.getOpCode(),
+          requestMessage.getRequestID(),
+          "status: SUCCESS\nBooking_ID: " + booking_confirmationID + " by " + userInfo
+      );
+
+      return responseMessage;
+
     } catch (Exception e) {
-      return "status: ERROR\nmessage: booking not successful or booking not found"  + " by " + userInfo; 
+
+      responseMessage = new RequestMessage(
+          Operation.UPDATE.getOpCode(),
+          requestMessage.getRequestID(),
+          "status: ERROR\nmessage: booking not successful or booking not found"  + " by " + userInfo 
+      );      
+      return responseMessage;
     }
   }
 
@@ -494,12 +486,27 @@ public class Server {
 
 
 
-  private static String deleteBooking(String facilityName, DayOfWeek day, int startHour, int startMinute, int endHour,
-      int endMinute, InetAddress userAddress, int userPort) {
+
+
+  private static RequestMessage deleteBooking(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
+
+    BookingDetails booking = Parser.parseBookingDetails(requestMessage.getData());
+
+    String facilityName = booking.getFacilityName();
+    DayOfWeek day = booking.getDay();
+    int startHour = booking.getStartHour();
+    int startMinute = booking.getStartMinute();
+    int endHour = booking.getEndHour();
+    int endMinute = booking.getEndMinute();
+
 
     Facility facility = facilityFactory.getFacility(facilityName);
     if (facility == null) {
-      return "status: ERROR\nmessage: facility not found";
+      return new RequestMessage(
+                Operation.DELETE.getOpCode(), 
+                requestMessage.getRequestID(), 
+                "status: ERROR\nmessage: facility not found"
+            );
     }
 
     Availability availability = facility.getAvailability();
@@ -511,9 +518,17 @@ public class Server {
     try{
       //Remove the booking for that facility and get the confirmation ID
       String confirmationID = availability.removeTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
-      return "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo;
+      return new RequestMessage(
+                Operation.DELETE.getOpCode(), 
+                requestMessage.getRequestID(), 
+                "status: SUCCESS\nBooking_ID: " + confirmationID + " by " + userInfo
+            );
     } catch (Exception e) {
-      return "status: ERROR\nmessage: booking not found";
+      return new RequestMessage(
+                Operation.DELETE.getOpCode(), 
+                requestMessage.getRequestID(), 
+                "status: ERROR\nmessage: booking not found"
+            );
     }
     
   }
@@ -523,9 +538,21 @@ public class Server {
     return "status: SUCCESS\nGet Rating: " + facility.getRating().getAverageRating();
   }
 
-  private static String addRating(Facility facility, double rating) {
+
+
+  private static RequestMessage addRating(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
+    String[] requestString = requestMessage.getData().split(",");
+    Facility facility = facilityFactory.getFacility(requestString[1]);
+    double rating = Double.parseDouble(requestString[2]);
+
     facility.addRating(rating);
-    return "status: SUCCESS\n Added Rating: " + rating;
+    String userInfo = userAddress.toString() + ":" + userPort;
+
+    RequestMessage responseMessage = new RequestMessage(
+                                            Operation.UPDATE.getOpCode(),
+                                            requestMessage.getRequestID(),
+                                            "status: SUCCESS\n Added Rating: " + rating + " by: " + userInfo);
+    return responseMessage;
   }
 
 

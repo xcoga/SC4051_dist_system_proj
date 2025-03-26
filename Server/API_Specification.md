@@ -194,6 +194,25 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 }
 ```
 
+
+### Delete a booking
+#### Request:
+```json
+{
+  "operation": 3,
+  "requestID": 2,
+  "data": "Weekday1,MONDAY,10,0,12,0"
+}
+```
+#### Response:
+```json
+{
+  "operation": 3,
+  "requestID": 2,
+  "data": "status: SUCCESS\n Booking_ID: <booking_id> deleted by <user_info>"
+}
+```
+
 ## Error Handling
 The server returns error messages in the format of "status: ERROR\nmessage: <error_message>".
 The server may return the following errors:

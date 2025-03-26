@@ -37,9 +37,9 @@ public class Parser{
         String[] parts = bookingDetailsStr.split(",");
         
         // Check if we have the correct number of elements
-        if (parts.length != 11) {
+        if (parts.length != 12) {
             throw new IllegalArgumentException(
-                "Invalid booking details format. Expected 11 comma-separated values, found: " + parts.length);
+                "Invalid booking details format. Expected 12 comma-separated values, found: " + parts.length);
         }
         
         // Extract the facility name

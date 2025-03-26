@@ -25,7 +25,7 @@ public class UDPClient {
       
       while (continueRunning) {
         // Get operation input as integer
-        System.out.println("\nEnter operation code (integer) (-1=NONE, 0=READ, 1=WRITE, 2=UPDATE, 3=DELETE, 4=MONITOR, 5=ECHO, 6=RATING,7=EXIT): ");
+        System.out.println("\nEnter operation code (integer) (-1=NONE, 0=READ, 1=WRITE, 2=UPDATE, 3=DELETE, 4=MONITOR, 5=ECHO, 7=EXIT): ");
         int opCode;
         try {
           opCode = Integer.parseInt(scanner.nextLine());
