@@ -65,7 +65,7 @@ std::string Client::bookFacility(std::string facilityName, std::string dayOfWeek
     endTimeHour = endTime.substr(0, 2);
     endTimeMinute = endTime.substr(2, 2);
 
-    std::string messageData = "facility," + facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
+    std::string messageData = facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
 
     RequestMessage requestMessage(RequestMessage::WRITE, requestID++, messageData);
     sendRequest(requestMessage);
