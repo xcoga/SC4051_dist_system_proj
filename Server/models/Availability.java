@@ -11,7 +11,8 @@ public class Availability {
   private int[] startMinute;
   private int[] endHour;
   private int[] endMinute;
-  private List<TimeSlot>[] bookedSlots;
+  private List<Booking>[] bookedSlots;
+  private String facilityName;
 
   @SuppressWarnings("unchecked")
   public Availability() {
@@ -20,7 +21,7 @@ public class Availability {
     this.startMinute = new int[7];
     this.endHour = new int[7];
     this.endMinute = new int[7];
-    this.bookedSlots = (List<TimeSlot>[]) new ArrayList[7];
+    this.bookedSlots = (List<Booking>[]) new ArrayList[7];
     for (int i = 0; i < 7; i++) {
       this.bookedSlots[i] = new ArrayList<>();
     }
@@ -69,14 +70,14 @@ public class Availability {
     return this.endMinute[day.getValue() - 1];
   }
 
-  public boolean isAvailable(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
-    int dayIndex = day.getValue() - 1;
+  public boolean isAvailable(TimeSlot timeSlot) {
+    int dayIndex = timeSlot.day.getValue() - 1;
     if (!this.days[dayIndex]) {
       return false;
     }
 
-    for (TimeSlot slot : this.bookedSlots[dayIndex]) {
-      if (slot.conflictsWith(startHour, startMinute, endHour, endMinute)) {
+    for (Booking slot : this.bookedSlots[dayIndex]) {
+      if (slot.conflictsWith(timeSlot)) {
         return false;
       }
     }
@@ -84,43 +85,43 @@ public class Availability {
     return true;
   }
 
-  public String bookTimeSlot(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute,
-      String userInfo) {
-    int dayIndex = day.getValue() - 1;
+  public String bookTimeSlot(String userInfo, TimeSlot timeSlot) {
+    int dayIndex = timeSlot.day.getValue() - 1;
     String confirmationID = UUID.randomUUID().toString();
-    this.bookedSlots[dayIndex].add(new TimeSlot(startHour, startMinute, endHour, endMinute, confirmationID, userInfo));
+    this.bookedSlots[dayIndex]
+        .add(new Booking(confirmationID, userInfo, this.facilityName, timeSlot));
     return confirmationID;
   }
 
   // public String removeTimeSlot(String prev_bookingId, String userInfo){
-  //   for (TimeSlot slot : this.bookedSlots[dayIndex]) {
-  //     if (slot.confirmationID.equals(prev_bookingId) && slot.userInfo.equals(userInfo)) {
-  //       this.bookedSlots[dayIndex].remove(slot);
-  //       return slot.confirmationID;
-  //     }
-  //   }
-  //   return null;
+  // for (TimeSlot slot : this.bookedSlots[dayIndex]) {
+  // if (slot.confirmationID.equals(prev_bookingId) &&
+  // slot.userInfo.equals(userInfo)) {
+  // this.bookedSlots[dayIndex].remove(slot);
+  // return slot.confirmationID;
+  // }
+  // }
+  // return null;
   // }
 
-public String removeTimeSlot(String prev_bookingId, String userInfo) {
+  public String removeTimeSlot(String prev_bookingId, String userInfo) {
     // Loop through each day
     for (int dayIndex = 0; dayIndex < this.bookedSlots.length; dayIndex++) {
-        // Loop through each slot in the current day
-        for (int slotIndex = 0; slotIndex < this.bookedSlots[dayIndex].size(); slotIndex++) {
-            TimeSlot slot = this.bookedSlots[dayIndex].get(slotIndex);
-            if (slot.confirmationID.equals(prev_bookingId) && slot.userInfo.equals(userInfo)) {
-                this.bookedSlots[dayIndex].remove(slotIndex);
-                return slot.confirmationID;
-            }
+      // Loop through each slot in the current day
+      for (int slotIndex = 0; slotIndex < this.bookedSlots[dayIndex].size(); slotIndex++) {
+        Booking slot = this.bookedSlots[dayIndex].get(slotIndex);
+        if (slot.confirmationID.equals(prev_bookingId) && slot.userInfo.equals(userInfo)) {
+          this.bookedSlots[dayIndex].remove(slotIndex);
+          return slot.confirmationID;
         }
+      }
     }
     return null;
-}
+  }
 
-  
-  public TimeSlot getBookingInfo(String confirmationID) {
+  public Booking getBookingInfo(String confirmationID) {
     for (int i = 0; i < 7; i++) {
-      for (TimeSlot slot : this.bookedSlots[i]) {
+      for (Booking slot : this.bookedSlots[i]) {
         if (slot.confirmationID.equals(confirmationID)) {
           return slot;
         }
@@ -140,65 +141,27 @@ public String removeTimeSlot(String prev_bookingId, String userInfo) {
     int currentStartHour = this.startHour[dayIndex];
     int currentStartMinute = this.startMinute[dayIndex];
 
-    for (TimeSlot bookedSlot : this.bookedSlots[dayIndex]) {
+    for (Booking bookedSlot : this.bookedSlots[dayIndex]) {
       // Add available slot before the booked slot
-      if (currentStartHour < bookedSlot.startHour ||
-          (currentStartHour == bookedSlot.startHour && currentStartMinute < bookedSlot.startMinute)) {
+      if (currentStartHour < bookedSlot.timeSlot.startHour ||
+          (currentStartHour == bookedSlot.timeSlot.startHour && currentStartMinute < bookedSlot.timeSlot.startMinute)) {
         availableSlots
-            .add(new TimeSlot(currentStartHour, currentStartMinute, bookedSlot.startHour, bookedSlot.startMinute));
+            .add(new TimeSlot(currentStartHour, currentStartMinute, bookedSlot.timeSlot.startHour,
+                bookedSlot.timeSlot.startMinute, day));
       }
       // Update the start time to the end of the booked slot
-      currentStartHour = bookedSlot.endHour;
-      currentStartMinute = bookedSlot.endMinute;
+      currentStartHour = bookedSlot.timeSlot.endHour;
+      currentStartMinute = bookedSlot.timeSlot.endMinute;
     }
 
     // Add the remaining available slot after the last booked slot
     if (currentStartHour < this.endHour[dayIndex] ||
         (currentStartHour == this.endHour[dayIndex] && currentStartMinute < this.endMinute[dayIndex])) {
       availableSlots
-          .add(new TimeSlot(currentStartHour, currentStartMinute, this.endHour[dayIndex], this.endMinute[dayIndex]));
+          .add(new TimeSlot(currentStartHour, currentStartMinute, this.endHour[dayIndex], this.endMinute[dayIndex],
+              day));
     }
 
     return availableSlots;
-  }
-
-  public class TimeSlot {
-    int startHour;
-    int startMinute;
-    int endHour;
-    int endMinute;
-    String confirmationID;
-    String userInfo;
-
-    TimeSlot(int startHour, int startMinute, int endHour, int endMinute) {
-      this.startHour = startHour;
-      this.startMinute = startMinute;
-      this.endHour = endHour;
-      this.endMinute = endMinute;
-    }
-
-    TimeSlot(int startHour, int startMinute, int endHour, int endMinute, String confirmationID, String userInfo) {
-      this.startHour = startHour;
-      this.startMinute = startMinute;
-      this.endHour = endHour;
-      this.endMinute = endMinute;
-      this.confirmationID = confirmationID;
-      this.userInfo = userInfo;
-    }
-
-    boolean conflictsWith(int startHour, int startMinute, int endHour, int endMinute) {
-      if (this.endHour < startHour || (this.endHour == startHour && this.endMinute <= startMinute)) {
-        return false;
-      }
-      if (this.startHour > endHour || (this.startHour == endHour && this.startMinute >= endMinute)) {
-        return false;
-      }
-      return true;
-    }
-
-    @Override
-    public String toString() {
-      return String.format("%02d%02d - %02d%02d", this.startHour, this.startMinute, this.endHour, this.endMinute);
-    }
   }
 }

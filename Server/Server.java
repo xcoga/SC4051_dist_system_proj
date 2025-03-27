@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 import Server.models.Availability;
+import Server.models.Booking;
 import Server.models.Facility;
+import Server.models.TimeSlot;
 import Server.models.BookingDetails;
 import Server.services.FacilityFactory;
 import Server.services.MonitorService;
@@ -186,11 +188,11 @@ public class Server {
                 Availability availability = requestedFacility.getAvailability();
                 String availableTimeslots = "";
                 for (DayOfWeek day : DayOfWeek.values()) {
-                  List<Availability.TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
+                  List<TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
                   if (!timeslots.isEmpty()) {
-                    availableTimeslots += day.toString() + ":";
-                    for (Availability.TimeSlot slot : timeslots) {
-                      availableTimeslots += slot.toString() + ",";
+                    availableTimeslots += day.toString() + ": ";
+                    for (TimeSlot slot : timeslots) {
+                      availableTimeslots += slot.toString() + ", ";
                     }
                     availableTimeslots += "\n";
                   }
@@ -214,10 +216,16 @@ public class Server {
           for (Facility facility : facilityFactory.getFacilities()) {
             Availability availability = facility.getAvailability();
             if (availability != null) {
-              String bookingInfo = availability.getBookingInfo(bookingID).toString();
+              Booking bookingInfo = availability.getBookingInfo(bookingID);
               if (bookingInfo != null) {
                 responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                    "status:SUCCESS\n" + bookingInfo);
+                    "status: SUCCESS\n" + 
+                    "BookingID: " + bookingInfo.confirmationID + "\n"+
+                    "User: " + bookingInfo.userInfo + "\n"+
+                    "Facility: " + facility.getName() +"\n"+
+                    "Day: " + bookingInfo.getDay() +"\n"+
+                    "StartTime: "+bookingInfo.timeSlot.getStartTime() + "\n"+
+                    "EndTime: "+bookingInfo.timeSlot.getEndTime() + "\n");
                 break;
               }
             }
@@ -393,7 +401,8 @@ public class Server {
       return responseMessage;
     }
     Availability availability = facility.getAvailability();
-    if (availability == null || !availability.isAvailable(day, startHour, startMinute, endHour, endMinute)) {
+    TimeSlot bookTimeSlot = new TimeSlot(startHour, startMinute, endHour, endMinute, day);
+    if (availability == null || !availability.isAvailable(bookTimeSlot)) {
       responseMessage = new RequestMessage(
           Operation.WRITE.getOpCode(), 
           request.getRequestID(), 
@@ -406,11 +415,8 @@ public class Server {
     String userInfo = userAddress.toString() + ":" + userPort;
 
     // Book the facility and get the confirmation ID
-    String confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
-
-    String dayStr = day.name();
-    String startTimeStr = String.format("%02d%02d", startHour, startMinute);
-    String endTimeStr = String.format("%02d%02d", endHour, endMinute);
+    String confirmationID = availability.bookTimeSlot(userInfo, bookTimeSlot);
+    
 
     //Craft response message to send back to client
     responseMessage = new RequestMessage(
@@ -424,7 +430,7 @@ public class Server {
           "day:%s%n" +
           "startTime:%s%n" +
           "endTime:%s",
-          confirmationID, userInfo, facilityName, dayStr, startTimeStr, endTimeStr
+          confirmationID, userInfo, facilityName, bookTimeSlot.getDay(), bookTimeSlot.getStartTime(), bookTimeSlot.getEndTime()
         )
     );
 
@@ -452,6 +458,8 @@ public class Server {
     int endHour = booking.getEndHour();
     int endMinute = booking.getEndMinute();
 
+    TimeSlot newTimeSlot = new TimeSlot(startHour, startMinute, endHour, endMinute, day);
+
     RequestMessage responseMessage;
 
     Facility facility = facilityFactory.getFacility(facilityName);
@@ -472,25 +480,24 @@ public class Server {
     // Book the facility and get the confirmation ID
     try{
       String delete_confirmationID = availability.removeTimeSlot(prev_bookingId, userInfo);
-      String booking_confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+
+      String booking_confirmationID = availability.bookTimeSlot(userInfo, newTimeSlot);
 
       String dayStr = day.name();
-      String startTimeStr = String.format("%02d%02d", startHour, startMinute);
-      String endTimeStr = String.format("%02d%02d", endHour, endMinute);
 
       responseMessage = new RequestMessage(
           Operation.UPDATE.getOpCode(),
           requestMessage.getRequestID(),
           String.format(
-          "status:SUCCESS%n" +
-          "oldBookingID:%s%n" +
-          "newBookingID:%s%n" +
-          "user:%s%n" +
-          "facility:%s%n" +
-          "day:%s%n" +
-          "startTime:%s%n" +
-          "endTime:%s",
-          delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, startTimeStr, endTimeStr
+          "status:SUCCESS%s\n" +
+          "oldBookingID:%s\n" +
+          "newBookingID:%s\n" +
+          "user:%s\n" +
+          "facility:%s\n" +
+          "day:%s\n" +
+          "startTime:%s\n" +
+          "endTime:%s\n",
+          delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, newTimeSlot.getStartTime(), newTimeSlot.getEndTime()
         )
       );
 
