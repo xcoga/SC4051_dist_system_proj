@@ -400,14 +400,26 @@ public class Server {
     String userInfo = userAddress.toString() + ":" + userPort;
 
     // Book the facility and get the confirmation ID
-    String confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
-    
+    String bookingID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+
+    String dayStr = day.name();
+    String startTimeStr = String.format("%02d%02d", startHour, startMinute);
+    String endTimeStr = String.format("%02d%02d", endHour, endMinute);
 
     //Craft response message to send back to client
     responseMessage = new RequestMessage(
         Operation.WRITE.getOpCode(), 
         request.getRequestID(), 
-        String.format("status:SUCCESS%nbookingID:%s%nuser:%s", confirmationID, userInfo)
+        String.format(
+          "status:SUCCESS%n" +
+          "bookingID:%s%n" +
+          "user:%s%n" +
+          "facility:%s%n" +
+          "day:%s%n" +
+          "startTime:%s%n" +
+          "endTime:%s",
+          bookingID, userInfo, facilityName, dayStr, startTimeStr, endTimeStr
+        )
     );
 
     return responseMessage;
