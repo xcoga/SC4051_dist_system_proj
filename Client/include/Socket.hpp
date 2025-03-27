@@ -32,7 +32,6 @@ public:
     int getSocketName(struct sockaddr *addr);
     void closeSocket();
 
-
 private:
     int sockfd;
 

@@ -1,6 +1,7 @@
 #include "Client.hpp"
 
 #include "Serializer.hpp"
+#include "UserInterface.hpp"
 
 Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 {
@@ -26,14 +27,24 @@ Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
         exit(1);
     }
 
-    printBoundSocketInfo();
-
     makeRemoteSocketAddress(&serverAddr, const_cast<char *>(serverIp.c_str()), serverPort);
+
+    UserInterface::displayConnectionInfo(socket, serverAddr);
 }
 
 Client::~Client()
 {
     socket.closeSocket();
+}
+
+std::string Client::queryFacilityNames()
+{
+    std::string messageData = "facility,ALL";
+
+    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    return receiveResponse();
 }
 
 std::string Client::queryAvailability(std::string facilityName)
@@ -43,7 +54,6 @@ std::string Client::queryAvailability(std::string facilityName)
     RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
     sendRequest(requestMessage);
 
-    // TODO: Parse response then return
     return receiveResponse();
 }
 
@@ -58,19 +68,30 @@ std::string Client::bookFacility(std::string facilityName, std::string dayOfWeek
     std::string messageData = "facility," + facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
 
     RequestMessage requestMessage(RequestMessage::WRITE, requestID++, messageData);
+    sendRequest(requestMessage);
 
     return receiveResponse();
 }
 
 std::string Client::queryBooking(std::string bookingID)
 {
-    // TODO: Implement query booking functionality
-    return "";
+    std::string messageData = "booking," + bookingID;
+
+    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    return receiveResponse();
 }
 
 std::string Client::changeBooking(std::string bookingID, std::string newDayOfWeek, std::string newStartTime, std::string newEndTime)
 {
-    // TODO: Implement change booking functionality
+    // TODO: Implement change booking functionality (use booking ID?)
+    return "";
+}
+
+std::string Client::deleteBooking(std::string bookingID)
+{
+    // TODO: Implement delete booking functionality (use booking ID?)
     return "";
 }
 
@@ -80,10 +101,29 @@ std::string Client::monitorAvailability(std::string facilityName)
     return "";
 }
 
-// TODO: Implement idempotent and non-idempotent operations
-// TODO: Repeated request operations, so requestID should not increment
+std::string Client::rateFacility(std::string facilityName, float rating)
+{
+    std::string messageData = "rating," + facilityName + "," + std::to_string(rating);
 
-std::string Client::sendCustomMessage(std::string messageData)
+    RequestMessage requestMessage(RequestMessage::UPDATE, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    return receiveResponse();
+}
+
+std::string Client::queryRating(std::string facilityName)
+{
+    std::string messageData = "rating," + facilityName;
+
+    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    return receiveResponse();
+}
+
+// TODO: Need to simulate repeated request operations, so requestID should not increment
+
+std::string Client::echoMessage(std::string messageData)
 {
     std::cout << RequestMessage::ECHO << std::endl;
     std::cout << requestID + 1 << std::endl;
@@ -121,20 +161,6 @@ void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int
         }
         memcpy(&(sa->sin_addr), host->h_addr, host->h_length);
     }
-}
-
-void Client::printBoundSocketInfo()
-{
-    if (socket.getSocketName((struct sockaddr *)&clientAddr) < 0)
-    {
-        perror("Error getting socket name");
-        exit(1);
-    }
-
-    // Print the bound IP address and port
-    char ipStr[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
-    std::cout << "Client socket bound to IP " << ipStr << " and port " << ntohs(clientAddr.sin_port) << std::endl;
 }
 
 void Client::sendRequest(const RequestMessage &request)

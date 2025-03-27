@@ -6,14 +6,19 @@
 class ResponseParser
 {
 public:
-    static void parseResponse(const std::string &response);
+    static std::vector<std::string> parseQueryFacilityNamesResponse(const std::string &response);
     // static void parseQueryAvailabilityResponse(const std::string &response);
     // static void parseBookFacilityResponse(const std::string &response);
+    // static void parseQueryBookingResponse(const std::string &response);
     // static void parseChangeBookingResponse(const std::string &response);
+    // static void parseDeleteBookingResponse(const std::string &response);
     // static void parseMonitorAvailabilityResponse(const std::string &response);
-    // TODO: Parse idempotent and non-idempotent operation responses
+    // static void parseRateFacilityResponse(const std::string &response);
+    // static void parseQueryRatingResponse(const std::string &response);
+    static std::vector<std::string> parseEchoMessageResponse(const std::string &response);
 
-// private:
+private:
+    static bool isErrorResponse(const std::string &response, std::string &errorMessage);
     // static void checkResponseParity(const std::string &response);
 };
 
