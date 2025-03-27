@@ -7,7 +7,7 @@ class ResponseParser
 {
 public:
     static std::vector<std::string> parseQueryFacilityNamesResponse(const std::string &response);
-    // static void parseQueryAvailabilityResponse(const std::string &response);
+    static std::vector<std::string> parseQueryAvailabilityResponse(const std::string &response);
     // static void parseBookFacilityResponse(const std::string &response);
     // static void parseQueryBookingResponse(const std::string &response);
     // static void parseChangeBookingResponse(const std::string &response);
@@ -18,7 +18,7 @@ public:
     static std::vector<std::string> parseEchoMessageResponse(const std::string &response);
 
 private:
-    static bool isErrorResponse(const std::string &response, std::string &errorMessage);
+    static bool isErrorResponse(std::istringstream &responseStream);
     // static void checkResponseParity(const std::string &response);
 };
 
