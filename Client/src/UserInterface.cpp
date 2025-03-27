@@ -231,7 +231,7 @@ void UserInterface::handleBookFacility()
     endTime = promptTime("Enter end time (HHMM): ");
 
     response = client.bookFacility(facilityName, dayOfWeek, startTime, endTime);
-    parsedResponse = ResponseParser::parseBookFacilityResponse(response, facilityName, dayOfWeek, startTime, endTime);
+    parsedResponse = ResponseParser::parseBookFacilityResponse(response);
     std::cout << generateBox(parsedResponse);
 }
 
@@ -254,16 +254,20 @@ void UserInterface::handleChangeBooking()
     std::cout << std::endl;
     std::cout << "Change Existing Booking selected." << std::endl;
 
-    std::string bookingID, dayOfWeek, newStartTime, newEndTime;
-    std::string response;
+    std::string bookingID, dayOfWeek, newStartTime, newEndTime, response;
+    std::vector<std::string> parsedResponse;
 
     bookingID = promptBookingID("Enter booking ID: ");
+
+    // TODO: Query existing booking details and display them to the user
+
     dayOfWeek = promptDayOfWeek("Enter new day of week (1-7): ");
     newStartTime = promptTime("Enter new start time (HHMM): ");
     newEndTime = promptTime("Enter new end time (HHMM): ");
 
     response = client.changeBooking(bookingID, dayOfWeek, newStartTime, newEndTime);
-    std::cout << "Received response from server: " << response << std::endl;
+    parsedResponse = ResponseParser::parseChangeBookingResponse(response);
+    std::cout << generateBox(parsedResponse);
 }
 
 void UserInterface::handleDeleteBooking()
@@ -271,11 +275,23 @@ void UserInterface::handleDeleteBooking()
     std::cout << std::endl;
     std::cout << "Delete Existing Booking selected." << std::endl;
 
-    std::string bookingID;
-    std::string response;
+    std::string bookingID, response;
+    std::vector<std::string> parsedResponse;
 
     bookingID = promptBookingID("Enter booking ID: ");
+
+    // TODO: Query existing booking details and display them to the user
+
+    // Prompt user for confirmation before deleting booking
+    bool confirmation = promptConfirmation("Delete booking (yes/no)? ");
+    if (!confirmation)
+    {
+        std::cout << "Booking not deleted. Returning to main menu..." << std::endl;
+        return;
+    }
+
     response = client.deleteBooking(bookingID);
+
 
     std::cout << "Received response from server: " << response << std::endl;
 }
@@ -299,15 +315,21 @@ void UserInterface::handleRateFacility()
     std::cout << std::endl;
     std::cout << "Rate Facility selected." << std::endl;
 
-    std::string facilityName;
+    std::string facilityName, response;
     float rating;
-    std::string response;
+    std::vector<std::string> parsedResponse;
+
+    // Display list of facility names to choose from
+    response = client.queryFacilityNames();
+    parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
+    std::cout << generateBox(parsedResponse);
 
     facilityName = promptFacilityName("Enter facility name: ");
     rating = promptRating("Enter rating (1-5): ");
-    response = client.rateFacility(facilityName, rating);
 
-    std::cout << "Received response from server: " << response << std::endl;
+    response = client.rateFacility(facilityName, rating);
+    parsedResponse = ResponseParser::parseRateFacilityResponse(response);
+    std::cout << generateBox(parsedResponse);
 }
 
 void UserInterface::handleQueryRating()
@@ -315,8 +337,13 @@ void UserInterface::handleQueryRating()
     std::cout << std::endl;
     std::cout << "Query Facility Rating selected." << std::endl;
 
-    std::string facilityName;
-    std::string response;
+    std::string facilityName, response;
+    std::vector<std::string> parsedResponse;
+
+    // Display list of facility names to choose from
+    response = client.queryFacilityNames();
+    parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
+    std::cout << generateBox(parsedResponse);
 
     facilityName = promptFacilityName("Enter facility name: ");
     response = client.queryRating(facilityName);
