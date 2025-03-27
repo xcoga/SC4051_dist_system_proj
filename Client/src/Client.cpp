@@ -135,10 +135,6 @@ std::string Client::queryRating(std::string facilityName)
 
 std::string Client::echoMessage(std::string messageData)
 {
-    std::cout << RequestMessage::ECHO << std::endl;
-    std::cout << requestID + 1 << std::endl;
-    std::cout << messageData << std::endl;
-
     RequestMessage requestMessage(RequestMessage::ECHO, requestID++, messageData);
     sendRequest(requestMessage);
 
@@ -198,19 +194,13 @@ std::string Client::receiveResponse()
     {
         int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
 
-        // Check parity
+        // TODO: Check parity
 
         // Deserialize response
         std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
         std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
 
         std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
-
-        // // Display deserialized message
-        // std::cout << "Deserialized message:" << std::endl;
-        // std::cout << "Request ID: " << responseMessage->getRequestID() << std::endl;
-        // std::cout << "Message Type: " << responseMessage->getRequestType() << std::endl;
-        // std::cout << "Message: " << responseMessage->getData() << std::endl;
         messageData = responseMessage->getData();
     }
     catch(const std::exception& e)
