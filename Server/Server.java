@@ -178,8 +178,9 @@ public class Server {
               break;
             default:
               // return specified facility information
-              System.out.println("handleRequest: Requested facility: " + requestString[1]);
-              Facility requestedFacility = facilityFactory.getFacility(requestString[1]);
+              String facilityName = requestString[1];
+              System.out.println("handleRequest: Requested facility: " + facilityName);
+              Facility requestedFacility = facilityFactory.getFacility(facilityName);
               if (requestedFacility != null) {
                 // Get available timeslots for the requested facility
                 Availability availability = requestedFacility.getAvailability();
@@ -194,7 +195,12 @@ public class Server {
                     availableTimeslots += "\n";
                   }
                 }
-                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(), String.format("status:SUCCESS%navailableTimeslots:%n%s", availableTimeslots));
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(), String.format(
+                  "status:SUCCESS%n" +
+                  "facility:%s%n" +
+                  "availableTimeslots:%n%s",
+                  facilityName, availableTimeslots
+                ));
               } else {
                 responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                     "status:ERROR\nmessage:Facility not found");
