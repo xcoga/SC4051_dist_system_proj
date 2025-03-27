@@ -486,9 +486,9 @@ public class Server {
       String dayStr = day.name();
 
       responseMessage = new RequestMessage(
-          Operation.UPDATE.getOpCode(),
-          requestMessage.getRequestID(),
-          String.format(
+        Operation.UPDATE.getOpCode(),
+        requestMessage.getRequestID(),
+        String.format(
           "status:SUCCESS%s\n" +
           "oldBookingID:%s\n" +
           "newBookingID:%s\n" +
@@ -590,9 +590,9 @@ public class Server {
       requestMessage.getRequestID(),
       String.format(
         "status:SUCCESS%n" +
-        "user:%s%n",
+        "user:%s%n" +
         "facility:%s%n" +
-        "rating:%.1f" +
+        "rating:%.1f",
         userInfo, facilityName, rating
       )
     );

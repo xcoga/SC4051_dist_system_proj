@@ -11,10 +11,10 @@ public:
     static std::vector<std::string> parseBookFacilityResponse(const std::string &response);
     static std::vector<std::string> parseQueryBookingResponse(const std::string &response);
     static std::vector<std::string> parseChangeBookingResponse(const std::string &response);
-    // static std::vector<std::string> parseDeleteBookingResponse(const std::string &response);
-    // static std::vector<std::string> parseMonitorAvailabilityResponse(const std::string &response);
+    static std::vector<std::string> parseDeleteBookingResponse(const std::string &response);
+    static std::vector<std::string> parseMonitorAvailabilityResponse(const std::string &response);
     static std::vector<std::string> parseRateFacilityResponse(const std::string &response);
-    // static std::vector<std::string> parseQueryRatingResponse(const std::string &response);
+    static std::vector<std::string> parseQueryRatingResponse(const std::string &response);
     static std::vector<std::string> parseEchoMessageResponse(const std::string &response);
 
 private:
