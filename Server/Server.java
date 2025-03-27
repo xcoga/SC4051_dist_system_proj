@@ -127,7 +127,7 @@ public class Server {
     } catch (Exception e) {
       System.err.println("Error deserializing request: " + e.getMessage());
 
-      responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "status:ERROR\nmessage: bad request");
+      responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "status:ERROR\nmessage:Bad request");
       return responseMessage;
     }
     // do nothing if requested server to echo
@@ -190,9 +190,9 @@ public class Server {
                 for (DayOfWeek day : DayOfWeek.values()) {
                   List<TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
                   if (!timeslots.isEmpty()) {
-                    availableTimeslots += day.toString() + ": ";
+                    availableTimeslots += day.toString() + ":";
                     for (TimeSlot slot : timeslots) {
-                      availableTimeslots += slot.toString() + ", ";
+                      availableTimeslots += slot.toString() + ",";
                     }
                     availableTimeslots += "\n";
                   }
