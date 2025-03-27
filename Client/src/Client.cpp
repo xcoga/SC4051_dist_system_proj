@@ -89,13 +89,13 @@ std::string Client::queryBooking(std::string bookingID)
 }
 
 std::string Client::changeBooking(
-    std::string bookingID,
+    std::string oldBookingID,
     std::string newDayOfWeek,
     std::string newStartTime,
     std::string newEndTime
 )
 {
-    // TODO: Implement change booking functionality (use booking ID?)
+    // TODO: Implement change booking functionality
     return "";
 }
 
