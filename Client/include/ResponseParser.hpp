@@ -8,7 +8,13 @@ class ResponseParser
 public:
     static std::vector<std::string> parseQueryFacilityNamesResponse(const std::string &response);
     static std::vector<std::string> parseQueryAvailabilityResponse(const std::string &response, const std::string &facilityName);
-    // static void parseBookFacilityResponse(const std::string &response);
+    static std::vector<std::string> parseBookFacilityResponse(
+        const std::string &response,
+        const std::string &facilityName,
+        const std::string &dayOfWeek,
+        const std::string &startTime,
+        const std::string &endTime
+    );
     // static void parseQueryBookingResponse(const std::string &response);
     // static void parseChangeBookingResponse(const std::string &response);
     // static void parseDeleteBookingResponse(const std::string &response);

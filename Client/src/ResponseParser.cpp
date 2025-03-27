@@ -16,10 +16,10 @@ std::vector<std::string> ResponseParser::parseQueryFacilityNamesResponse(const s
         parsedResponse.push_back("Error");
 
         std::string line;
-        if (std::getline(responseStream, line) && line.find("message: ") == 0)
+        if (std::getline(responseStream, line) && line.find("message:") == 0)
         {
             // Remove "message: " prefix
-            std::string errorMessage = line.substr(9);
+            std::string errorMessage = line.substr(8);
             parsedResponse.push_back(errorMessage);
         }
     }
@@ -28,12 +28,24 @@ std::vector<std::string> ResponseParser::parseQueryFacilityNamesResponse(const s
         parsedResponse.push_back("Facility Names");
 
         // Add comma-separated facility names to the parsed response
-        std::string facilityName;
-        while (std::getline(responseStream, facilityName, ','))
+        std::string line;
+        while (std::getline(responseStream, line))
         {
-            if (!facilityName.empty())
+            if (line.find("facilityNames:") == 0)
             {
-                parsedResponse.push_back(facilityName);
+                // Extract the list of facility names
+                std::string facilityNames = line.substr(14); // Remove "facilityNames:" prefix
+                std::istringstream facilityNamesStream(facilityNames);
+                std::string facilityName;
+
+                // Split the facility names by comma
+                while (std::getline(facilityNamesStream, facilityName, ','))
+                {
+                    if (!facilityName.empty())
+                    {
+                        parsedResponse.push_back(facilityName);
+                    }
+                }
             }
         }
     }
@@ -51,10 +63,10 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
         parsedResponse.push_back("Error");
 
         std::string line;
-        if (std::getline(responseStream, line) && line.find("message: ") == 0)
+        if (std::getline(responseStream, line) && line.find("message:") == 0)
         {
             // Remove "message: " prefix
-            std::string errorMessage = line.substr(9);
+            std::string errorMessage = line.substr(8);
             parsedResponse.push_back(errorMessage);
         }
     }
@@ -66,7 +78,7 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
         while (std::getline(responseStream, line))
         {
             // Skip the header line
-            if (line.find("Available timeslots:") == 0)
+            if (line.find("availableTimeslots:") == 0)
             {
                 continue;
             }
@@ -76,12 +88,12 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
             std::string day, timeslot, formattedTimeslots;
             if (std::getline(lineStream, day, ':'))
             {
-                formattedTimeslots = day + ":";
+                formattedTimeslots = day + ": ";
 
                 while (std::getline(lineStream, timeslot, ','))
                 {
                     // Ignore whitespaces as well
-                    if (!timeslot.empty() && timeslot != " ")
+                    if (!timeslot.empty())
                     {
                         size_t dashPos = timeslot.find('-');
                         if (dashPos != std::string::npos)
@@ -89,20 +101,72 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
                             timeslot.replace(dashPos, 1, "to");
                         }
 
-                        formattedTimeslots += (timeslot + ",");
+                        formattedTimeslots += (timeslot + ", ");
                     }
                 }
 
-                // Remove trailing comma
-                if (formattedTimeslots.size() > 1)
+                // Remove trailing comma and space
+                if (formattedTimeslots.size() > 2)
                 {
-                    formattedTimeslots.erase(formattedTimeslots.size() - 1);
+                    formattedTimeslots.erase(formattedTimeslots.size() - 2, 2);
                 }
 
                 // Add formatted timeslots to parsed response
                 parsedResponse.push_back(formattedTimeslots);
             }
         }
+    }
+
+    return parsedResponse;
+}
+
+std::vector<std::string> ResponseParser::parseBookFacilityResponse(
+    const std::string &response,
+    const std::string &facilityName,
+    const std::string &dayOfWeek,
+    const std::string &startTime,
+    const std::string &endTime)
+{
+    std::vector<std::string> parsedResponse;
+    std::istringstream responseStream(response);
+
+    if (isErrorResponse(responseStream))
+    {
+        parsedResponse.push_back("Error");
+
+        std::string line;
+        if (std::getline(responseStream, line) && line.find("message:") == 0)
+        {
+            // Remove "message: " prefix
+            std::string errorMessage = line.substr(8);
+            parsedResponse.push_back(errorMessage);
+        }
+    }
+    else
+    {
+        parsedResponse.push_back("Booking Details");
+
+        std::string line;
+        while (std::getline(responseStream, line))
+        {
+            // Extract the booking ID
+            if (line.find("bookingID:") == 0)
+            {
+                // Remove "bookingID:" prefix
+                parsedResponse.push_back("Booking ID: " + line.substr(10));
+            }
+
+            if (line.find("user:") == 0)
+            {
+                // Remove "user:" prefix
+                parsedResponse.push_back("User: " + line.substr(5));
+            }
+        }
+
+        parsedResponse.push_back("Facility: " + facilityName);
+        parsedResponse.push_back("Day: " + dayOfWeek);
+        parsedResponse.push_back("Start Time: " + startTime);
+        parsedResponse.push_back("End Time: " + endTime);
     }
 
     return parsedResponse;
@@ -125,7 +189,7 @@ bool ResponseParser::isErrorResponse(std::istringstream &responseStream)
 {
     std::string line;
 
-    if (std::getline(responseStream, line) && line.find("ERROR") == 0)
+    if (std::getline(responseStream, line) && line.find("status:ERROR") == 0)
     {
         return true;
     }

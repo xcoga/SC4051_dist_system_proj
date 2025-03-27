@@ -26,9 +26,19 @@ public:
 
     std::string queryFacilityNames();
     std::string queryAvailability(std::string facilityName);
-    std::string bookFacility(std::string facilityName, std::string dayOfWeek, std::string startTime, std::string endTime);
+    std::string bookFacility(
+        std::string facilityName,
+        std::string dayOfWeek,
+        std::string startTime,
+        std::string endTime
+    );
     std::string queryBooking(std::string bookingID);
-    std::string changeBooking(std::string bookingID, std::string newDayOfWeek, std::string newStartTime, std::string newEndTime);
+    std::string changeBooking(
+        std::string bookingID,
+        std::string newDayOfWeek,
+        std::string newStartTime,
+        std::string newEndTime
+    );
     std::string deleteBooking(std::string bookingID);
     std::string monitorAvailability(std::string facilityName);
     std::string rateFacility(std::string facilityName, float rating);       // Non-idempotent operation
