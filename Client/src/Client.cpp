@@ -95,13 +95,13 @@ std::string Client::changeBooking(
     std::string newEndTime
 )
 {
-    // TODO: Implement change booking functionality
+    // TODO: Implement change booking functionality using only booking ID
     return "";
 }
 
 std::string Client::deleteBooking(std::string bookingID)
 {
-    // TODO: Implement delete booking functionality (use booking ID?)
+    // TODO: Implement delete booking functionality using only booking ID
     return "";
 }
 
