@@ -151,7 +151,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 1,
   "requestID": <any_integer>,
-  "data": "status:SUCCESS\nbookingID:<bookingID>\nuser:<user_address>:<user_port>"
+  "data": "status:SUCCESS\nbookingID:<bookingID>\nuser:<user_address>:<user_port>\nfacility:Weekday1\nday:MONDAY\nstartTime:1000\nendTime:1200"
 }
 ```
 

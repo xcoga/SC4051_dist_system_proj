@@ -149,7 +149,6 @@ std::vector<std::string> ResponseParser::parseBookFacilityResponse(
         std::string line;
         while (std::getline(responseStream, line))
         {
-            // Extract the booking ID
             if (line.find("bookingID:") == 0)
             {
                 // Remove "bookingID:" prefix
@@ -161,12 +160,31 @@ std::vector<std::string> ResponseParser::parseBookFacilityResponse(
                 // Remove "user:" prefix
                 parsedResponse.push_back("User: " + line.substr(5));
             }
-        }
 
-        parsedResponse.push_back("Facility: " + facilityName);
-        parsedResponse.push_back("Day: " + dayOfWeek);
-        parsedResponse.push_back("Start Time: " + startTime);
-        parsedResponse.push_back("End Time: " + endTime);
+            if (line.find("facility:") == 0)
+            {
+                // Remove "facility:" prefix
+                parsedResponse.push_back("Facility: " + line.substr(9));
+            }
+
+            if (line.find("day:") == 0)
+            {
+                // Remove "day:" prefix
+                parsedResponse.push_back("Day: " + line.substr(4));
+            }
+
+            if (line.find("startTime:") == 0)
+            {
+                // Remove "startTime:" prefix
+                parsedResponse.push_back("Start Time: " + line.substr(10));
+            }
+
+            if (line.find("endTime:") == 0)
+            {
+                // Remove "endTime:" prefix
+                parsedResponse.push_back("End Time: " + line.substr(8));
+            }
+        }
     }
 
     return parsedResponse;
