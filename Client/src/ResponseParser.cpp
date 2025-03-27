@@ -41,16 +41,16 @@ std::vector<std::string> ResponseParser::parseQueryFacilityNamesResponse(const s
     return parsedResponse;
 }
 
-std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const std::string &response)
+std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const std::string &response, const std::string &facilityName)
 {
     std::vector<std::string> parsedResponse;
     std::istringstream responseStream(response);
-    std::string line;
 
     if (isErrorResponse(responseStream))
     {
         parsedResponse.push_back("Error");
 
+        std::string line;
         if (std::getline(responseStream, line) && line.find("message: ") == 0)
         {
             // Remove "message: " prefix
@@ -60,9 +60,49 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
     }
     else
     {
-        parsedResponse.push_back("Facility Availability");
+        parsedResponse.push_back("Availability for " + facilityName);
 
-        // TODO
+        std::string line;
+        while (std::getline(responseStream, line))
+        {
+            // Skip the header line
+            if (line.find("Available timeslots:") == 0)
+            {
+                continue;
+            }
+
+            // Parse each day's availability
+            std::istringstream lineStream(line);
+            std::string day, timeslot, formattedTimeslots;
+            if (std::getline(lineStream, day, ':'))
+            {
+                formattedTimeslots = day + ":";
+
+                while (std::getline(lineStream, timeslot, ','))
+                {
+                    // Ignore whitespaces as well
+                    if (!timeslot.empty() && timeslot != " ")
+                    {
+                        size_t dashPos = timeslot.find('-');
+                        if (dashPos != std::string::npos)
+                        {
+                            timeslot.replace(dashPos, 1, "to");
+                        }
+
+                        formattedTimeslots += (timeslot + ",");
+                    }
+                }
+
+                // Remove trailing comma
+                if (formattedTimeslots.size() > 1)
+                {
+                    formattedTimeslots.erase(formattedTimeslots.size() - 1);
+                }
+
+                // Add formatted timeslots to parsed response
+                parsedResponse.push_back(formattedTimeslots);
+            }
+        }
     }
 
     return parsedResponse;
