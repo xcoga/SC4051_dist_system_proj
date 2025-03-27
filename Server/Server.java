@@ -561,24 +561,41 @@ public class Server {
 
 
   private static String getRating(Facility facility) {
-    return "status:SUCCESS\nrating:" + facility.getRating().getAverageRating();
+    String facilityName = facility.getName();
+    double avgRating = facility.getRating().getAverageRating();
+
+    String response = String.format(
+      "status:SUCCESS%n" +
+      "facility:%s%n" +
+      "rating:%.1f",
+      facilityName, avgRating
+    );
+
+    return response;
   }
 
 
 
   private static RequestMessage addRating(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
     String[] requestString = requestMessage.getData().split(",");
-    Facility facility = facilityFactory.getFacility(requestString[1]);
+    String facilityName = requestString[1];
+    Facility facility = facilityFactory.getFacility(facilityName);
     double rating = Double.parseDouble(requestString[2]);
 
     facility.addRating(rating);
     String userInfo = userAddress.toString() + ":" + userPort;
 
     RequestMessage responseMessage = new RequestMessage(
-                                            Operation.UPDATE.getOpCode(),
-                                            requestMessage.getRequestID(),
-                                            String.format("status:SUCCESS%nrating:%s%nuser:%s", rating, userInfo)
-                                          );
+      Operation.UPDATE.getOpCode(),
+      requestMessage.getRequestID(),
+      String.format(
+        "status:SUCCESS%n" +
+        "user:%s%n",
+        "facility:%s%n" +
+        "rating:%.1f" +
+        userInfo, facilityName, rating
+      )
+    );
     return responseMessage;
   }
 

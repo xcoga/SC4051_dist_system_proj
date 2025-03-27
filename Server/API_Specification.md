@@ -139,7 +139,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 0,
   "requestID": <any_integer>,
-  "data": "status:SUCCESS\nrating:5.0"
+  "data": "status:SUCCESS\nfacility:<facilityName>\nrating:4.55"
 }
 ```
 
@@ -242,7 +242,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 2,
   "requestID": <any_integer>,
-  "data": "status:SUCCESS\nrating:5.0\nuser:<user_address>:<user_port>"
+  "data": "status:SUCCESS\nuser:<user_address>:<user_port>\nfacility:<facilityName>\nrating:5.0"
 }
 ```
 
