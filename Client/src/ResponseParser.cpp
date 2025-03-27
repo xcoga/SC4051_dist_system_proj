@@ -130,6 +130,12 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
 
 std::vector<std::string> ResponseParser::parseBookFacilityResponse(const std::string &response)
 {
+    // Both queryBooking and bookFacility responses are the same
+    return parseQueryBookingResponse(response);
+}
+
+std::vector<std::string> ResponseParser::parseQueryBookingResponse(const std::string &response)
+{
     std::vector<std::string> parsedResponse;
     std::istringstream responseStream(response);
 

@@ -240,13 +240,14 @@ void UserInterface::handleQueryBooking()
     std::cout << std::endl;
     std::cout << "Query Existing Booking selected." << std::endl;
 
-    std::string bookingID;
-    std::string response;
+    std::string bookingID, response;
+    std::vector<std::string> parsedResponse;
 
     bookingID = promptBookingID("Enter booking ID: ");
-    response = client.queryBooking(bookingID);
 
-    std::cout << "Received response from server: " << response << std::endl;
+    response = client.queryBooking(bookingID);
+    parsedResponse = ResponseParser::parseQueryBookingResponse(response);
+    std::cout << generateBox(parsedResponse);
 }
 
 void UserInterface::handleChangeBooking()
