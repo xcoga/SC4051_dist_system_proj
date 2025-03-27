@@ -188,7 +188,6 @@ void UserInterface::handleQueryFacilityNames()
 
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
-
     std::cout << generateBox(parsedResponse);
 }
 
@@ -197,15 +196,19 @@ void UserInterface::handleQueryAvailability()
     std::cout << std::endl;
     std::cout << "Query Facility Availability selected." << std::endl;
 
-    // TODO: Display list of names first
+    std::string facilityName, response;
+    std::vector<std::string> parsedResponse;
 
-    std::string facilityName;
-    std::string response;
+    // Display list of facility names to choose from
+    response = client.queryFacilityNames();
+    parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
+    std::cout << generateBox(parsedResponse);
 
+    // Prompt user to enter facility name to check availability for
     facilityName = promptFacilityName("Enter facility name: ");
     response = client.queryAvailability(facilityName);
-
-    std::cout << "Received response from server: " << response << std::endl;
+    parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response, facilityName);
+    std::cout << generateBox(parsedResponse);
 }
 
 void UserInterface::handleBookFacility()
