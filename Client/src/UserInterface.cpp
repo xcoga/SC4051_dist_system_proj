@@ -218,6 +218,12 @@ void UserInterface::handleBookFacility()
 
     std::string facilityName, dayOfWeek, startTime, endTime;
     std::string response;
+    std::vector<std::string> parsedResponse;
+
+    // Display list of facility names to choose from
+    response = client.queryFacilityNames();
+    parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
+    std::cout << generateBox(parsedResponse);
 
     facilityName = promptFacilityName("Enter facility name: ");
     dayOfWeek = promptDayOfWeek("Enter choice (1-7): ");
@@ -225,7 +231,8 @@ void UserInterface::handleBookFacility()
     endTime = promptTime("Enter end time (HHMM): ");
 
     response = client.bookFacility(facilityName, dayOfWeek, startTime, endTime);
-    std::cout << "Received response from server: " << response << std::endl;
+    parsedResponse = ResponseParser::parseBookFacilityResponse(response, facilityName, dayOfWeek, startTime, endTime);
+    std::cout << generateBox(parsedResponse);
 }
 
 void UserInterface::handleQueryBooking()

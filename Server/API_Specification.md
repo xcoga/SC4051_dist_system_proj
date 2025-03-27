@@ -19,7 +19,7 @@ Generic success response
 {
   "operation": <as_per_requestType_in_request>,
   "requestID": <as_per_requestID_in_request>,
-  "data": "status: SUCCESS\n<data_string>"
+  "data": "status:SUCCESS\n<data_string>"
 }
 ```
 See below for `data_string` formats for each of the available functions.
@@ -29,7 +29,7 @@ Generic error response
 {
   "operation": <as_per_requestType_in_request>,
   "requestID": <as_per_requestID_in_request>,
-  "data": "status: ERROR\nmessage: <error_message>"
+  "data": "status:ERROR\nmessage:<error_message>"
 }
 ```
 
@@ -60,8 +60,8 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 5,
-  "requestID": <any integer>,
-  "data": <any string>
+  "requestID": <any_integer>,
+  "data": <any_string>
 }
 ```
 
@@ -70,7 +70,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 0,
-  "requestID": 0,
+  "requestID": <any_integer>,
   "data": "facility,ALL"
 }
 ```
@@ -78,8 +78,8 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 0,
-  "requestID": 0,
-  "data": "status: SUCCESS\nWeekday1,Weekday2,Weekends,"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\nfacilityNames:Weekday1,Weekday2,Weekends,"
 }
 ```
 
@@ -88,16 +88,16 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 0,
-  "requestID": 1,
-  "data": "facility,Weekday1"
+  "requestID": <any_integer>,
+  "data": "facility,<facilityName>"
 }
 ```
 #### Response:
 ```json
 {
   "operation": 0,
-  "requestID": 1,
-  "data": "status: SUCCESS\nAvailable timeslots:\nMONDAY: 0800 - 1700, \nTUESDAY: 0800 - 1700, \nWEDNESDAY: 0800 - 1700, \n"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\navailableTimeslots:\nMONDAY: 0800 - 1200,1300 - 1700,\nTUESDAY: 0800 - 1700, \nWEDNESDAY: 0800 - 1700,\n"
 }
 ```
 
@@ -106,16 +106,16 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 0,
-  "requestID": 1,
-  "data": "rating,Weekday1"
+  "requestID": <any_intger>,
+  "data": "rating,<facilityName>"
 }
 ```
 #### Response:
 ```json
 {
   "operation": 0,
-  "requestID": 1,
-  "data": "status: SUCCESS\nGet Rating: <rating>"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\nrating:5.0"
 }
 ```
 
@@ -124,16 +124,16 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 0,
-  "requestID": 1,
-  "data": "booking,<booking id>"
+  "requestID": <any_integer>,
+  "data": "booking,<bookingID>"
 }
 ```
 #### Response:
 ```json
 {
   "operation": 1,
-  "requestID": 1,
-  "data": "status: SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
 }
 ```
 
@@ -142,7 +142,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 1,
-  "requestID": 1,
+  "requestID": <any_integer>,
   "data": "Weekday1,MONDAY,10,0,12,0"
 }
 ```
@@ -150,8 +150,8 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 1,
-  "requestID": 1,
-  "data": "status: SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\nbookingID:<bookingID>\nuser:<user_address>:<user_port>"
 }
 ```
 
@@ -162,16 +162,16 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 2,
-  "requestID": 1,
-  "data": "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
+  "requestID": <any_integer>,
+  "data": "book,<oldBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
 }
 ```
 #### Response:
 ```json
 {
   "operation": 2,
-  "requestID": 2,
-  "data": "status: SUCCESS\nBooking_ID: <confirmationID> by <user_address>:<user_port>"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\nbookingID:<newBookingID>\nuser:<user_address>:<user_port>"
 }
 ```
 
@@ -181,16 +181,16 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 2,
-  "requestID": 2,
-  "data": "rating,Weekday1,5.0"
+  "requestID": <any_integer>,
+  "data": "rating,<facilityName>,<rating>"
 }
 ```
 #### Response:
 ```json
 {
   "operation": 2,
-  "requestID": 2,
-  "data": "status: SUCCESS\n Add Rating: <rating>"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\nrating:5.0\nuser:<user_address>:<user_port>"
 }
 ```
 
@@ -200,7 +200,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 3,
-  "requestID": 2,
+  "requestID": <any_integer>,
   "data": "<bookingId_to_delete>,<facilityName>"
 }
 ```
@@ -208,21 +208,21 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```json
 {
   "operation": 3,
-  "requestID": 2,
-  "data": "status: SUCCESS\n Booking_ID: <booking_id> deleted by <user_info>"
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\n Booking_ID: <booking_id> deleted by <user_info>"
 }
 ```
 
 ## Error Handling
-The server returns error messages in the format of "status: ERROR\nmessage: <error_message>".
+The server returns error messages in the format of "status:ERROR\nmessage:<error_message>".
 The server may return the following errors:
 
 | Error Message	| Description |
 | ------------- | ----------- |
-| facility not found | Returned when the requested facility does not exist. |
-| unimplemented operation | Returned when a requested operation is not yet supported. |
-| unknown operation | Returned when the requestType is invalid. |
-| bad request | Returned when the request is malformed or incorrectly formatted. |
-| invalid booking request format | Returned when the booking request format is invalid. |
-| invalid booking request parameters | Returned when the booking request parameters are invalid. |
-| facility not available at the requested time | Returned when the facility is not available at the requested time. |
+| `Facility not found` | Returned when the requested facility does not exist. |
+| `Unimplemented operation` | Returned when a requested operation is not yet supported. |
+| `Unknown operation` | Returned when the requestType is invalid. |
+| `Bad request` | Returned when the request is malformed or incorrectly formatted. |
+| `Invalid booking request format` | Returned when the booking request format is invalid. |
+| `Invalid booking request parameters` | Returned when the booking request parameters are invalid. |
+| `Facility not available at the requested time` | Returned when the facility is not available at the requested time. |

@@ -57,7 +57,12 @@ std::string Client::queryAvailability(std::string facilityName)
     return receiveResponse();
 }
 
-std::string Client::bookFacility(std::string facilityName, std::string dayOfWeek, std::string startTime, std::string endTime)
+std::string Client::bookFacility(
+    std::string facilityName,
+    std::string dayOfWeek,
+    std::string startTime,
+    std::string endTime
+)
 {
     std::string startTimeHour, startTimeMinute, endTimeHour, endTimeMinute;
     startTimeHour = startTime.substr(0, 2);
@@ -83,7 +88,12 @@ std::string Client::queryBooking(std::string bookingID)
     return receiveResponse();
 }
 
-std::string Client::changeBooking(std::string bookingID, std::string newDayOfWeek, std::string newStartTime, std::string newEndTime)
+std::string Client::changeBooking(
+    std::string bookingID,
+    std::string newDayOfWeek,
+    std::string newStartTime,
+    std::string newEndTime
+)
 {
     // TODO: Implement change booking functionality (use booking ID?)
     return "";
