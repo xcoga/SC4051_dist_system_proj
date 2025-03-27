@@ -81,9 +81,9 @@ public class UDPClient {
               buffer.length);
           aSocket.receive(reply);
           
-          RequestMessage deserialised_data = (RequestMessage) Serializer.deserialize(reply.getData());
+          RequestMessage deserialized_data = (RequestMessage) Serializer.deserialize(reply.getData());
           
-          System.out.println("Reply from server: " + deserialised_data.toString());
+          System.out.println("Reply from server: " + deserialized_data.toString());
         } catch (IOException e) {
           System.err.println("IO error: " + e.getMessage());
         } catch (Exception e) {
