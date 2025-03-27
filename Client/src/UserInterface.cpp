@@ -347,9 +347,10 @@ void UserInterface::handleQueryRating()
     std::cout << generateBox(parsedResponse);
 
     facilityName = promptFacilityName("Enter facility name: ");
+    
     response = client.queryRating(facilityName);
-
-    std::cout << "Received response from server: " << response << std::endl;
+    parsedResponse = ResponseParser::parseQueryRatingResponse(response);
+    std::cout << generateBox(parsedResponse);
 }
 
 void UserInterface::handleEchoMessage()

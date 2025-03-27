@@ -270,6 +270,16 @@ std::vector<std::string> ResponseParser::parseChangeBookingResponse(const std::s
     return parsedResponse;
 }
 
+std::vector<std::string> ResponseParser::parseDeleteBookingResponse(const std::string &response)
+{
+    // TODO
+}
+
+std::vector<std::string> ResponseParser::parseMonitorAvailabilityResponse(const std::string &response)
+{
+    // TODO
+}
+
 std::vector<std::string> ResponseParser::parseRateFacilityResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -300,6 +310,47 @@ std::vector<std::string> ResponseParser::parseRateFacilityResponse(const std::st
                 parsedResponse.push_back("User: " + line.substr(5));
             }
 
+            if (line.find("facility:") == 0)
+            {
+                // Remove "facility:" prefix
+                parsedResponse.push_back("Facility: " + line.substr(9));
+            }
+
+            if (line.find("rating:") == 0)
+            {
+                // Remove "rating:" prefix
+                parsedResponse.push_back("Rating: " + line.substr(7));
+            }
+        }
+    }
+
+    return parsedResponse;
+}
+
+std::vector<std::string> ResponseParser::parseQueryRatingResponse(const std::string &response)
+{
+    std::vector<std::string> parsedResponse;
+    std::istringstream responseStream(response);
+
+    if (isErrorResponse(responseStream))
+    {
+        parsedResponse.push_back("Error");
+
+        std::string line;
+        if (std::getline(responseStream, line) && line.find("message:") == 0)
+        {
+            // Remove "message: " prefix
+            std::string errorMessage = line.substr(8);
+            parsedResponse.push_back(errorMessage);
+        }
+    }
+    else
+    {
+        parsedResponse.push_back("Facility Rating");
+
+        std::string line;
+        while (std::getline(responseStream, line))
+        {
             if (line.find("facility:") == 0)
             {
                 // Remove "facility:" prefix
