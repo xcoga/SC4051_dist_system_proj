@@ -198,7 +198,7 @@ public String removeTimeSlot(String prev_bookingId, String userInfo) {
 
     @Override
     public String toString() {
-      return String.format("%02d:%02d - %02d:%02d", this.startHour, this.startMinute, this.endHour, this.endMinute);
+      return String.format("%02d%02d - %02d%02d", this.startHour, this.startMinute, this.endHour, this.endMinute);
     }
   }
 }

@@ -97,7 +97,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 0,
   "requestID": 1,
-  "data": "status: SUCCESS\nAvailable timeslots: \nMONDAY: 08:00 - 17:00, \nTUESDAY: 08:00 - 17:00, \nWEDNESDAY: 08:00 - 17:00, \nTHURSDAY: Closed, \nFRIDAY: Closed, \nSATURDAY: Closed, \nSUNDAY: Closed"
+  "data": "status: SUCCESS\nAvailable timeslots:\nMONDAY: 0800 - 1700, \nTUESDAY: 0800 - 1700, \nWEDNESDAY: 0800 - 1700, \n"
 }
 ```
 
