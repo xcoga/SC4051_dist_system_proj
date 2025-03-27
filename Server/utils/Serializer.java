@@ -31,7 +31,7 @@ public class Serializer {
          * Structure of the byte array:
          * 
          * Null marker
-         * Object reference marker (Checks if object has been serialised before)
+         * Object reference marker (Checks if object has been serialized before)
          * Object reference/handle (consists of the entire object's fieldname, fieldtype
          * + data.)
          * 
@@ -74,7 +74,7 @@ public class Serializer {
             }
         }
 
-        // Write the number of fields to serialise.
+        // Write the number of fields to serialize.
         buffer.writeInt(serializableFields.size());
 
         // MODIFIED: Write field metadata and value together for each field
@@ -148,7 +148,7 @@ public class Serializer {
      * Structure of the byte array:
      * 
      * Null marker
-     * Object reference marker (Checks if object has been serialised before)
+     * Object reference marker (Checks if object has been serialized before)
      * Object reference/handle (consists of the entire object's fieldname, fieldtype
      * + data.)
      * 
@@ -167,9 +167,9 @@ public class Serializer {
             throw new Exception("Parity check failed: data corruption detected");
         }
 
-        System.out.println("Parity check passed in deserialisation");
+        System.out.println("Parity check passed in deserialization");
 
-        // Deserialisation
+        // Deserialization
         deserializedObjects.clear();
         objectCounter = 0;
         ByteReader reader = new ByteReader(actualData);
@@ -181,7 +181,7 @@ public class Serializer {
      * deserializeObject().
      * 
      * Primitive class types cannot get the class name using Class.forName method
-     * during deserialisation
+     * during deserialization
      */
     private static Class<?> getClassFromName(String className) throws ClassNotFoundException {
         // Handle primitive types
@@ -215,7 +215,7 @@ public class Serializer {
             return null;
         }
 
-        // check if object has been deserialised before.
+        // check if object has been deserialized before.
         byte referenceMarker = reader.readByte();
         if (referenceMarker == 1) {
             int objectId = reader.readInt();
