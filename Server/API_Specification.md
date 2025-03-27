@@ -97,7 +97,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 0,
   "requestID": <any_integer>,
-  "data": "status:SUCCESS\navailableTimeslots:\nMONDAY: 0800 - 1200,1300 - 1700,\nTUESDAY: 0800 - 1700, \nWEDNESDAY: 0800 - 1700,\n"
+  "data": "status:SUCCESS\nfacility:<facilityName>\navailableTimeslots:\nMONDAY: 0800 - 1200,1300 - 1700,\nTUESDAY: 0800 - 1700, \nWEDNESDAY: 0800 - 1700,\n"
 }
 ```
 
