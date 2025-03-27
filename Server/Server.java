@@ -184,7 +184,7 @@ public class Server {
               if (requestedFacility != null) {
                 // Get available timeslots for the requested facility
                 Availability availability = requestedFacility.getAvailability();
-                String availableTimeslots = "Available timeslots: ";
+                String availableTimeslots = "Available timeslots:\n";
                 for (DayOfWeek day : DayOfWeek.values()) {
                   List<Availability.TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
                   if (!timeslots.isEmpty()) {
@@ -192,6 +192,7 @@ public class Server {
                     for (Availability.TimeSlot slot : timeslots) {
                       availableTimeslots += slot.toString() + ", ";
                     }
+                    availableTimeslots += "\n";
                   }
                 }
                 responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
