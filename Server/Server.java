@@ -400,7 +400,7 @@ public class Server {
     String userInfo = userAddress.toString() + ":" + userPort;
 
     // Book the facility and get the confirmation ID
-    String bookingID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
+    String confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
 
     String dayStr = day.name();
     String startTimeStr = String.format("%02d%02d", startHour, startMinute);
@@ -418,7 +418,7 @@ public class Server {
           "day:%s%n" +
           "startTime:%s%n" +
           "endTime:%s",
-          bookingID, userInfo, facilityName, dayStr, startTimeStr, endTimeStr
+          confirmationID, userInfo, facilityName, dayStr, startTimeStr, endTimeStr
         )
     );
 
