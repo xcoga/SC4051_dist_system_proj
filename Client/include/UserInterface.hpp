@@ -12,6 +12,7 @@ private:
     Client &client;
 
     void handleUserChoice(int choice);
+    void handleQueryFacilityNames();
     void handleQueryAvailability();
     void handleBookFacility();
     void handleQueryBooking();

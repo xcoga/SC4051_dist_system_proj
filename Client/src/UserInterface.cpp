@@ -13,16 +13,17 @@ void UserInterface::displayMenu()
     int choice;
     std::vector<std::string> menuContent = {
         "Facility Booking System",
-        "1. Query Facility Availability",
-        "2. Book Facility",
-        "3. Query Existing Booking",
-        "4. Change Existing Booking",
-        "5. Delete Existing Booking",
-        "6. Monitor Facility Availability",
-        "7. Rate Facility",
-        "8. Query Facility Rating",
-        "9. [DEBUG] Echo Message",
-        "10. Exit"
+        "1. Query Facility Names",
+        "2. Query Facility Availability",
+        "3. Book Facility",
+        "4. Query Existing Booking",
+        "5. Change Existing Booking",
+        "6. Delete Existing Booking",
+        "7. Monitor Facility Availability",
+        "8. Rate Facility",
+        "9. Query Facility Rating",
+        "10. [DEBUG] Echo Message",
+        "11. Exit"
     };
 
     while (true)
@@ -30,9 +31,9 @@ void UserInterface::displayMenu()
         std::cout << std::endl;
         std::cout << generateBox(menuContent);
 
-        choice = UserInterface::promptChoice("Enter choice (1-10): ");
+        choice = UserInterface::promptChoice("Enter choice (1-11): ");
 
-        if (choice == 10)
+        if (choice == 11)
         {
             std::cout << "Exiting...\n";
             return;
@@ -140,33 +141,36 @@ void UserInterface::handleUserChoice(int choice)
     switch (choice)
     {
     case 1:
-        handleQueryAvailability();
+        handleQueryFacilityNames();
         break;
     case 2:
-        handleBookFacility();
+        handleQueryAvailability();
         break;
     case 3:
-        handleQueryBooking();
+        handleBookFacility();
         break;
     case 4:
-        handleChangeBooking();
+        handleQueryBooking();
         break;
     case 5:
-        handleDeleteBooking();
+        handleChangeBooking();
         break;
     case 6:
-        handleMonitorAvailability();
+        handleDeleteBooking();
         break;
     case 7:
-        handleRateFacility();
+        handleMonitorAvailability();
         break;
     case 8:
-        handleQueryRating();
+        handleRateFacility();
         break;
     case 9:
-        handleEchoMessage();
+        handleQueryRating();
         break;
     case 10:
+        handleEchoMessage();
+        break;
+    case 11:
         std::cout << "Exiting..." << std::endl;
         break;
     default:
@@ -174,10 +178,26 @@ void UserInterface::handleUserChoice(int choice)
     }
 }
 
+void UserInterface::handleQueryFacilityNames()
+{
+    std::cout << std::endl;
+    std::cout << "Query Facility Names selected." << std::endl;
+
+    std::string response;
+    std::vector<std::string> parsedResponse;
+
+    response = client.queryFacilityNames();
+    parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
+
+    std::cout << generateBox(parsedResponse);
+}
+
 void UserInterface::handleQueryAvailability()
 {
     std::cout << std::endl;
     std::cout << "Query Facility Availability selected." << std::endl;
+
+    // TODO: Display list of names first
 
     std::string facilityName;
     std::string response;
@@ -315,9 +335,8 @@ void UserInterface::handleEchoMessage()
     }
 
     response = client.echoMessage(messageData);
-    parsedResponse = ResponseParser::parseEchoResponse(response);
+    parsedResponse = ResponseParser::parseEchoMessageResponse(response);
 
-    std::cout << std::endl;
     std::cout << generateBox(parsedResponse);
 }
 
@@ -336,9 +355,9 @@ int UserInterface::promptChoice(std::string prompt)
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
             std::cout << "Invalid input. Please enter a number." << std::endl;
         }
-        else if (choice < 1 || choice > 10)
+        else if (choice < 1 || choice > 11)
         {
-            std::cout << "Invalid choice. Please enter a number between 1 and 10." << std::endl;
+            std::cout << "Invalid choice. Please enter a number between 1 and 11." << std::endl;
         }
         else
         {
