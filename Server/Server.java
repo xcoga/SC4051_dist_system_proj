@@ -219,13 +219,13 @@ public class Server {
               Booking bookingInfo = availability.getBookingInfo(bookingID);
               if (bookingInfo != null) {
                 responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                    "status: SUCCESS\n" + 
-                    "BookingID: " + bookingInfo.confirmationID + "\n"+
-                    "User: " + bookingInfo.userInfo + "\n"+
-                    "Facility: " + facility.getName() +"\n"+
-                    "Day: " + bookingInfo.getDay() +"\n"+
-                    "StartTime: "+bookingInfo.timeSlot.getStartTime() + "\n"+
-                    "EndTime: "+bookingInfo.timeSlot.getEndTime() + "\n");
+                    "status:SUCCESS\n" + 
+                    "bookingID:" + bookingInfo.confirmationID + "\n"+
+                    "user:" + bookingInfo.userInfo + "\n"+
+                    "facility:" + facility.getName() +"\n"+
+                    "day:" + bookingInfo.getDay() +"\n"+
+                    "startTime:" + bookingInfo.timeSlot.getStartTime() + "\n"+
+                    "endTime:" + bookingInfo.timeSlot.getEndTime() + "\n");
                 break;
               }
             }
