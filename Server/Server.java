@@ -260,15 +260,15 @@ public class Server {
 
         try {
           // Parse the request to get the type of update
-          String bookingType = Parser.parseUpdateType(requestMessage.getData());
+          String updateType = Parser.parseUpdateType(requestMessage.getData());
 
           //Updating an existing booking
-          if (bookingType.equals("book")){           
+          if (updateType.equals("booking")){           
             responseMessage = updateBooking(requestMessage, request.getAddress(), request.getPort());
           }
 
           //Updating a Facility rating
-          else if (bookingType.equals("rating")){
+          else if (updateType.equals("rating")){
             responseMessage = addRating(requestMessage, request.getAddress(), request.getPort());
           }
 
@@ -448,7 +448,6 @@ public class Server {
 
     RequestMessage responseMessage;
 
-
     Facility facility = facilityFactory.getFacility(facilityName);
     if (facility == null) {
       responseMessage = new RequestMessage(
@@ -469,10 +468,24 @@ public class Server {
       String delete_confirmationID = availability.removeTimeSlot(prev_bookingId, userInfo);
       String booking_confirmationID = availability.bookTimeSlot(day, startHour, startMinute, endHour, endMinute, userInfo);
 
+      String dayStr = day.name();
+      String startTimeStr = String.format("%02d%02d", startHour, startMinute);
+      String endTimeStr = String.format("%02d%02d", endHour, endMinute);
+
       responseMessage = new RequestMessage(
           Operation.UPDATE.getOpCode(),
           requestMessage.getRequestID(),
-          String.format("status:SUCCESS%nbookingID:%s%nuser:%s", booking_confirmationID, userInfo)
+          String.format(
+          "status:SUCCESS%n" +
+          "oldBookingID:%s%n" +
+          "newBookingID:%s%n" +
+          "user:%s%n" +
+          "facility:%s%n" +
+          "day:%s%n" +
+          "startTime:%s%n" +
+          "endTime:%s",
+          delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, startTimeStr, endTimeStr
+        )
       );
 
       return responseMessage;

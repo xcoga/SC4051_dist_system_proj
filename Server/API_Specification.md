@@ -156,14 +156,14 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 ```
 
 
-### Update Facility
+### Update Booking
 **Note: The First few fields after the FacilityName are details of the previous booking. The later fields are the new booking details to write.
 #### Request:
 ```json
 {
   "operation": 2,
   "requestID": <any_integer>,
-  "data": "book,<oldBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
+  "data": "booking,<oldBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
 }
 ```
 #### Response:
@@ -171,7 +171,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 2,
   "requestID": <any_integer>,
-  "data": "status:SUCCESS\nbookingID:<newBookingID>\nuser:<user_address>:<user_port>"
+  "data": "status:SUCCESS\noldBookingID:<oldBookingID>\nnewBookingID:<newBookingID>\nuser:<user_address>:<user_port>\nfacility:Weekday1\nday:MONDAY\nstartTime:1000\nendTime:1200"
 }
 ```
 
