@@ -318,31 +318,35 @@ public class Server {
 
       case MONITOR:
         // Monitor request format: "<register>,<facilityName>,<monitor interval>"
-        String[] monitorRequestString = requestMessage.getData().split(",");
-        if (monitorRequestString == null || monitorRequestString.length == 1) {
-          responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-              "status:ERROR\nmessage:Invalid request format");
-          break;
+        try {
+          String[] monitorRequestString = requestMessage.getData().split(",");
+          if (monitorRequestString == null || monitorRequestString.length == 1) {
+            responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                "status:ERROR\nmessage:Invalid request format");
+            break;
+          }
+
+          if (monitorRequestString[0].equals("register")) {
+            // Register facility for monitoring
+            String facilityName = monitorRequestString[1];
+            int monitorInterval = Integer.parseInt(monitorRequestString[2]);
+
+            Monitor clientMonitor = new Monitor(facilityName, requestMessage.getRequestID(), request.getAddress(),
+                request.getPort(), monitorInterval);
+
+            facilityMonitorService.registerMonitor(clientMonitor);
+            responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
+                "status:SUCCESS\nmessage:Facility registered for monitoring");
+          } else {
+            responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
+                "status:ERROR\nmessage:Invalid request format");
+          }
+        } catch (Exception e) {
+          responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
+              "status:ERROR\nmessage:" + e.getMessage());
         }
 
-        if (monitorRequestString[0].equals("register")) {
-          // Register facility for monitoring
-          String facilityName = monitorRequestString[1];
-          int monitorInterval = Integer.parseInt(monitorRequestString[2]);
-
-          Monitor clientMonitor = new Monitor(facilityName, requestMessage.getRequestID(), request.getAddress(),
-              request.getPort(), monitorInterval);
-
-          facilityMonitorService.registerMonitor(clientMonitor);
-          responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
-              "status:SUCCESS\nmessage:Facility registered for monitoring");
-        } else {
-          responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
-              "status:ERROR\nmessage:Invalid request format");
-        }
-        
         break;
-
       default:
         responseMessage = new RequestMessage(Operation.NONE.getOpCode(), requestMessage.getRequestID(),
             "status:ERROR\nmessage:Unknown operation");
