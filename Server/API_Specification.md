@@ -268,6 +268,37 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 }
 ```
 
+### Monitor a facility
+
+#### Request:
+
+```json
+{
+  "operation": 4,
+  "requestID": <any_integer>,
+  "data": "register,<facility name>,<monitor interval>"
+}
+```
+
+#### Response:
+
+```json
+{
+  "operation": 3,
+  "requestID": <any_integer>,
+  "data": "status:SUCCESS\nFacility registered for monitoring"
+}
+```
+
+### Monitor messages if facility availablilty is updated
+```json
+{
+  "operation": 0,
+  "requestID": 0,
+  "data": "status:SUCCESS\nfacility:<facilityName>\navailableTimeslots:\nMONDAY: 0800 - 1200,1300 - 1700,\nTUESDAY: 0800 - 1700, \nWEDNESDAY: 0800 - 1700,\n"
+}
+```
+
 ## Error Handling
 
 The server returns error messages in the format of "status:ERROR\nmessage:<error_message>".
