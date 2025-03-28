@@ -38,13 +38,16 @@ public class MonitorService {
    * Notify all clients when the underlying resource is updated.
    * @param socket DatagramSocket object for sending notifications.
    */
-  public void notifyAll(DatagramSocket socket) {
-    // TODO: implement actual reply message
+  public void notifyAll(DatagramSocket socket, String facilityName, String message) {
     // Create the notification message
-    byte[] notification = "Resource updated".getBytes();
+    byte[] notification = message.getBytes();
 
     // Send notification to all monitors
     for (Monitor monitor : this.monitors) {
+      if (!monitor.resourceName.equals(facilityName)) {
+        continue;
+      }
+      
       DatagramPacket notificationPacket = new DatagramPacket(notification, 
                                                              notification.length, 
                                                              monitor.clientAddress, 
@@ -64,7 +67,7 @@ public class MonitorService {
   /**
    * Remove all expired monitors.
    */
-  public void removeExpiredMonitors() {
-    this.monitors.removeIf(Monitor::ifExpired);
+  public boolean removeExpiredMonitors() {
+    return this.monitors.removeIf(Monitor::ifExpired);
   }
 }

@@ -29,6 +29,7 @@ public class Server {
   private static FacilityFactory facilityFactory;
 
   private static DatagramSocket aSocket = null;
+  private static String lastUpdatedFacility = null;
 
   public static void main(String[] args) {
     init();
@@ -118,6 +119,8 @@ public class Server {
   public static RequestMessage handleRequest(DatagramPacket request) {
     RequestMessage requestMessage = null;
     RequestMessage responseMessage = null;
+    lastUpdatedFacility = null;
+    
     // Deserialize request
     try {
       byte[] receivedData = new byte[request.getLength()];
@@ -180,34 +183,8 @@ public class Server {
                   String.format("status:SUCCESS%nfacilityNames:%s", facilityNames));
               break;
             default:
-              // return specified facility information
-              String facilityName = requestString[1];
-              System.out.println("handleRequest: Requested facility: " + facilityName);
-              Facility requestedFacility = facilityFactory.getFacility(facilityName);
-              if (requestedFacility != null) {
-                // Get available timeslots for the requested facility
-                Availability availability = requestedFacility.getAvailability();
-                String availableTimeslots = "";
-                for (DayOfWeek day : DayOfWeek.values()) {
-                  List<TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
-                  if (!timeslots.isEmpty()) {
-                    availableTimeslots += day.toString() + ":";
-                    for (TimeSlot slot : timeslots) {
-                      availableTimeslots += slot.toString() + ",";
-                    }
-                    availableTimeslots += "\n";
-                  }
-                }
-                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                    String.format(
-                        "status:SUCCESS%n" +
-                            "facility:%s%n" +
-                            "availableTimeslots:%n%s",
-                        facilityName, availableTimeslots));
-              } else {
-                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                    "status:ERROR\nmessage:Facility not found");
-              }
+              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                  formatFacilityAvailability(requestString[1]));
               break;
           }
         } else if (requestString[0].equals("booking")) {
@@ -254,7 +231,6 @@ public class Server {
         break;
 
       case WRITE:
-
         // For book facility request, format:
         // facilityName,day,startHour,startMinute,endHour,endMinute
         try {
@@ -336,7 +312,7 @@ public class Server {
 
             facilityMonitorService.registerMonitor(clientMonitor);
             responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
-                "status:SUCCESS\nmessage:Facility registered for monitoring");
+                "status:SUCCESS\nFacility registered for monitoring");
           } else {
             responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
                 "status:ERROR\nmessage:Invalid request format");
@@ -362,11 +338,20 @@ public class Server {
     requestHistory.addRequest(currentRequestInformation);
 
     // Check if request changes monitored resources
-    // TODO: the list of things to monitor is not confirmed currently, to add on if
-    // needed
-    // if (requestMessage.getOperation() == Operation.UPDATE) {
-    // facilityMonitorService.notifyAll(aSocket);
-    // }
+    // Only notify if write or update or delete operation and is booking related
+    try {
+      if (lastUpdatedFacility != null && (requestMessage.getOperation() == Operation.WRITE || requestMessage.getOperation() == Operation.UPDATE || requestMessage.getOperation() == Operation.DELETE)) {
+        facilityMonitorService.removeExpiredMonitors();
+        
+        String notification = formatFacilityAvailability(lastUpdatedFacility);
+        if(!(notification == null || notification.isEmpty() || notification.contains("status:ERROR"))){
+          facilityMonitorService.notifyAll(aSocket, lastUpdatedFacility, notification);
+        }
+      }
+    } catch (Exception e) {
+      System.err.println("Error notifying clients: " + e.getMessage());
+    }
+
     return responseMessage;
   }
 
@@ -391,7 +376,7 @@ public class Server {
   private static RequestMessage bookFacility(RequestMessage request, InetAddress userAddress, int userPort) {
 
     BookingDetails booking = Parser.parseBookingDetails(request.getData());
-
+    
     String facilityName = booking.getFacilityName();
     DayOfWeek day = booking.getDay();
     int startHour = booking.getStartHour();
@@ -410,6 +395,8 @@ public class Server {
           "status:ERROR\nmessage:Facility not found");
       return responseMessage;
     }
+    lastUpdatedFacility = facilityName;
+
     Availability availability = facility.getAvailability();
     TimeSlot bookTimeSlot = new TimeSlot(startHour, startMinute, endHour, endMinute, day);
     if (availability == null || !availability.isAvailable(bookTimeSlot)) {
@@ -475,6 +462,8 @@ public class Server {
       return responseMessage;
     }
 
+    lastUpdatedFacility = facilityName;
+
     Availability availability = facility.getAvailability();
 
     // Capture user information
@@ -528,6 +517,7 @@ public class Server {
           requestMessage.getRequestID(),
           "status:ERROR\nmessage:Facility not found");
     }
+    lastUpdatedFacility = facilityName;
 
     Availability availability = facility.getAvailability();
 
@@ -584,4 +574,32 @@ public class Server {
     return responseMessage;
   }
 
+  // facilityName cannot be null
+  private static String formatFacilityAvailability(String facilityName) {
+    // return specified facility information
+    System.out.println("handleRequest: Requested facility: " + facilityName);
+    Facility requestedFacility = facilityFactory.getFacility(facilityName);
+    if (requestedFacility != null) {
+      // Get available timeslots for the requested facility
+      Availability availability = requestedFacility.getAvailability();
+      String availableTimeslots = "";
+      for (DayOfWeek day : DayOfWeek.values()) {
+        List<TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
+        if (!timeslots.isEmpty()) {
+          availableTimeslots += day.toString() + ":";
+          for (TimeSlot slot : timeslots) {
+            availableTimeslots += slot.toString() + ",";
+          }
+          availableTimeslots += "\n";
+        }
+      }
+      return String.format(
+          "status:SUCCESS%n" +
+              "facility:%s%n" +
+              "availableTimeslots:%n%s",
+          facilityName, availableTimeslots);
+    } else {
+      return "status:ERROR\nmessage:Facility not found";
+    }
+  }
 }
