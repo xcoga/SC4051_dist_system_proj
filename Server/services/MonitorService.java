@@ -61,5 +61,10 @@ public class MonitorService {
     LOGGER.info("Notified all clients");
   }
 
-
+  /**
+   * Remove all expired monitors.
+   */
+  public void removeExpiredMonitors() {
+    this.monitors.removeIf(Monitor::ifExpired);
+  }
 }

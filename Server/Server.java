@@ -14,12 +14,12 @@ import Server.models.Facility;
 import Server.models.TimeSlot;
 import Server.models.BookingDetails;
 import Server.services.FacilityFactory;
+import Server.services.Monitor;
 import Server.services.MonitorService;
 import Server.services.RequestInfo;
 import Server.services.RequestHistory;
 import Server.utils.Serializer;
 import Server.utils.Parser;
-
 
 import java.io.IOException;
 
@@ -176,7 +176,8 @@ public class Server {
               for (Facility facility : facilityFactory.getFacilities()) {
                 facilityNames += facility.getName() + ",";
               }
-              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(), String.format("status:SUCCESS%nfacilityNames:%s", facilityNames));
+              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                  String.format("status:SUCCESS%nfacilityNames:%s", facilityNames));
               break;
             default:
               // return specified facility information
@@ -197,12 +198,12 @@ public class Server {
                     availableTimeslots += "\n";
                   }
                 }
-                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(), String.format(
-                  "status:SUCCESS%n" +
-                  "facility:%s%n" +
-                  "availableTimeslots:%n%s",
-                  facilityName, availableTimeslots
-                ));
+                responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                    String.format(
+                        "status:SUCCESS%n" +
+                            "facility:%s%n" +
+                            "availableTimeslots:%n%s",
+                        facilityName, availableTimeslots));
               } else {
                 responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                     "status:ERROR\nmessage:Facility not found");
@@ -219,13 +220,13 @@ public class Server {
               Booking bookingInfo = availability.getBookingInfo(bookingID);
               if (bookingInfo != null) {
                 responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                    "status:SUCCESS\n" + 
-                    "bookingID:" + bookingInfo.confirmationID + "\n"+
-                    "user:" + bookingInfo.userInfo + "\n"+
-                    "facility:" + facility.getName() +"\n"+
-                    "day:" + bookingInfo.getDay() +"\n"+
-                    "startTime:" + bookingInfo.timeSlot.getStartTime() + "\n"+
-                    "endTime:" + bookingInfo.timeSlot.getEndTime() + "\n");
+                    "status:SUCCESS\n" +
+                        "bookingID:" + bookingInfo.confirmationID + "\n" +
+                        "user:" + bookingInfo.userInfo + "\n" +
+                        "facility:" + facility.getName() + "\n" +
+                        "day:" + bookingInfo.getDay() + "\n" +
+                        "startTime:" + bookingInfo.timeSlot.getStartTime() + "\n" +
+                        "endTime:" + bookingInfo.timeSlot.getEndTime() + "\n");
                 break;
               }
             }
@@ -234,7 +235,7 @@ public class Server {
             responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                 "status:ERROR\nmessage:Booking not found");
           }
-        } else if (requestString[0].equals("rating")){
+        } else if (requestString[0].equals("rating")) {
           // read rating information based on facility name string in request
           // Expected request format: "rating",facility_name
 
@@ -252,11 +253,11 @@ public class Server {
         }
         break;
 
-
       case WRITE:
 
-        //For book facility request, format: facilityName,day,startHour,startMinute,endHour,endMinute
-        try{
+        // For book facility request, format:
+        // facilityName,day,startHour,startMinute,endHour,endMinute
+        try {
           responseMessage = bookFacility(requestMessage, request.getAddress(), request.getPort());
         } catch (Exception e) {
           responseMessage = new RequestMessage(Operation.WRITE.getOpCode(), requestMessage.getRequestID(),
@@ -265,72 +266,82 @@ public class Server {
 
         break;
 
-      
-      //UPDATE has 2 cases: 1. Update booking 2. Add a rating
-      //1. Update Booking, Expected format: "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
-      //2. Add Rating, Expected format: "rating",facilityName,rating
+      // UPDATE has 2 cases: 1. Update booking 2. Add a rating
+      // 1. Update Booking, Expected format:
+      // "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
+      // 2. Add Rating, Expected format: "rating",facilityName,rating
       case UPDATE:
-
 
         try {
           // Parse the request to get the type of update
           String updateType = Parser.parseUpdateType(requestMessage.getData());
 
-          //Updating an existing booking
-          if (updateType.equals("booking")){           
+          // Updating an existing booking
+          if (updateType.equals("booking")) {
             responseMessage = updateBooking(requestMessage, request.getAddress(), request.getPort());
           }
 
-          //Updating a Facility rating
-          else if (updateType.equals("rating")){
+          // Updating a Facility rating
+          else if (updateType.equals("rating")) {
             responseMessage = addRating(requestMessage, request.getAddress(), request.getPort());
           }
 
-          //Invalid update type
-          else{
+          // Invalid update type
+          else {
             responseMessage = new RequestMessage(
                 Operation.UPDATE.getOpCode(),
                 requestMessage.getRequestID(),
-                "status:ERROR\nmessage:Invalid update type"
-            );
+                "status:ERROR\nmessage:Invalid update type");
           }
         } catch (Exception e) {
-            responseMessage = new RequestMessage(
-                Operation.UPDATE.getOpCode(),
-                requestMessage.getRequestID(),
-                "status:ERROR\nmessage:" + e.getMessage()
-            );
+          responseMessage = new RequestMessage(
+              Operation.UPDATE.getOpCode(),
+              requestMessage.getRequestID(),
+              "status:ERROR\nmessage:" + e.getMessage());
         }
 
         break;
 
-
-
       case DELETE:
 
-        try{  
-            //Delete booking. Expected format: "<bookingId>,<facilityName>"
-            responseMessage = deleteBooking(requestMessage,request.getAddress(), request.getPort());
-            
-          } catch (Exception e) {
-            responseMessage = new RequestMessage(
-                Operation.DELETE.getOpCode(), 
-                requestMessage.getRequestID(),
-                "status:ERROR\nmessage:" + e.getMessage()
-            );
-          }
+        try {
+          // Delete booking. Expected format: "<bookingId>,<facilityName>"
+          responseMessage = deleteBooking(requestMessage, request.getAddress(), request.getPort());
+
+        } catch (Exception e) {
+          responseMessage = new RequestMessage(
+              Operation.DELETE.getOpCode(),
+              requestMessage.getRequestID(),
+              "status:ERROR\nmessage:" + e.getMessage());
+        }
         break;
-
-
 
       case MONITOR:
-        responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
-            "status:ERROR\nmessage:Unimplemented operation");
+        // Monitor request format: "<register>,<facilityName>,<monitor interval>"
+        String[] monitorRequestString = requestMessage.getData().split(",");
+        if (monitorRequestString == null || monitorRequestString.length == 1) {
+          responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+              "status:ERROR\nmessage:Invalid request format");
+          break;
+        }
+
+        if (monitorRequestString[0].equals("register")) {
+          // Register facility for monitoring
+          String facilityName = monitorRequestString[1];
+          int monitorInterval = Integer.parseInt(monitorRequestString[2]);
+
+          Monitor clientMonitor = new Monitor(facilityName, requestMessage.getRequestID(), request.getAddress(),
+              request.getPort(), monitorInterval);
+
+          facilityMonitorService.registerMonitor(clientMonitor);
+          responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
+              "status:SUCCESS\nmessage:Facility registered for monitoring");
+        } else {
+          responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
+              "status:ERROR\nmessage:Invalid request format");
+        }
+        
         break;
-
-
-
-
 
       default:
         responseMessage = new RequestMessage(Operation.NONE.getOpCode(), requestMessage.getRequestID(),
@@ -373,41 +384,35 @@ public class Server {
     }
   }
 
-
-
-
   private static RequestMessage bookFacility(RequestMessage request, InetAddress userAddress, int userPort) {
 
     BookingDetails booking = Parser.parseBookingDetails(request.getData());
 
-    String facilityName = booking.getFacilityName(); 
-    DayOfWeek day = booking.getDay(); 
-    int startHour = booking.getStartHour(); 
-    int startMinute = booking.getStartMinute(); 
-    int endHour = booking.getEndHour(); 
+    String facilityName = booking.getFacilityName();
+    DayOfWeek day = booking.getDay();
+    int startHour = booking.getStartHour();
+    int startMinute = booking.getStartMinute();
+    int endHour = booking.getEndHour();
     int endMinute = booking.getEndMinute();
 
     RequestMessage responseMessage;
 
-    
-    //Check if facility is available for booking
+    // Check if facility is available for booking
     Facility facility = facilityFactory.getFacility(facilityName);
     if (facility == null) {
       responseMessage = new RequestMessage(
-          Operation.WRITE.getOpCode(), 
-          request.getRequestID(), 
-          "status:ERROR\nmessage:Facility not found"
-      );
+          Operation.WRITE.getOpCode(),
+          request.getRequestID(),
+          "status:ERROR\nmessage:Facility not found");
       return responseMessage;
     }
     Availability availability = facility.getAvailability();
     TimeSlot bookTimeSlot = new TimeSlot(startHour, startMinute, endHour, endMinute, day);
     if (availability == null || !availability.isAvailable(bookTimeSlot)) {
       responseMessage = new RequestMessage(
-          Operation.WRITE.getOpCode(), 
-          request.getRequestID(), 
-          "status:ERROR\nmessage:Facility not available at the requested time"
-      );
+          Operation.WRITE.getOpCode(),
+          request.getRequestID(),
+          "status:ERROR\nmessage:Facility not available at the requested time");
       return responseMessage;
     }
 
@@ -416,32 +421,27 @@ public class Server {
 
     // Book the facility and get the confirmation ID
     String confirmationID = availability.bookTimeSlot(userInfo, bookTimeSlot);
-    
 
-    //Craft response message to send back to client
+    // Craft response message to send back to client
     responseMessage = new RequestMessage(
-        Operation.WRITE.getOpCode(), 
-        request.getRequestID(), 
+        Operation.WRITE.getOpCode(),
+        request.getRequestID(),
         String.format(
-          "status:SUCCESS%n" +
-          "bookingID:%s%n" +
-          "user:%s%n" +
-          "facility:%s%n" +
-          "day:%s%n" +
-          "startTime:%s%n" +
-          "endTime:%s",
-          confirmationID, userInfo, facilityName, bookTimeSlot.getDay(), bookTimeSlot.getStartTime(), bookTimeSlot.getEndTime()
-        )
-    );
+            "status:SUCCESS%n" +
+                "bookingID:%s%n" +
+                "user:%s%n" +
+                "facility:%s%n" +
+                "day:%s%n" +
+                "startTime:%s%n" +
+                "endTime:%s",
+            confirmationID, userInfo, facilityName, bookTimeSlot.getDay(), bookTimeSlot.getStartTime(),
+            bookTimeSlot.getEndTime()));
 
     return responseMessage;
   }
 
-
-
-
-
-  //Update booking. Expected format: "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
+  // Update booking. Expected format:
+  // "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
   private static RequestMessage updateBooking(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
 
     // Extract booking details from the request message.
@@ -467,8 +467,7 @@ public class Server {
       responseMessage = new RequestMessage(
           Operation.UPDATE.getOpCode(),
           requestMessage.getRequestID(),
-          "status:ERROR\nmessage:Facility not found"
-      );
+          "status:ERROR\nmessage:Facility not found");
       return responseMessage;
     }
 
@@ -478,7 +477,7 @@ public class Server {
     String userInfo = userAddress.toString() + ":" + userPort;
 
     // Book the facility and get the confirmation ID
-    try{
+    try {
       String delete_confirmationID = availability.removeTimeSlot(prev_bookingId, userInfo);
 
       String booking_confirmationID = availability.bookTimeSlot(userInfo, newTimeSlot);
@@ -486,20 +485,19 @@ public class Server {
       String dayStr = day.name();
 
       responseMessage = new RequestMessage(
-        Operation.UPDATE.getOpCode(),
-        requestMessage.getRequestID(),
-        String.format(
-          "status:SUCCESS%s\n" +
-          "oldBookingID:%s\n" +
-          "newBookingID:%s\n" +
-          "user:%s\n" +
-          "facility:%s\n" +
-          "day:%s\n" +
-          "startTime:%s\n" +
-          "endTime:%s\n",
-          delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, newTimeSlot.getStartTime(), newTimeSlot.getEndTime()
-        )
-      );
+          Operation.UPDATE.getOpCode(),
+          requestMessage.getRequestID(),
+          String.format(
+              "status:SUCCESS%s\n" +
+                  "oldBookingID:%s\n" +
+                  "newBookingID:%s\n" +
+                  "user:%s\n" +
+                  "facility:%s\n" +
+                  "day:%s\n" +
+                  "startTime:%s\n" +
+                  "endTime:%s\n",
+              delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, newTimeSlot.getStartTime(),
+              newTimeSlot.getEndTime()));
 
       return responseMessage;
 
@@ -507,32 +505,24 @@ public class Server {
       responseMessage = new RequestMessage(
           Operation.UPDATE.getOpCode(),
           requestMessage.getRequestID(),
-          String.format("status:ERROR%nmessage:Booking not successful or booking by %s is not found", userInfo)
-      );
+          String.format("status:ERROR%nmessage:Booking not successful or booking by %s is not found", userInfo));
       return responseMessage;
     }
   }
 
-
-
-
-
-
-  //Delete booking. Expected format: "<bookingId>,<facilityName>"
+  // Delete booking. Expected format: "<bookingId>,<facilityName>"
   private static RequestMessage deleteBooking(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
 
     String[] parts = requestMessage.getData().split(",");
     String bookingId = parts[0];
     String facilityName = parts[1];
 
-
     Facility facility = facilityFactory.getFacility(facilityName);
     if (facility == null) {
       return new RequestMessage(
-                Operation.DELETE.getOpCode(), 
-                requestMessage.getRequestID(), 
-                "status:ERROR\nmessage:Facility not found"
-            );
+          Operation.DELETE.getOpCode(),
+          requestMessage.getRequestID(),
+          "status:ERROR\nmessage:Facility not found");
     }
 
     Availability availability = facility.getAvailability();
@@ -540,41 +530,34 @@ public class Server {
     // Capture user information
     String userInfo = userAddress.toString() + ":" + userPort;
 
-
-    try{
-      //Remove the booking for that facility and get the confirmation ID
+    try {
+      // Remove the booking for that facility and get the confirmation ID
       String confirmationID = availability.removeTimeSlot(bookingId, userInfo);
       return new RequestMessage(
-                Operation.DELETE.getOpCode(),
-                requestMessage.getRequestID(),
-                String.format("status:SUCCESS%nbookingID:%s%nuser:%s", confirmationID, userInfo)
-            );
+          Operation.DELETE.getOpCode(),
+          requestMessage.getRequestID(),
+          String.format("status:SUCCESS%nbookingID:%s%nuser:%s", confirmationID, userInfo));
     } catch (Exception e) {
       return new RequestMessage(
-                Operation.DELETE.getOpCode(), 
-                requestMessage.getRequestID(), 
-                "status:ERROR\nmessage:Booking not found"
-            );
+          Operation.DELETE.getOpCode(),
+          requestMessage.getRequestID(),
+          "status:ERROR\nmessage:Booking not found");
     }
-    
-  }
 
+  }
 
   private static String getRating(Facility facility) {
     String facilityName = facility.getName();
     double avgRating = facility.getRating().getAverageRating();
 
     String response = String.format(
-      "status:SUCCESS%n" +
-      "facility:%s%n" +
-      "rating:%.1f",
-      facilityName, avgRating
-    );
+        "status:SUCCESS%n" +
+            "facility:%s%n" +
+            "rating:%.1f",
+        facilityName, avgRating);
 
     return response;
   }
-
-
 
   private static RequestMessage addRating(RequestMessage requestMessage, InetAddress userAddress, int userPort) {
     String[] requestString = requestMessage.getData().split(",");
@@ -586,18 +569,15 @@ public class Server {
     String userInfo = userAddress.toString() + ":" + userPort;
 
     RequestMessage responseMessage = new RequestMessage(
-      Operation.UPDATE.getOpCode(),
-      requestMessage.getRequestID(),
-      String.format(
-        "status:SUCCESS%n" +
-        "user:%s%n" +
-        "facility:%s%n" +
-        "rating:%.1f",
-        userInfo, facilityName, rating
-      )
-    );
+        Operation.UPDATE.getOpCode(),
+        requestMessage.getRequestID(),
+        String.format(
+            "status:SUCCESS%n" +
+                "user:%s%n" +
+                "facility:%s%n" +
+                "rating:%.1f",
+            userInfo, facilityName, rating));
     return responseMessage;
   }
-
 
 }
