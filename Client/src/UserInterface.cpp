@@ -258,14 +258,25 @@ void UserInterface::handleQueryBooking()
 void UserInterface::handleUpdateBooking()
 {
     std::cout << std::endl;
-    std::cout << "Change Existing Booking selected." << std::endl;
+    std::cout << "Update Existing Booking selected." << std::endl;
 
     std::string bookingID, dayOfWeek, newStartTime, newEndTime, response;
     std::vector<std::string> parsedResponse;
+    bool confirmation;
 
     bookingID = promptBookingID("Enter booking ID: ");
 
-    // TODO: Query existing booking details and display them to the user
+    response = client.queryBooking(bookingID);
+    parsedResponse = ResponseParser::parseQueryBookingResponse(response);
+    std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
+
+    confirmation = promptConfirmation("Update booking (yes/no)? ");
+    if (!confirmation)
+    {
+        std::cout << "Booking not updated. Returning to main menu..." << std::endl;
+        return;
+    }
 
     dayOfWeek = promptDayOfWeek("Enter new day of week (1-7): ");
     newStartTime = promptTime("Enter new start time (HHMM): ");
@@ -284,13 +295,17 @@ void UserInterface::handleDeleteBooking()
 
     std::string bookingID, response;
     std::vector<std::string> parsedResponse;
+    bool confirmation;
 
     bookingID = promptBookingID("Enter booking ID: ");
 
-    // TODO: Query existing booking details and display them to the user
+    response = client.queryBooking(bookingID);
+    parsedResponse = ResponseParser::parseQueryBookingResponse(response);
+    std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 
     // Prompt user for confirmation before deleting booking
-    bool confirmation = promptConfirmation("Delete booking (yes/no)? ");
+    confirmation = promptConfirmation("Delete booking (yes/no)? ");
     if (!confirmation)
     {
         std::cout << "Booking not deleted. Returning to main menu..." << std::endl;
@@ -299,8 +314,8 @@ void UserInterface::handleDeleteBooking()
 
     response = client.deleteBooking(bookingID);
     parsedResponse = ResponseParser::parseDeleteBookingResponse(response);
-
-    std::cout << "Received response from server: " << response << std::endl;
+    std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 void UserInterface::handleMonitorAvailability()
@@ -371,12 +386,13 @@ void UserInterface::handleEchoMessage()
     std::string messageData;
     std::string response;
     std::vector<std::string> parsedResponse;
+    bool confirmation;
 
     std::cout << "Enter message to send: ";
     std::cin.ignore();
     std::getline(std::cin, messageData);
 
-    bool confirmation = promptConfirmation("Send message to server (yes/no)? ");
+    confirmation = promptConfirmation("Send message to server (yes/no)? ");
     if (!confirmation)
     {
         std::cout << "Message not sent. Returning to main menu..." << std::endl;
