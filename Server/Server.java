@@ -203,7 +203,7 @@ public class Server {
                 facilityNames += facility.getName() + ",";
               }
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                  String.format("status:SUCCESS%nfacilityNames:%s", facilityNames));
+                  String.format("status:SUCCESS\nfacilityNames:%s", facilityNames));
               break;
             default:
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
@@ -334,8 +334,16 @@ public class Server {
                 request.getPort(), monitorInterval);
 
             facilityMonitorService.registerMonitor(clientMonitor);
-            responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
-                "status:SUCCESS\nFacility registered for monitoring");
+            responseMessage = new RequestMessage(
+              Operation.MONITOR.getOpCode(),
+              requestMessage.getRequestID(),
+              String.format(
+                "status:SUCCESS\n" +
+                "facility:%s\n" +
+                "interval:%d",
+                facilityName, monitorInterval
+              )
+            );
           } else {
             responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
                 "status:ERROR\nmessage:Invalid request format");
@@ -442,13 +450,13 @@ public class Server {
         Operation.WRITE.getOpCode(),
         request.getRequestID(),
         String.format(
-            "status:SUCCESS%n" +
-                "bookingID:%s%n" +
-                "user:%s%n" +
-                "facility:%s%n" +
-                "day:%s%n" +
-                "startTime:%s%n" +
-                "endTime:%s",
+            "status:SUCCESS\n" +
+              "bookingID:%s\n" +
+              "user:%s\n" +
+              "facility:%s\n" +
+              "day:%s\n" +
+              "startTime:%s\n" +
+              "endTime:%s",
             confirmationID, userInfo, facilityName, bookTimeSlot.getDay(), bookTimeSlot.getStartTime(),
             bookTimeSlot.getEndTime()));
 
@@ -505,7 +513,7 @@ public class Server {
           Operation.UPDATE.getOpCode(),
           requestMessage.getRequestID(),
           String.format(
-              "status:SUCCESS%s\n" +
+              "status:SUCCESS\n" +
                   "oldBookingID:%s\n" +
                   "newBookingID:%s\n" +
                   "user:%s\n" +
@@ -514,7 +522,9 @@ public class Server {
                   "startTime:%s\n" +
                   "endTime:%s\n",
               delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, newTimeSlot.getStartTime(),
-              newTimeSlot.getEndTime()));
+              newTimeSlot.getEndTime()
+          )
+      );
 
       return responseMessage;
 
@@ -522,7 +532,7 @@ public class Server {
       responseMessage = new RequestMessage(
           Operation.UPDATE.getOpCode(),
           requestMessage.getRequestID(),
-          String.format("status:ERROR%nmessage:Booking not successful or booking by %s is not found", userInfo));
+          String.format("status:ERROR\nmessage:Booking not successful or booking by %s is not found", userInfo));
       return responseMessage;
     }
   }
@@ -554,7 +564,7 @@ public class Server {
       return new RequestMessage(
           Operation.DELETE.getOpCode(),
           requestMessage.getRequestID(),
-          String.format("status:SUCCESS%nbookingID:%s%nuser:%s", confirmationID, userInfo));
+          String.format("status:SUCCESS\nbookingID:%s\nuser:%s", confirmationID, userInfo));
     } catch (Exception e) {
       return new RequestMessage(
           Operation.DELETE.getOpCode(),
@@ -569,8 +579,8 @@ public class Server {
     double avgRating = facility.getRating().getAverageRating();
 
     String response = String.format(
-        "status:SUCCESS%n" +
-            "facility:%s%n" +
+        "status:SUCCESS\n" +
+            "facility:%s\n" +
             "rating:%.1f",
         facilityName, avgRating);
 
@@ -590,9 +600,9 @@ public class Server {
         Operation.UPDATE.getOpCode(),
         requestMessage.getRequestID(),
         String.format(
-            "status:SUCCESS%n" +
-                "user:%s%n" +
-                "facility:%s%n" +
+            "status:SUCCESS\n" +
+                "user:%s\n" +
+                "facility:%s\n" +
                 "rating:%.1f",
             userInfo, facilityName, rating));
     return responseMessage;
@@ -618,9 +628,9 @@ public class Server {
         }
       }
       return String.format(
-          "status:SUCCESS%n" +
-              "facility:%s%n" +
-              "availableTimeslots:%n%s",
+          "status:SUCCESS\n" +
+              "facility:%s\n" +
+              "availableTimeslots:\n%s",
           facilityName, availableTimeslots);
     } else {
       return "status:ERROR\nmessage:Facility not found";
