@@ -12,6 +12,8 @@
 #include "RequestMessage.hpp"
 #include "Socket.hpp"
 
+#define TIMEOUT_SEC 5
+
 class Client
 {
 private:

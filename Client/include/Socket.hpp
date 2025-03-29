@@ -27,6 +27,7 @@ public:
 
     void create(const int domain, const int type, const int protocol);
     void bind(const int port);
+    void setReceiveTimeout(int seconds);
     void sendDataTo(const std::vector<uint8_t> &data, const struct sockaddr_in &addr);
     int receiveDataFrom(char *buffer, struct sockaddr_in &addr);
     int getSocketName(struct sockaddr *addr);

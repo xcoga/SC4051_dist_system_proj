@@ -29,6 +29,8 @@ Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 
     makeRemoteSocketAddress(&serverAddr, const_cast<char *>(serverIp.c_str()), serverPort);
 
+    socket.setReceiveTimeout(TIMEOUT_SEC);
+
     UserInterface::displayConnectionInfo(socket, serverAddr);
 }
 
@@ -108,6 +110,7 @@ std::string Client::deleteBooking(std::string bookingID)
 std::string Client::monitorAvailability(std::string facilityName)
 {
     // TODO: Implement monitor availability functionality
+    // Client to keep track of duration then block subsequent requests throughout the duration
     return "";
 }
 
@@ -205,7 +208,8 @@ std::string Client::receiveResponse()
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        return "status:ERROR\nmessage:" + std::string(e.what());
+        // std::cerr << e.what() << '\n';
     }
 
     return messageData;
