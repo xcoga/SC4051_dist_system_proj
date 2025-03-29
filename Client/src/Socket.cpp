@@ -41,13 +41,14 @@ void Socket::create(int domain, int type, int protocol)
     sockfd = socket(domain, type, protocol);
     if (sockfd == INVALID_SOCKET)
     {
-        throw std::runtime_error("Socket creation failed!");
+        int errorCode = WSAGetLastError();
+        throw std::runtime_error("Socket creation failed! Error code: " + std::to_string(errorCode));
     }
 #else
     sockfd = socket(domain, type, protocol);
     if (sockfd == -1)
     {
-        throw std::runtime_error("Socket creation failed!");
+        throw std::runtime_error("Socket creation failed! Error: " + std::string(strerror(errno)));
     }
 #endif
 }
@@ -62,13 +63,38 @@ void Socket::bind(int port)
 
 #ifdef _WIN32
     if (::bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
+    {
+        int errorCode = WSAGetLastError();
+        throw std::runtime_error("Bind failed! Error code: " + std::to_string(errorCode));
+    }
 #else
     if (::bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
 #endif
     {
-        throw std::runtime_error("Bind failed!");
+        throw std::runtime_error("Bind failed! Error: " + std::string(strerror(errno)));
     }
 }
+
+void Socket::setReceiveTimeout(int seconds)
+{
+#ifdef _WIN32
+    DWORD timeout = seconds * 1000;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout)) == SOCKET_ERROR)
+    {
+        int errorCode = WSAGetLastError();
+        throw std::runtime_error("Set receive timeout failed! Error code: " + std::to_string(errorCode));
+    }
+#else
+    struct timeval timeout;
+    timeout.tv_sec = seconds;
+    timeout.tv_usec = 0;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout)) == -1)
+    {
+        throw std::runtime_error("Set receive timeout failed! Error: " + std::string(strerror(errno)));
+    }
+#endif
+}
+
 
 void Socket::sendDataTo(const std::vector<uint8_t> &data, const struct sockaddr_in &addr)
 {
@@ -76,18 +102,18 @@ void Socket::sendDataTo(const std::vector<uint8_t> &data, const struct sockaddr_
     int result = sendto(sockfd, (const char *)data.data(), data.size(), 0, (const sockaddr *)&addr, sizeof(addr));
     if (result == SOCKET_ERROR)
     {
-        throw std::runtime_error("Send failed!");
+        int errorCode = WSAGetLastError();
+        throw std::runtime_error("Send failed! Error code: " + std::to_string(errorCode));
     }
 #else
     ssize_t result = sendto(sockfd, data.data(), data.size(), 0, (const struct sockaddr *)&addr, sizeof(addr));
     if (result == -1)
     {
-        throw std::runtime_error("Send failed!");
+        throw std::runtime_error("Send failed! Error: " + std::string(strerror(errno)));
     }
 #endif
 }
 
-// TODO: Fix receiving messages from server
 int Socket::receiveDataFrom(char *buffer, struct sockaddr_in &addr)
 {
 #ifdef _WIN32
@@ -98,51 +124,56 @@ int Socket::receiveDataFrom(char *buffer, struct sockaddr_in &addr)
     int bytesReceived = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&addr, &addrLen);
     if (bytesReceived < 0)
     {
-        throw std::runtime_error("Receive failed!");
+#ifdef _WIN32
+        int errorCode = WSAGetLastError();
+        if (errorCode == WSAETIMEDOUT)
+        {
+            throw std::runtime_error("Receive failed! Error: Timeout occurred");
+        }
+        else
+        {
+            throw std::runtime_error("Receive failed! Error code: " + std::to_string(errorCode));
+        }
+#else
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            throw std::runtime_error("Receive failed! Error: Timeout occurred");
+        }
+        else
+        {
+            throw std::runtime_error("Receive failed! Error code: " + std::to_string(errno));
+        }
+#endif
     }
     return bytesReceived;
 }
-
-// std::string Socket::receiveDataFrom(struct sockaddr_in &addr)
-// {
-//     char buffer[BUFFER_SIZE];
-//     memset(buffer, 0, sizeof(buffer));
-
-// #ifdef _WIN32
-//     int result = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&addr, (int *)sizeof(addr));
-//     if (result == SOCKET_ERROR)
-//     {
-//         std::cerr << "Receive failed!" << std::endl;
-//         return "";
-//     }
-// #else
-//     ssize_t result = recvfrom(sockfd, buffer, sizeof(buffer), 0 , (struct sockaddr *)&addr, (socklen_t *)sizeof(addr));
-//     if (result == -1)
-//     {
-//         std::cerr << "Receive failed!" << std::endl;
-//         return "";
-//     }
-// #endif
-
-//     return std::string(buffer);
-// }
 
 int Socket::getSocketName(struct sockaddr *addr)
 {
 #ifdef _WIN32
     int addrLen = sizeof(*addr);
-    return getsockname(sockfd, addr, &addrLen);
+    int result = getsockname(sockfd, addr, &addrLen);
+    if (result == SOCKET_ERROR)
+    {
+        int errorCode = WSAGetLastError();
+        throw std::runtime_error("Get socket name failed! Error code: " + std::to_string(errorCode));
+    }
 #else
     socklen_t addrLen = sizeof(*addr);
-    return getsockname(sockfd, addr, &addrLen);
+    int result = getsockname(sockfd, addr, &addrLen);
+    if (result == -1)
+    {
+        throw std::runtime_error("Get socket name failed! Error: " + std::string(strerror(errno)));
+    }
 #endif
+    return result;
 }
 
 void Socket::closeSocket()
 {
 #ifdef _WIN32
-    closesocket(sockfd);  // Windows specific
+    closesocket(sockfd);
 #else
-    close(sockfd);  // UNIX specific
+    close(sockfd);
 #endif
 }
