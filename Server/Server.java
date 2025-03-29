@@ -31,7 +31,7 @@ public class Server {
   private static RequestHistory requestHistory;
   private static FacilityFactory facilityFactory;
 
-  private static boolean checkHistory = false;
+  private static boolean checkHistory = true; // true for at-most-once, false for at-least-once
 
   private static DatagramSocket aSocket = null;
   private static String lastUpdatedFacility = null;
@@ -140,7 +140,7 @@ public class Server {
     RequestMessage requestMessage = null;
     RequestMessage responseMessage = null;
     lastUpdatedFacility = null;
-    
+
     // Deserialize request
     try {
       byte[] receivedData = new byte[request.getLength()];
@@ -163,19 +163,22 @@ public class Server {
     // responseMessage = new RequestMessage(0, 0, "Good: good request");
     // return responseMessage;
 
-    // Check if request is in history, return previous response if it is
-    RequestInfo requestInformation = new RequestInfo(
-        requestMessage,
-        request.getAddress(),
-        request.getPort(),
-        null);
-    RequestInfo prevRequest = requestHistory.containsRequest(requestInformation);
-    if (prevRequest != null) {
-      System.out.println("Duplicate request id detected: " +
-          requestMessage.getRequestID());
-      // response for already done is the same as the previous request
-      responseMessage = prevRequest.responseMessage;
-      return responseMessage;
+    // if invocation semantics is at-least-once, check if request is in history
+    if (checkHistory) {
+      System.out.println("Checking request history...");
+      // Check if request is in history, return previous response if it is
+      RequestInfo requestInformation = new RequestInfo(
+          requestMessage,
+          request.getAddress(),
+          request.getPort(),
+          null);
+      RequestInfo prevRequest = requestHistory.containsRequest(requestInformation);
+      if (prevRequest != null) {
+        System.out.printf("Duplicate %s request id %d detected\n",requestMessage.getOperation(),requestMessage.getRequestID());
+        // response for already done is the same as the previous request
+        responseMessage = prevRequest.responseMessage;
+        return responseMessage;
+      }
     }
 
     // Process request
@@ -360,11 +363,12 @@ public class Server {
     // Check if request changes monitored resources
     // Only notify if write or update or delete operation and is booking related
     try {
-      if (lastUpdatedFacility != null && (requestMessage.getOperation() == Operation.WRITE || requestMessage.getOperation() == Operation.UPDATE || requestMessage.getOperation() == Operation.DELETE)) {
+      if (lastUpdatedFacility != null && (requestMessage.getOperation() == Operation.WRITE
+          || requestMessage.getOperation() == Operation.UPDATE || requestMessage.getOperation() == Operation.DELETE)) {
         facilityMonitorService.removeExpiredMonitors();
-        
+
         String notification = formatFacilityAvailability(lastUpdatedFacility);
-        if(!(notification == null || notification.isEmpty() || notification.contains("status:ERROR"))){
+        if (!(notification == null || notification.isEmpty() || notification.contains("status:ERROR"))) {
           facilityMonitorService.notifyAll(aSocket, lastUpdatedFacility, notification);
         }
       }
@@ -396,7 +400,7 @@ public class Server {
   private static RequestMessage bookFacility(RequestMessage request, InetAddress userAddress, int userPort) {
 
     BookingDetails booking = Parser.parseBookingDetails(request.getData());
-    
+
     String facilityName = booking.getFacilityName();
     DayOfWeek day = booking.getDay();
     int startHour = booking.getStartHour();
