@@ -23,7 +23,10 @@ import Server.utils.Parser;
 
 import java.io.IOException;
 
+// Server class to handle requests from clients and manage facility bookings
 public class Server {
+  private static final double DROP_CHANCE = 0.1; // % chance to drop a request
+
   private static MonitorService facilityMonitorService;
   private static RequestHistory requestHistory;
   private static FacilityFactory facilityFactory;
@@ -47,6 +50,12 @@ public class Server {
         aSocket.receive(request); // Blocks until a packet is received
 
         System.out.println("Received request from: " + request.getAddress() + ":" + request.getPort());
+
+        boolean dropRequest = Math.random() < DROP_CHANCE;
+        if (dropRequest) {
+          System.out.println("Dropping request from " + request.getAddress() + ":" + request.getPort());
+          continue; // Skip processing this request
+        }
         RequestMessage responseMessage = handleRequest(request);
         System.out.println("Current request history: " + requestHistory.toString());
 
