@@ -31,10 +31,21 @@ public class Server {
   private static RequestHistory requestHistory;
   private static FacilityFactory facilityFactory;
 
+  private static boolean checkHistory = false;
+
   private static DatagramSocket aSocket = null;
   private static String lastUpdatedFacility = null;
 
   public static void main(String[] args) {
+    String invocationScematic = args.length > 0 ? args[0] : "default";
+
+    if (invocationScematic.equals("at-least-once")) {
+      System.out.println("Server started with at-least-once invocation semantics.");
+      checkHistory = false;
+    } else {
+      System.out.println("Server started with at-most-once invocation semantics.");
+    }
+
     init();
     RequestMessage requestMessage = null;
 
