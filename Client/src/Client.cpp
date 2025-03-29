@@ -97,8 +97,24 @@ std::string Client::changeBooking(
     std::string newEndTime
 )
 {
-    // TODO: Implement change booking functionality using only booking ID
-    return "";
+    // Make queryBooking call first to get the old booking details, especially the facility name
+    // Facility name is required for the change booking request
+    std::string oldBookingDetails = queryBooking(oldBookingID);
+    std::string facilityName = extractFacilityName(oldBookingDetails);
+
+    // Now we can proceed with the change booking request
+    std::string startTimeHour, startTimeMinute, endTimeHour, endTimeMinute;
+    startTimeHour = newStartTime.substr(0, 2);
+    startTimeMinute = newStartTime.substr(2, 2);
+    endTimeHour = newEndTime.substr(0, 2);
+    endTimeMinute = newEndTime.substr(2, 2);
+
+    std::string messageData = "booking," + oldBookingID + "," + facilityName + "," + newDayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
+
+    RequestMessage requestMessage(RequestMessage::UPDATE, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    return receiveResponse();
 }
 
 std::string Client::deleteBooking(std::string bookingID)
@@ -213,4 +229,19 @@ std::string Client::receiveResponse()
     }
 
     return messageData;
+}
+
+std::string Client::extractFacilityName(const std::string &bookingDetails)
+{
+    const std::string facilityPrefix = "facility:";
+    size_t pos = bookingDetails.find(facilityPrefix);
+
+    if (pos != std::string::npos)
+    {
+        size_t start = pos + facilityPrefix.length();
+        size_t end = bookingDetails.find('\n', start);
+        return bookingDetails.substr(start, end - start);
+    }
+
+    return "";
 }
