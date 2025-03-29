@@ -199,7 +199,7 @@ std::vector<std::string> ResponseParser::parseQueryBookingResponse(const std::st
     return parsedResponse;
 }
 
-std::vector<std::string> ResponseParser::parseChangeBookingResponse(const std::string &response)
+std::vector<std::string> ResponseParser::parseUpdateBookingResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
     std::istringstream responseStream(response);
@@ -226,7 +226,7 @@ std::vector<std::string> ResponseParser::parseChangeBookingResponse(const std::s
             if (line.find("oldBookingID:") == 0)
             {
                 // Remove "oldBookingID:" prefix
-                parsedResponse.push_back("Successfully changed booking " + line.substr(12) + ".");
+                parsedResponse.push_back("Successfully updated booking " + line.substr(12) + ".");
             }
 
             if (line.find("newBookingID:"))

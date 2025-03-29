@@ -35,7 +35,7 @@ public:
         std::string endTime
     );
     std::string queryBooking(std::string bookingID);
-    std::string changeBooking(
+    std::string updateBooking(
         std::string oldBookingID,
         std::string newDayOfWeek,
         std::string newStartTime,

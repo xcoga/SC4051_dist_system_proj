@@ -17,7 +17,7 @@ void UserInterface::displayMenu()
         "2. Query Facility Availability",
         "3. Book Facility",
         "4. Query Existing Booking",
-        "5. Change Existing Booking",
+        "5. Update Existing Booking",
         "6. Delete Existing Booking",
         "7. Monitor Facility Availability",
         "8. Rate Facility",
@@ -153,7 +153,7 @@ void UserInterface::handleUserChoice(int choice)
         handleQueryBooking();
         break;
     case 5:
-        handleChangeBooking();
+        handleUpdateBooking();
         break;
     case 6:
         handleDeleteBooking();
@@ -255,7 +255,7 @@ void UserInterface::handleQueryBooking()
     if (isErrorResponse(parsedResponse)) return;
 }
 
-void UserInterface::handleChangeBooking()
+void UserInterface::handleUpdateBooking()
 {
     std::cout << std::endl;
     std::cout << "Change Existing Booking selected." << std::endl;
@@ -271,8 +271,8 @@ void UserInterface::handleChangeBooking()
     newStartTime = promptTime("Enter new start time (HHMM): ");
     newEndTime = promptTime("Enter new end time (HHMM): ");
 
-    response = client.changeBooking(bookingID, dayOfWeek, newStartTime, newEndTime);
-    parsedResponse = ResponseParser::parseChangeBookingResponse(response);
+    response = client.updateBooking(bookingID, dayOfWeek, newStartTime, newEndTime);
+    parsedResponse = ResponseParser::parseUpdateBookingResponse(response);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse)) return;
 }
@@ -298,6 +298,7 @@ void UserInterface::handleDeleteBooking()
     }
 
     response = client.deleteBooking(bookingID);
+    parsedResponse = ResponseParser::parseDeleteBookingResponse(response);
 
     std::cout << "Received response from server: " << response << std::endl;
 }

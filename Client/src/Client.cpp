@@ -90,7 +90,7 @@ std::string Client::queryBooking(std::string bookingID)
     return receiveResponse();
 }
 
-std::string Client::changeBooking(
+std::string Client::updateBooking(
     std::string oldBookingID,
     std::string newDayOfWeek,
     std::string newStartTime,
@@ -119,8 +119,17 @@ std::string Client::changeBooking(
 
 std::string Client::deleteBooking(std::string bookingID)
 {
-    // TODO: Implement delete booking functionality using only booking ID
-    return "";
+    // Make queryBooking call first to get the old booking details, especially the facility name
+    // Facility name is required for the delete booking request
+    std::string bookingDetails = queryBooking(bookingID);
+    std::string facilityName = extractFacilityName(bookingDetails);
+
+    std::string messageData = bookingID + "," + facilityName;
+    
+    RequestMessage requestMessage(RequestMessage::DELETE, requestID++, messageData);
+    sendRequest(requestMessage);
+
+    return receiveResponse();
 }
 
 std::string Client::monitorAvailability(std::string facilityName)

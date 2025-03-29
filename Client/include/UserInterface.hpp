@@ -16,7 +16,7 @@ private:
     void handleQueryAvailability();
     void handleBookFacility();
     void handleQueryBooking();
-    void handleChangeBooking();
+    void handleUpdateBooking();
     void handleDeleteBooking();
     void handleMonitorAvailability();
     void handleRateFacility();
