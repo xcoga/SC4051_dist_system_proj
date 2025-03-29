@@ -32,6 +32,7 @@ private:
     static float promptRating(std::string prompt);
 
     static std::string generateBox(const std::vector<std::string> &content);
+    static bool isErrorResponse(const std::vector<std::string> &parsedResponse);
 
 public:
     UserInterface(Client &client);

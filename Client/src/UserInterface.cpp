@@ -203,12 +203,14 @@ void UserInterface::handleQueryAvailability()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 
     // Prompt user to enter facility name to check availability for
     facilityName = promptFacilityName("Enter facility name: ");
     response = client.queryAvailability(facilityName);
     parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response, facilityName);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 void UserInterface::handleBookFacility()
@@ -224,6 +226,7 @@ void UserInterface::handleBookFacility()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 
     facilityName = promptFacilityName("Enter facility name: ");
     dayOfWeek = promptDayOfWeek("Enter choice (1-7): ");
@@ -233,6 +236,7 @@ void UserInterface::handleBookFacility()
     response = client.bookFacility(facilityName, dayOfWeek, startTime, endTime);
     parsedResponse = ResponseParser::parseBookFacilityResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 void UserInterface::handleQueryBooking()
@@ -248,6 +252,7 @@ void UserInterface::handleQueryBooking()
     response = client.queryBooking(bookingID);
     parsedResponse = ResponseParser::parseQueryBookingResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 void UserInterface::handleChangeBooking()
@@ -269,6 +274,7 @@ void UserInterface::handleChangeBooking()
     response = client.changeBooking(bookingID, dayOfWeek, newStartTime, newEndTime);
     parsedResponse = ResponseParser::parseChangeBookingResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 void UserInterface::handleDeleteBooking()
@@ -292,7 +298,6 @@ void UserInterface::handleDeleteBooking()
     }
 
     response = client.deleteBooking(bookingID);
-
 
     std::cout << "Received response from server: " << response << std::endl;
 }
@@ -324,6 +329,7 @@ void UserInterface::handleRateFacility()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 
     facilityName = promptFacilityName("Enter facility name: ");
     rating = promptRating("Enter rating (1-5): ");
@@ -331,6 +337,7 @@ void UserInterface::handleRateFacility()
     response = client.rateFacility(facilityName, rating);
     parsedResponse = ResponseParser::parseRateFacilityResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 void UserInterface::handleQueryRating()
@@ -345,12 +352,14 @@ void UserInterface::handleQueryRating()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 
     facilityName = promptFacilityName("Enter facility name: ");
     
     response = client.queryRating(facilityName);
     parsedResponse = ResponseParser::parseQueryRatingResponse(response);
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 void UserInterface::handleEchoMessage()
@@ -375,8 +384,8 @@ void UserInterface::handleEchoMessage()
 
     response = client.echoMessage(messageData);
     parsedResponse = ResponseParser::parseEchoMessageResponse(response);
-
     std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse)) return;
 }
 
 int UserInterface::promptChoice(std::string prompt)
@@ -572,4 +581,14 @@ std::string UserInterface::generateBox(const std::vector<std::string> &content)
     box += "+-" + std::string(maxLength, '-') + "-+\n";
 
     return box;
+}
+
+bool UserInterface::isErrorResponse(const std::vector<std::string> &parsedResponse)
+{
+    if (!parsedResponse.empty() && parsedResponse[0] == "Error")
+    {
+        std::cout << "Returning to main menu..." << std::endl;
+        return true;
+    }
+    return false;
 }
