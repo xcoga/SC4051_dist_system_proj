@@ -52,6 +52,7 @@ private:
     void makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int port);
     void sendRequest(const RequestMessage &request);
     std::string receiveResponse();
+    std::string extractFacilityName(const std::string &bookingDetails);
 };
 
 #endif // CLIENT_HPP
