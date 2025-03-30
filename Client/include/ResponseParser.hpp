@@ -2,6 +2,8 @@
 #define RESPONSE_PARSER_HPP
 
 #include <string>
+#include <vector>
+#include <sstream>
 
 class ResponseParser
 {

@@ -3,6 +3,7 @@
 #include "ResponseParser.hpp"
 
 #include <regex>
+#include <limits>
 
 /* Constructors */
 UserInterface::UserInterface(Client &client) : client(client) {}

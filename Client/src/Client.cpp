@@ -172,7 +172,7 @@ std::string Client::echoMessage(std::string messageData)
 void Client::makeLocalSocketAddress(struct sockaddr_in *sa)
 {
     sa->sin_family = AF_INET;
-    sa->sin_port = htons(0);                 // Let the system choose a port
+    sa->sin_port = htons(8000);                 // Let the system choose a port
     sa->sin_addr.s_addr = htonl(INADDR_ANY); // On local host
 }
 
