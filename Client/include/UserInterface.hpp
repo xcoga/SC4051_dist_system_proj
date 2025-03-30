@@ -28,6 +28,7 @@ private:
     static std::string promptDayOfWeek(const std::string prompt);
     static std::string promptTime(const std::string prompt);
     static std::string promptBookingID(const std::string prompt);
+    static int promptOffset(const std::string prompt);
     static bool promptConfirmation(const std::string prompt);
     static float promptRating(const std::string prompt);
     static int promptDuration(const std::string prompt);

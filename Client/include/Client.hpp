@@ -36,12 +36,7 @@ public:
         std::string endTime
     );
     std::string queryBooking(std::string bookingID);
-    std::string updateBooking(
-        std::string oldBookingID,
-        std::string newDayOfWeek,
-        std::string newStartTime,
-        std::string newEndTime
-    );
+    std::string updateBooking(std::string oldBookingID, int offsetMinutes);
     std::string deleteBooking(std::string bookingID);
     void monitorAvailability(
         std::string facilityName,
@@ -55,10 +50,16 @@ public:
 private:
     void makeLocalSocketAddress(struct sockaddr_in *sa);
     void makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int port);
+
     void sendRequest(const RequestMessage &request, bool retry = false);
     std::string receiveResponse();
     std::string sendWithRetry(const RequestMessage &request);
+
     std::string extractFacilityName(const std::string &bookingDetails);
+    std::string extractDayOfWeek(const std::string &bookingDetails);
+    std::string extractStartTime(const std::string &bookingDetails);
+    std::string extractEndTime(const std::string &bookingDetails);
+
     void listenForMonitoringUpdates(
         int durationSeconds,
         const std::function<void(const std::string &, const bool)> &onUpdate

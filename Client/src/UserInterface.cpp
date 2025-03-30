@@ -276,6 +276,7 @@ void UserInterface::handleUpdateBooking()
     std::cout << std::endl;
     std::cout << "Update Existing Booking selected." << std::endl;
 
+    int offsetMinutes;
     std::string bookingID, dayOfWeek, newStartTime, newEndTime, response;
     std::vector<std::string> parsedResponse;
     bool confirmation;
@@ -298,11 +299,9 @@ void UserInterface::handleUpdateBooking()
         return;
     }
 
-    dayOfWeek = promptDayOfWeek("Enter new day of week (1-7): ");
-    newStartTime = promptTime("Enter new start time (HHMM): ");
-    newEndTime = promptTime("Enter new end time (HHMM): ");
+    offsetMinutes = promptOffset("Enter offset in minutes (positive for later, negative for earlier): ");
 
-    response = client.updateBooking(bookingID, dayOfWeek, newStartTime, newEndTime);
+    response = client.updateBooking(bookingID, offsetMinutes);
     parsedResponse = ResponseParser::parseUpdateBookingResponse(response);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse))
@@ -590,6 +589,32 @@ std::string UserInterface::promptBookingID(const std::string prompt)
         else
         {
             return bookingID;
+        }
+    }
+}
+
+int UserInterface::promptOffset(const std::string prompt)
+{
+    int offset;
+
+    while (true)
+    {
+        std::cout << prompt;
+        std::cin >> offset;
+
+        if (std::cin.fail())
+        {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
+            std::cout << "Invalid input. Please enter an integer value for the offset in minutes." << std::endl;
+        }
+        else if (offset == 0)
+        {
+            std::cout << "Offset cannot be zero. Please enter a non-zero integer value." << std::endl;
+        }
+        else
+        {
+            return offset;
         }
     }
 }
