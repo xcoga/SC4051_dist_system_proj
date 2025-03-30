@@ -86,26 +86,42 @@ std::string Client::queryBooking(std::string bookingID)
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::updateBooking(
-    std::string oldBookingID,
-    std::string newDayOfWeek,
-    std::string newStartTime,
-    std::string newEndTime
-)
+std::string Client::updateBooking(std::string oldBookingID, int offsetMinutes)
 {
-    // Make queryBooking call first to get the old booking details, especially the facility name
-    // Facility name is required for the change booking request
+    // Make queryBooking call first to get the old booking details
     std::string oldBookingDetails = queryBooking(oldBookingID);
     std::string facilityName = extractFacilityName(oldBookingDetails);
+    std::string oldDayOfWeek = extractDayOfWeek(oldBookingDetails);
+    std::string oldStartTime = extractStartTime(oldBookingDetails);
+    std::string oldEndTime = extractEndTime(oldBookingDetails);
+
+    // Parse old start and end times into hours and minutes
+    int oldStartHour = std::stoi(oldStartTime.substr(0, 2));
+    int oldStartMinute = std::stoi(oldStartTime.substr(2, 2));
+    int oldEndHour = std::stoi(oldEndTime.substr(0, 2));
+    int oldEndMinute = std::stoi(oldEndTime.substr(2, 2));
+
+    // Apply offset
+    int totalStartMinutes = oldStartHour * 60 + oldStartMinute + offsetMinutes;
+    int totalEndMinutes = oldEndHour * 60 + oldEndMinute + offsetMinutes;
+
+    // Calculate new start and end times
+    int newStartHour = totalStartMinutes / 60;
+    int newStartMinute = totalStartMinutes % 60;
+    int newEndHour = totalEndMinutes / 60;
+    int newEndMinute = totalEndMinutes % 60;
 
     // Now we can proceed with the change booking request
-    std::string startTimeHour, startTimeMinute, endTimeHour, endTimeMinute;
-    startTimeHour = newStartTime.substr(0, 2);
-    startTimeMinute = newStartTime.substr(2, 2);
-    endTimeHour = newEndTime.substr(0, 2);
-    endTimeMinute = newEndTime.substr(2, 2);
-
-    std::string messageData = "booking," + oldBookingID + "," + facilityName + "," + newDayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
+    std::string messageData = (
+        "booking," +
+        oldBookingID + "," +
+        facilityName + "," +
+        oldDayOfWeek + "," +
+        std::to_string(newStartHour) + "," +
+        std::to_string(newStartMinute) + "," +
+        std::to_string(newEndHour) + "," +
+        std::to_string(newEndMinute)
+    );
 
     RequestMessage requestMessage(RequestMessage::UPDATE, requestID, messageData);
 
@@ -275,6 +291,51 @@ std::string Client::extractFacilityName(const std::string &bookingDetails)
     if (pos != std::string::npos)
     {
         size_t start = pos + facilityPrefix.length();
+        size_t end = bookingDetails.find('\n', start);
+        return bookingDetails.substr(start, end - start);
+    }
+
+    return "";
+}
+
+std::string Client::extractDayOfWeek(const std::string &bookingDetails)
+{
+    const std::string dayPrefix = "day:";
+    size_t pos = bookingDetails.find(dayPrefix);
+
+    if (pos != std::string::npos)
+    {
+        size_t start = pos + dayPrefix.length();
+        size_t end = bookingDetails.find('\n', start);
+        return bookingDetails.substr(start, end - start);
+    }
+
+    return "";
+}
+
+std::string Client::extractStartTime(const std::string &bookingDetails)
+{
+    const std::string startTimePrefix = "startTime:";
+    size_t pos = bookingDetails.find(startTimePrefix);
+
+    if (pos != std::string::npos)
+    {
+        size_t start = pos + startTimePrefix.length();
+        size_t end = bookingDetails.find('\n', start);
+        return bookingDetails.substr(start, end - start);
+    }
+
+    return "";
+}
+
+std::string Client::extractEndTime(const std::string &bookingDetails)
+{
+    const std::string endTimePrefix = "endTime:";
+    size_t pos = bookingDetails.find(endTimePrefix);
+
+    if (pos != std::string::npos)
+    {
+        size_t start = pos + endTimePrefix.length();
         size_t end = bookingDetails.find('\n', start);
         return bookingDetails.substr(start, end - start);
     }
