@@ -327,7 +327,7 @@ std::vector<std::string> ResponseParser::parseMonitorAvailabilityResponse(const 
 
         parsedResponse.push_back("Monitoring Registration");
         parsedResponse.push_back("Facility: " + facility);
-        parsedResponse.push_back("Duration: " + duration);
+        parsedResponse.push_back("Duration: " + duration + "s");
     }
 
     return parsedResponse;
