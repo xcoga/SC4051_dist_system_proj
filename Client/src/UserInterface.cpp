@@ -79,7 +79,7 @@ void UserInterface::displayConnectionInfo(Socket &socket, struct sockaddr_in &se
     std::cout << generateBox(connectionInfo);
 }
 
-std::string UserInterface::promptServerIP(std::string prompt)
+std::string UserInterface::promptServerIP(const std::string prompt)
 {
     std::regex ipRegex(R"(^(\d{1,3}\.){3}\d{1,3}$|^localhost$)");
     std::string serverIp;
@@ -100,7 +100,7 @@ std::string UserInterface::promptServerIP(std::string prompt)
     }
 }
 
-int UserInterface::promptServerPort(std::string prompt)
+int UserInterface::promptServerPort(const std::string prompt)
 {
     std::regex portRegex(R"(^\d{1,5}$)");
     std::string serverPortStr;
@@ -137,45 +137,45 @@ int UserInterface::promptServerPort(std::string prompt)
 }
 
 /* Private methods */
-void UserInterface::handleUserChoice(int choice)
+void UserInterface::handleUserChoice(const int choice)
 {
     switch (choice)
     {
-    case 1:
-        handleQueryFacilityNames();
-        break;
-    case 2:
-        handleQueryAvailability();
-        break;
-    case 3:
-        handleBookFacility();
-        break;
-    case 4:
-        handleQueryBooking();
-        break;
-    case 5:
-        handleUpdateBooking();
-        break;
-    case 6:
-        handleDeleteBooking();
-        break;
-    case 7:
-        handleMonitorAvailability();
-        break;
-    case 8:
-        handleRateFacility();
-        break;
-    case 9:
-        handleQueryRating();
-        break;
-    case 10:
-        handleEchoMessage();
-        break;
-    case 11:
-        std::cout << "Exiting..." << std::endl;
-        break;
-    default:
-        std::cout << "Invalid choice. Please enter a number between 1 and 10." << std::endl;
+        case 1:
+            handleQueryFacilityNames();
+            break;
+        case 2:
+            handleQueryAvailability();
+            break;
+        case 3:
+            handleBookFacility();
+            break;
+        case 4:
+            handleQueryBooking();
+            break;
+        case 5:
+            handleUpdateBooking();
+            break;
+        case 6:
+            handleDeleteBooking();
+            break;
+        case 7:
+            handleMonitorAvailability();
+            break;
+        case 8:
+            handleRateFacility();
+            break;
+        case 9:
+            handleQueryRating();
+            break;
+        case 10:
+            handleEchoMessage();
+            break;
+        case 11:
+            std::cout << "Exiting..." << std::endl;
+            break;
+        default:
+            std::cout << "Invalid choice. Please enter a number between 1 and 11." << std::endl;
     }
 }
 
@@ -204,14 +204,20 @@ void UserInterface::handleQueryAvailability()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 
     // Prompt user to enter facility name to check availability for
     facilityName = promptFacilityName("Enter facility name: ");
     response = client.queryAvailability(facilityName);
     parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
 void UserInterface::handleBookFacility()
@@ -227,7 +233,10 @@ void UserInterface::handleBookFacility()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 
     facilityName = promptFacilityName("Enter facility name: ");
     dayOfWeek = promptDayOfWeek("Enter choice (1-7): ");
@@ -237,7 +246,10 @@ void UserInterface::handleBookFacility()
     response = client.bookFacility(facilityName, dayOfWeek, startTime, endTime);
     parsedResponse = ResponseParser::parseBookFacilityResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
 void UserInterface::handleQueryBooking()
@@ -253,7 +265,10 @@ void UserInterface::handleQueryBooking()
     response = client.queryBooking(bookingID);
     parsedResponse = ResponseParser::parseQueryBookingResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
 void UserInterface::handleUpdateBooking()
@@ -267,10 +282,14 @@ void UserInterface::handleUpdateBooking()
 
     bookingID = promptBookingID("Enter booking ID: ");
 
+    // Display booking details
     response = client.queryBooking(bookingID);
     parsedResponse = ResponseParser::parseQueryBookingResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 
     confirmation = promptConfirmation("Update booking (yes/no)? ");
     if (!confirmation)
@@ -286,7 +305,10 @@ void UserInterface::handleUpdateBooking()
     response = client.updateBooking(bookingID, dayOfWeek, newStartTime, newEndTime);
     parsedResponse = ResponseParser::parseUpdateBookingResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
 void UserInterface::handleDeleteBooking()
@@ -300,12 +322,15 @@ void UserInterface::handleDeleteBooking()
 
     bookingID = promptBookingID("Enter booking ID: ");
 
+    // Display booking details
     response = client.queryBooking(bookingID);
     parsedResponse = ResponseParser::parseQueryBookingResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 
-    // Prompt user for confirmation before deleting booking
     confirmation = promptConfirmation("Delete booking (yes/no)? ");
     if (!confirmation)
     {
@@ -316,7 +341,10 @@ void UserInterface::handleDeleteBooking()
     response = client.deleteBooking(bookingID);
     parsedResponse = ResponseParser::parseDeleteBookingResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
 void UserInterface::handleMonitorAvailability()
@@ -324,13 +352,44 @@ void UserInterface::handleMonitorAvailability()
     std::cout << std::endl;
     std::cout << "Monitor Facility Availability selected." << std::endl;
 
-    std::string facilityName;
-    std::string response;
+    std::string facilityName, response;
+    int durationSeconds;
+    std::vector<std::string> parsedResponse;
+
+    // Display list of facility names to choose from
+    response = client.queryFacilityNames();
+    parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
+    std::cout << generateBox(parsedResponse);
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 
     facilityName = promptFacilityName("Enter facility name: ");
-    response = client.monitorAvailability(facilityName);
+    durationSeconds = promptDuration("Enter duration in seconds: ");
 
-    std::cout << "Received response from server: " << response << std::endl;
+    client.monitorAvailability(facilityName, durationSeconds, [this](const std::string &response, const bool isRegistrationResponse) {
+        std::vector<std::string> parsedResponse;
+        if (isRegistrationResponse)
+        {
+            parsedResponse = ResponseParser::parseMonitorAvailabilityResponse(response);
+            std::cout << generateBox(parsedResponse);
+        }
+        else
+        {
+            parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response);
+            std::cout << generateBox(parsedResponse);
+        }
+    });
+
+    // Update client that monitoring period has ended
+    parsedResponse = {
+        "End of Monitoring",
+        "Monitoring period has ended. No further updates will be received."
+    };
+    std::cout << generateBox(parsedResponse);
+    std::cout << "Returning to main menu..." << std::endl;
+    // std::cout << "Received response from server: " << response << std::endl;
 }
 
 void UserInterface::handleRateFacility()
@@ -346,7 +405,10 @@ void UserInterface::handleRateFacility()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 
     facilityName = promptFacilityName("Enter facility name: ");
     rating = promptRating("Enter rating (1-5): ");
@@ -354,7 +416,10 @@ void UserInterface::handleRateFacility()
     response = client.rateFacility(facilityName, rating);
     parsedResponse = ResponseParser::parseRateFacilityResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
 void UserInterface::handleQueryRating()
@@ -369,14 +434,20 @@ void UserInterface::handleQueryRating()
     response = client.queryFacilityNames();
     parsedResponse = ResponseParser::parseQueryFacilityNamesResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 
     facilityName = promptFacilityName("Enter facility name: ");
     
     response = client.queryRating(facilityName);
     parsedResponse = ResponseParser::parseQueryRatingResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
 void UserInterface::handleEchoMessage()
@@ -403,10 +474,13 @@ void UserInterface::handleEchoMessage()
     response = client.echoMessage(messageData);
     parsedResponse = ResponseParser::parseEchoMessageResponse(response);
     std::cout << generateBox(parsedResponse);
-    if (isErrorResponse(parsedResponse)) return;
+    if (isErrorResponse(parsedResponse))
+    {
+        return;
+    }
 }
 
-int UserInterface::promptChoice(std::string prompt)
+int UserInterface::promptChoice(const std::string prompt)
 {
     int choice;
 
@@ -432,7 +506,7 @@ int UserInterface::promptChoice(std::string prompt)
     }
 }
 
-std::string UserInterface::promptFacilityName(std::string prompt)
+std::string UserInterface::promptFacilityName(const std::string prompt)
 {
     std::string facilityName;
 
@@ -443,7 +517,7 @@ std::string UserInterface::promptFacilityName(std::string prompt)
     return facilityName;
 }
 
-std::string UserInterface::promptDayOfWeek(std::string prompt)
+std::string UserInterface::promptDayOfWeek(const std::string prompt)
 {
     int choice;
     std::vector<std::string> daysOfWeekMenu = {
@@ -477,7 +551,7 @@ std::string UserInterface::promptDayOfWeek(std::string prompt)
     }
 }
 
-std::string UserInterface::promptTime(std::string prompt)
+std::string UserInterface::promptTime(const std::string prompt)
 {
     std::regex timeRegex(R"(^([01]\d|2[0-3])[0-5]\d$)");
     std::string timeStr;
@@ -498,7 +572,7 @@ std::string UserInterface::promptTime(std::string prompt)
     }
 }
 
-std::string UserInterface::promptBookingID(std::string prompt)
+std::string UserInterface::promptBookingID(const std::string prompt)
 {
     // Booking ID is in UUID v4 format
     std::regex bookingIDRegex(R"(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)", std::regex::icase);
@@ -520,7 +594,7 @@ std::string UserInterface::promptBookingID(std::string prompt)
     }
 }
 
-bool UserInterface::promptConfirmation(std::string prompt)
+bool UserInterface::promptConfirmation(const std::string prompt)
 {
     std::regex yesNoRegex(R"(^\s*(yes|y|no|n)\s*$)", std::regex::icase);
     std::string response;
@@ -542,7 +616,7 @@ bool UserInterface::promptConfirmation(std::string prompt)
     }
 }
 
-float UserInterface::promptRating(std::string prompt)
+float UserInterface::promptRating(const std::string prompt)
 {
     float rating;
 
@@ -561,6 +635,41 @@ float UserInterface::promptRating(std::string prompt)
         {
             return rating;
         }
+    }
+}
+
+int UserInterface::promptDuration(const std::string prompt)
+{
+    std::string input;
+    int duration;
+
+    while (true)
+    {
+        std::cout << prompt;
+        std::getline(std::cin, input);
+
+        // Check if input is all digits
+        if (!input.empty() && std::all_of(input.begin(), input.end(), ::isdigit))
+        {
+            try
+            {
+                duration = std::stoi(input);
+                if (duration > 0)
+                {
+                    return duration;
+                }
+                else
+                {
+                    std::cout << "Please enter a positive number." << std::endl;
+                }
+            }
+            catch (const std::out_of_range &e)
+            {
+                std::cout << "Number too large. Please enter a smaller positive number." << std::endl;
+            }
+        }
+
+        std::cout << "Invalid input. Please enter a positive number." << std::endl;
     }
 }
 

@@ -137,9 +137,7 @@ void Client::monitorAvailability(
     RequestMessage requestMessage(RequestMessage::MONITOR, requestID, messageData);
 
     std::string registrationResponse = sendWithRetry(requestMessage);
-    std::cout << "HERE" << std::endl;
-    onUpdate(registrationResponse, true);       // TODO: onUpdate() calls result in trace trap
-    std::cout << "HERE2" << std::endl;
+    onUpdate(registrationResponse, true);
 
     if (registrationResponse.find("status:SUCCESS") == 0)
     {
@@ -244,7 +242,7 @@ std::string Client::receiveResponse()
     }
     catch(const std::exception& e)
     {
-        return "status:ERROR\nmessage:" + std::string(e.what());
+        std::cerr << "Error receiving data: " << e.what() << std::endl;
     }
 
     return messageData;
@@ -258,12 +256,12 @@ std::string Client::sendWithRetry(const RequestMessage &request)
 
         std::string response = receiveResponse();
 
-        if (response.find("status:ERROR") != 0) // If no error, return the response
+        if (!response.empty())
         {
             return response;
         }
 
-        std::cerr << "Error response received. Retrying... (" << (attempt + 1) << "/" << MAX_RETRIES << ")" << std::endl;
+        std::cerr << "No response received. Retrying... (" << (attempt + 1) << "/" << MAX_RETRIES << ")" << std::endl;
     }
 
     return "status:ERROR\nmessage:Request failed after " + std::to_string(MAX_RETRIES) + " attempts.";
@@ -292,27 +290,29 @@ void Client::listenForMonitoringUpdates(
     auto startTime = std::chrono::steady_clock::now();
     auto endTime = startTime + std::chrono::seconds(durationSeconds);
 
+    socket.setReceiveTimeout(durationSeconds); // Set timeout to the duration of monitoring
+
     while (std::chrono::steady_clock::now() < endTime)
     {
-        onUpdate(receiveResponse(), false);
+        char recvBuffer[BUFFER_SIZE];
+        struct sockaddr_in senderAddr;
 
-        // char recvBuffer[BUFFER_SIZE];
-        // struct sockaddr_in senderAddr;
+        try
+        {
+            int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
 
-        // try
-        // {
-        //     int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
-
-        //     if (bytesReceived > 0)
-        //     {
-        //         std::string response(recvBuffer, bytesReceived);
-        //         onUpdate(response);
-        //     }
-        // }
-        // catch (const std::exception &e)
-        // {
-        //     std::cerr << "Error receiving monitoring update: " << e.what() << std::endl;
-        //     break;
-        // }
+            if (bytesReceived > 0)
+            {
+                std::string response(recvBuffer, bytesReceived);
+                onUpdate(response, false);
+            }
+        }
+        catch (const std::exception &e)
+        {
+            // Socket timeout aligns with the duration of monitoring, hence we can safely break out of loop
+            break;
+        }
     }
+
+    socket.setReceiveTimeout(TIMEOUT_SEC);
 }
