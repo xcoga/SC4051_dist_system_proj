@@ -208,7 +208,7 @@ void UserInterface::handleQueryAvailability()
     // Prompt user to enter facility name to check availability for
     facilityName = promptFacilityName("Enter facility name: ");
     response = client.queryAvailability(facilityName);
-    parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response, facilityName);
+    parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse)) return;
 }
