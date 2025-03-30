@@ -296,7 +296,39 @@ std::vector<std::string> ResponseParser::parseDeleteBookingResponse(const std::s
 
 std::vector<std::string> ResponseParser::parseMonitorAvailabilityResponse(const std::string &response)
 {
-    // TODO
+    std::vector<std::string> parsedResponse;
+    std::istringstream responseStream(response);
+
+    if (isErrorResponse(responseStream))
+    {
+        std::string line, errorMessage;
+        if (std::getline(responseStream, line) && line.find("message:") == 0)
+        {
+            errorMessage = line.substr(8); // Remove "message:" prefix
+        }
+
+        parsedResponse.push_back("Error");
+        parsedResponse.push_back(errorMessage);
+    }
+    else
+    {
+        std::string line, facility, duration;
+        while (std::getline(responseStream, line))
+        {
+            if (line.find("facility:") == 0)
+            {
+                facility = line.substr(9); // Remove "facility:" prefix
+            }
+            else if (line.find("interval:") == 0)
+            {
+                duration = line.substr(9); // Remove "interval:" prefix
+            }
+        }
+
+        parsedResponse.push_back("Monitoring Registration");
+        parsedResponse.push_back("Facility: " + facility);
+        parsedResponse.push_back("Duration: " + duration);
+    }
 }
 
 std::vector<std::string> ResponseParser::parseRateFacilityResponse(const std::string &response)
