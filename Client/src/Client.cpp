@@ -43,20 +43,18 @@ std::string Client::queryFacilityNames()
 {
     std::string messageData = "facility,ALL";
 
-    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
 std::string Client::queryAvailability(std::string facilityName)
 {
     std::string messageData = "facility," + facilityName;
 
-    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
 std::string Client::bookFacility(
@@ -74,20 +72,18 @@ std::string Client::bookFacility(
 
     std::string messageData = facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
 
-    RequestMessage requestMessage(RequestMessage::WRITE, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::WRITE, requestID, messageData);    
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
 std::string Client::queryBooking(std::string bookingID)
 {
     std::string messageData = "booking," + bookingID;
 
-    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
 std::string Client::updateBooking(
@@ -111,10 +107,9 @@ std::string Client::updateBooking(
 
     std::string messageData = "booking," + oldBookingID + "," + facilityName + "," + newDayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
 
-    RequestMessage requestMessage(RequestMessage::UPDATE, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::UPDATE, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
 std::string Client::deleteBooking(std::string bookingID)
@@ -126,54 +121,65 @@ std::string Client::deleteBooking(std::string bookingID)
 
     std::string messageData = bookingID + "," + facilityName;
     
-    RequestMessage requestMessage(RequestMessage::DELETE, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::DELETE, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
-std::string Client::monitorAvailability(std::string facilityName)
+void Client::monitorAvailability(
+    std::string facilityName,
+    int durationSeconds,
+    const std::function<void(const std::string &, const bool)> &onUpdate
+)
 {
-    // TODO: Implement monitor availability functionality
-    // Client to keep track of duration then block subsequent requests throughout the duration
-    return "";
+    std::string messageData = "register," + facilityName + "," + std::to_string(durationSeconds);
+
+    RequestMessage requestMessage(RequestMessage::MONITOR, requestID, messageData);
+
+    std::string registrationResponse = sendWithRetry(requestMessage);
+    std::cout << "HERE" << std::endl;
+    onUpdate(registrationResponse, true);       // TODO: onUpdate() calls result in trace trap
+    std::cout << "HERE2" << std::endl;
+
+    if (registrationResponse.find("status:SUCCESS") == 0)
+    {
+        listenForMonitoringUpdates(durationSeconds, [onUpdate](const std::string &update, bool isRegistrationResponse)
+        {
+            onUpdate(update, false);
+        });
+    }
 }
 
 std::string Client::rateFacility(std::string facilityName, float rating)
 {
     std::string messageData = "rating," + facilityName + "," + std::to_string(rating);
 
-    RequestMessage requestMessage(RequestMessage::UPDATE, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::UPDATE, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
 std::string Client::queryRating(std::string facilityName)
 {
     std::string messageData = "rating," + facilityName;
 
-    RequestMessage requestMessage(RequestMessage::READ, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
-
-// TODO: Need to simulate repeated request operations, so requestID should not increment
 
 std::string Client::echoMessage(std::string messageData)
 {
-    RequestMessage requestMessage(RequestMessage::ECHO, requestID++, messageData);
-    sendRequest(requestMessage);
+    RequestMessage requestMessage(RequestMessage::ECHO, requestID, messageData);
 
-    return receiveResponse();
+    return sendWithRetry(requestMessage);
 }
 
 void Client::makeLocalSocketAddress(struct sockaddr_in *sa)
 {
     sa->sin_family = AF_INET;
     sa->sin_port = htons(8000);                 // Let the system choose a port
-    sa->sin_addr.s_addr = htonl(INADDR_ANY); // On local host
+    sa->sin_addr.s_addr = htonl(INADDR_ANY);    // On local host
 }
 
 void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int port)
@@ -197,8 +203,13 @@ void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int
     }
 }
 
-void Client::sendRequest(const RequestMessage &request)
+void Client::sendRequest(const RequestMessage &request, bool retry)
 {
+    if (!retry)
+    {
+        requestID++;
+    }
+
     std::vector<uint8_t> serializedData = JavaSerializer::serialize(&request);
 
     try
@@ -234,10 +245,28 @@ std::string Client::receiveResponse()
     catch(const std::exception& e)
     {
         return "status:ERROR\nmessage:" + std::string(e.what());
-        // std::cerr << e.what() << '\n';
     }
 
     return messageData;
+}
+
+std::string Client::sendWithRetry(const RequestMessage &request)
+{
+    for (int attempt = 0; attempt < MAX_RETRIES; ++attempt)
+    {
+        sendRequest(request, attempt > 0); // Retry flag is false for first attempt and true for subsequent attempts
+
+        std::string response = receiveResponse();
+
+        if (response.find("status:ERROR") != 0) // If no error, return the response
+        {
+            return response;
+        }
+
+        std::cerr << "Error response received. Retrying... (" << (attempt + 1) << "/" << MAX_RETRIES << ")" << std::endl;
+    }
+
+    return "status:ERROR\nmessage:Request failed after " + std::to_string(MAX_RETRIES) + " attempts.";
 }
 
 std::string Client::extractFacilityName(const std::string &bookingDetails)
@@ -253,4 +282,37 @@ std::string Client::extractFacilityName(const std::string &bookingDetails)
     }
 
     return "";
+}
+
+void Client::listenForMonitoringUpdates(
+    int durationSeconds,
+    const std::function<void(const std::string &, const bool)> &onUpdate
+)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    auto endTime = startTime + std::chrono::seconds(durationSeconds);
+
+    while (std::chrono::steady_clock::now() < endTime)
+    {
+        onUpdate(receiveResponse(), false);
+
+        // char recvBuffer[BUFFER_SIZE];
+        // struct sockaddr_in senderAddr;
+
+        // try
+        // {
+        //     int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
+
+        //     if (bytesReceived > 0)
+        //     {
+        //         std::string response(recvBuffer, bytesReceived);
+        //         onUpdate(response);
+        //     }
+        // }
+        // catch (const std::exception &e)
+        // {
+        //     std::cerr << "Error receiving monitoring update: " << e.what() << std::endl;
+        //     break;
+        // }
+    }
 }
