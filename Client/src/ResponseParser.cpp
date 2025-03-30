@@ -329,6 +329,8 @@ std::vector<std::string> ResponseParser::parseMonitorAvailabilityResponse(const 
         parsedResponse.push_back("Facility: " + facility);
         parsedResponse.push_back("Duration: " + duration);
     }
+
+    return parsedResponse;
 }
 
 std::vector<std::string> ResponseParser::parseRateFacilityResponse(const std::string &response)
