@@ -11,7 +11,7 @@ class UserInterface
 private:
     Client &client;
 
-    void handleUserChoice(int choice);
+    void handleUserChoice(const int choice);
     void handleQueryFacilityNames();
     void handleQueryAvailability();
     void handleBookFacility();
@@ -23,23 +23,26 @@ private:
     void handleQueryRating();
     void handleEchoMessage();
 
-    static int promptChoice(std::string prompt);
-    static std::string promptFacilityName(std::string prompt);
-    static std::string promptDayOfWeek(std::string prompt);
-    static std::string promptTime(std::string prompt);
-    static std::string promptBookingID(std::string prompt);
-    static bool promptConfirmation(std::string prompt);
-    static float promptRating(std::string prompt);
+    static int promptChoice(const std::string prompt);
+    static std::string promptFacilityName(const std::string prompt);
+    static std::string promptDayOfWeek(const std::string prompt);
+    static std::string promptTime(const std::string prompt);
+    static std::string promptBookingID(const std::string prompt);
+    static bool promptConfirmation(const std::string prompt);
+    static float promptRating(const std::string prompt);
+    static int promptDuration(const std::string prompt);
 
     static std::string generateBox(const std::vector<std::string> &content);
     static bool isErrorResponse(const std::vector<std::string> &parsedResponse);
 
 public:
     UserInterface(Client &client);
+
     void displayMenu();
     static void displayConnectionInfo(Socket &socket, struct sockaddr_in &serverAddr);
-    static std::string promptServerIP(std::string prompt);
-    static int promptServerPort(std::string prompt);
+
+    static std::string promptServerIP(const std::string prompt);
+    static int promptServerPort(const std::string prompt);
 };
 
 #endif // USER_INTERFACE_HPP

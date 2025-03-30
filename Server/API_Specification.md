@@ -276,7 +276,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 {
   "operation": 4,
   "requestID": <any_integer>,
-  "data": "register,<facility name>,<monitor interval>"
+  "data": "register,<facilityName>,<monitorInterval>"
 }
 ```
 
@@ -284,9 +284,9 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
 
 ```json
 {
-  "operation": 3,
+  "operation": 4,
   "requestID": <any_integer>,
-  "data": "status:SUCCESS\nFacility registered for monitoring"
+  "data": "status:SUCCESS\nfacility:<facilityName>\ninterval:<monitorInterval>"
 }
 ```
 

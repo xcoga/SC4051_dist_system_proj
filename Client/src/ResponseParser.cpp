@@ -215,11 +215,11 @@ std::vector<std::string> ResponseParser::parseUpdateBookingResponse(const std::s
         {
             if (line.find("oldBookingID:") == 0)
             {
-                oldBookingID = line.substr(12); // Remove "oldBookingID:" prefix
+                oldBookingID = line.substr(13); // Remove "oldBookingID:" prefix
             }
             else if (line.find("newBookingID:") == 0)
             {
-                newBookingID = line.substr(12); // Remove "newBookingID:" prefix
+                newBookingID = line.substr(13); // Remove "newBookingID:" prefix
             }
             else if (line.find("user:") == 0)
             {
