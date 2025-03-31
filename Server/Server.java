@@ -27,7 +27,7 @@ import java.io.IOException;
 
 // Server class to handle requests from clients and manage facility bookings
 public class Server {
-  private static final double DROP_CHANCE = 0.4; // % chance to drop a request
+  private static final double DROP_CHANCE = 0.3; // % chance to drop a request
 
   private static MonitorService facilityMonitorService;
   private static RequestHistory requestHistory;
@@ -142,6 +142,16 @@ public class Server {
     RequestMessage requestMessage = null;
     RequestMessage responseMessage = null;
     lastUpdatedFacility = null;
+
+    try {
+        // Simulate processing delay between 3-8 seconds
+        int processingDelay = 3000 + (int)(Math.random() * 5000);
+        System.out.println("Simulating slow processing for " + processingDelay + "ms");
+        Thread.sleep(processingDelay);
+    } catch (InterruptedException e) {
+        System.err.println("Sleep interrupted: " + e.getMessage());
+    }
+
 
     // Deserialize request
     try {
