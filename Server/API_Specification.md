@@ -110,6 +110,14 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
   "data": "facility,<facilityName>"
 }
 ```
+You can also optionally add in the days to query for specific days only
+```json
+{
+  "operation": 0,
+  "requestID": <any_integer>,
+  "data": "facility,<facilityName>,<day1>,<day2>,..."
+}
+```
 
 #### Response:
 
@@ -120,6 +128,7 @@ All requests and responses are transmitted using **UDP packets**. The JSON forma
   "data": "status:SUCCESS\nfacility:<facilityName>\navailableTimeslots:\nMONDAY: 0800 - 1200,1300 - 1700,\nTUESDAY: 0800 - 1700, \nWEDNESDAY: 0800 - 1700,\n"
 }
 ```
+If you added in the days to query, the response will only include those days. It will be blank if no days fall within that range.
 
 ### Query Rating of a Specific Facility
 
