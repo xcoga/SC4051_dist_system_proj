@@ -5,6 +5,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.time.DayOfWeek;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -206,8 +208,19 @@ public class Server {
                   String.format("status:SUCCESS\nfacilityNames:%s", facilityNames));
               break;
             default:
+              // requestString[1] is the facility name
+              // if have more, can use a hashmap to store the days requested
+              // example requests format: facility,facilityName,day1,day2,...
+              // if no days specified, return all days
+              // else return only those days
+              HashMap<DayOfWeek, String> days = new HashMap<>();
+              for (int i = 2; i < requestString.length; i++) {
+                days.put(DayOfWeek.valueOf(requestString[i]), "true");
+              }
+              System.out.println("Days: " + days.toString());
+
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
-                  formatFacilityAvailability(requestString[1]));
+                  formatFacilityAvailability(requestString[1], days));
               break;
           }
         } else if (requestString[0].equals("booking")) {
@@ -375,7 +388,7 @@ public class Server {
           || requestMessage.getOperation() == Operation.UPDATE || requestMessage.getOperation() == Operation.DELETE)) {
         facilityMonitorService.removeExpiredMonitors();
 
-        String notification = formatFacilityAvailability(lastUpdatedFacility);
+        String notification = formatFacilityAvailability(lastUpdatedFacility, null);
         if (!(notification == null || notification.isEmpty() || notification.contains("status:ERROR"))) {
           facilityMonitorService.notifyAll(aSocket, lastUpdatedFacility, notification);
         }
@@ -609,7 +622,7 @@ public class Server {
   }
 
   // facilityName cannot be null
-  private static String formatFacilityAvailability(String facilityName) {
+  private static String formatFacilityAvailability(String facilityName, HashMap<DayOfWeek, String> days) {
     // return specified facility information
     System.out.println("handleRequest: Requested facility: " + facilityName);
     Facility requestedFacility = facilityFactory.getFacility(facilityName);
@@ -618,6 +631,14 @@ public class Server {
       Availability availability = requestedFacility.getAvailability();
       String availableTimeslots = "";
       for (DayOfWeek day : DayOfWeek.values()) {
+        // if days not specified, get all days
+        // else if days specified, only get those days
+        if(!(days == null || days.isEmpty()) && days.get(day) == null) {
+          continue;
+        } 
+
+        System.out.println("Checking availability for day: " + day);
+
         List<TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
         if (!timeslots.isEmpty()) {
           availableTimeslots += day.toString() + ":";
