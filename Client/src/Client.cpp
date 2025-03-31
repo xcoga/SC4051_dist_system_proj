@@ -92,6 +92,8 @@ std::string Client::updateBooking(std::string oldBookingID, int offsetMinutes)
 {
     // Make queryBooking call first to get the old booking details
     std::string oldBookingDetails = queryBooking(oldBookingID);
+
+    // Extract facility name, day of week, start time, and end time from the old booking details
     std::string facilityName = extractFacilityName(oldBookingDetails);
     std::string oldDayOfWeek = extractDayOfWeek(oldBookingDetails);
     std::string oldStartTime = extractStartTime(oldBookingDetails);
@@ -239,34 +241,6 @@ void Client::sendRequest(const RequestMessage &request, bool retry)
     }
 }
 
-// std::string Client::receiveResponse()
-// {
-//     char recvBuffer[BUFFER_SIZE];
-//     struct sockaddr_in senderAddr;
-//     std::string messageData;
-
-//     try
-//     {
-//         int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
-
-//         // TODO: Check parity
-
-//         // Deserialize response
-//         std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
-//         std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
-
-//         std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
-//         messageData = responseMessage->getData();
-//     }
-//     catch(const std::exception& e)
-//     {
-//         std::cerr << e.what() << std::endl;
-//     }
-
-//     return messageData;
-// }
-
-
 std::string Client::receiveResponse(uint32_t expectedRequestID)
 {
     char recvBuffer[BUFFER_SIZE];
@@ -309,7 +283,6 @@ std::string Client::sendWithRetry(const RequestMessage &request)
 
         // std::string response = receiveResponse();
         std::string response = receiveResponse(request.getRequestID());
-
 
         if (!response.empty())
         {
