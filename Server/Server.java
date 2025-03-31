@@ -62,7 +62,7 @@ public class Server {
         DatagramPacket request = new DatagramPacket(buffer, buffer.length);
         aSocket.receive(request); // Blocks until a packet is received
 
-        System.out.println("Received request from: " + request.getAddress() + ":" + request.getPort());
+        System.out.println("\n\nReceived request from: " + request.getAddress() + ":" + request.getPort());
 
         boolean dropRequest = Math.random() < DROP_CHANCE;
         if (dropRequest) {
