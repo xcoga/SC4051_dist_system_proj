@@ -343,6 +343,14 @@ public class Server {
             String facilityName = monitorRequestString[1];
             int monitorInterval = Integer.parseInt(monitorRequestString[2]);
 
+            //CHECK if the facilityName provided by user is correct.
+            if (facilityFactory.getFacility(facilityName) == null){
+              responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
+                  "status:ERROR\nmessage:Invalid facilityName provided");
+              break;              
+            }
+            
+
             Monitor clientMonitor = new Monitor(facilityName, requestMessage.getRequestID(), request.getAddress(),
                 request.getPort(), monitorInterval);
 
