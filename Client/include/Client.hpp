@@ -13,7 +13,7 @@
 #include "Socket.hpp"
 
 #define TIMEOUT_SEC 5
-#define MAX_RETRIES 3
+#define MAX_RETRIES 5
 
 class Client
 {
@@ -52,7 +52,8 @@ private:
     void makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int port);
 
     void sendRequest(const RequestMessage &request, bool retry = false);
-    std::string receiveResponse();
+    // std::string receiveResponse();
+    std::string receiveResponse(uint32_t expectedRequestID);
     std::string sendWithRetry(const RequestMessage &request);
 
     std::string extractFacilityName(const std::string &bookingDetails);

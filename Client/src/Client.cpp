@@ -239,7 +239,35 @@ void Client::sendRequest(const RequestMessage &request, bool retry)
     }
 }
 
-std::string Client::receiveResponse()
+// std::string Client::receiveResponse()
+// {
+//     char recvBuffer[BUFFER_SIZE];
+//     struct sockaddr_in senderAddr;
+//     std::string messageData;
+
+//     try
+//     {
+//         int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
+
+//         // TODO: Check parity
+
+//         // Deserialize response
+//         std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
+//         std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
+
+//         std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
+//         messageData = responseMessage->getData();
+//     }
+//     catch(const std::exception& e)
+//     {
+//         std::cerr << e.what() << std::endl;
+//     }
+
+//     return messageData;
+// }
+
+
+std::string Client::receiveResponse(uint32_t expectedRequestID)
 {
     char recvBuffer[BUFFER_SIZE];
     struct sockaddr_in senderAddr;
@@ -249,13 +277,20 @@ std::string Client::receiveResponse()
     {
         int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
 
-        // TODO: Check parity
-
         // Deserialize response
         std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
         std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
 
         std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
+        
+        // Verify the response matches our request ID
+        if (responseMessage->getRequestID() != expectedRequestID) {
+            std::cerr << "Received response for request ID " 
+                      << responseMessage->getRequestID() 
+                      << " but expected " << expectedRequestID << std::endl;
+            return ""; // Return empty string to trigger retry
+        }
+        
         messageData = responseMessage->getData();
     }
     catch(const std::exception& e)
@@ -272,7 +307,9 @@ std::string Client::sendWithRetry(const RequestMessage &request)
     {
         sendRequest(request, attempt > 0); // Retry flag is false for first attempt and true for subsequent attempts
 
-        std::string response = receiveResponse();
+        // std::string response = receiveResponse();
+        std::string response = receiveResponse(request.getRequestID());
+
 
         if (!response.empty())
         {
