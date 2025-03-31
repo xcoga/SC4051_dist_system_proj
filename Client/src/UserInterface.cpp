@@ -4,41 +4,59 @@
 
 #include <regex>
 #include <limits>
+#include <numeric>
 
 /* Constructors */
 UserInterface::UserInterface(Client &client) : client(client) {}
+
+/* Constants */
+const std::vector<std::string> UserInterface::MAIN_MENU = {
+    "Facility Booking System",
+    "1. Query Facility Names",
+    "2. Query Facility Availability",
+    "3. Book Facility",
+    "4. Query Existing Booking",
+    "5. Update Existing Booking",
+    "6. Delete Existing Booking",
+    "7. Monitor Facility Availability",
+    "8. Rate Facility",
+    "9. Query Facility Rating",
+    "10. [DEBUG] Echo Message",
+    "11. Exit"
+};
+
+const std::vector<std::string> UserInterface::DAYS_OF_WEEK_MENU = {
+    "Day of Week",
+    "1. MONDAY",
+    "2. TUESDAY",
+    "3. WEDNESDAY",
+    "4. THURSDAY",
+    "5. FRIDAY",
+    "6. SATURDAY",
+    "7. SUNDAY"
+};
+
+const std::vector<std::string> UserInterface::DAYS_OF_WEEK = {
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY"
+};
 
 /* Public methods */
 void UserInterface::displayMenu()
 {
     int choice;
-    std::vector<std::string> menuContent = {
-        "Facility Booking System",
-        "1. Query Facility Names",
-        "2. Query Facility Availability",
-        "3. Book Facility",
-        "4. Query Existing Booking",
-        "5. Update Existing Booking",
-        "6. Delete Existing Booking",
-        "7. Monitor Facility Availability",
-        "8. Rate Facility",
-        "9. Query Facility Rating",
-        "10. [DEBUG] Echo Message",
-        "11. Exit"
-    };
 
     while (true)
     {
         std::cout << std::endl;
-        std::cout << generateBox(menuContent);
+        std::cout << generateBox(MAIN_MENU);
 
         choice = UserInterface::promptChoice("Enter choice (1-11): ");
-
-        if (choice == 11)
-        {
-            std::cout << "Exiting...\n";
-            return;
-        }
 
         handleUserChoice(choice);
     }
@@ -172,7 +190,7 @@ void UserInterface::handleUserChoice(const int choice)
             handleEchoMessage();
             break;
         case 11:
-            std::cout << "Exiting..." << std::endl;
+            handleExit();
             break;
         default:
             std::cout << "Invalid choice. Please enter a number between 1 and 11." << std::endl;
@@ -197,7 +215,7 @@ void UserInterface::handleQueryAvailability()
     std::cout << std::endl;
     std::cout << "Query Facility Availability selected." << std::endl;
 
-    std::string facilityName, response;
+    std::string facilityName, daysOfWeek, response;
     std::vector<std::string> parsedResponse;
 
     // Display list of facility names to choose from
@@ -211,8 +229,9 @@ void UserInterface::handleQueryAvailability()
 
     // Prompt user to enter facility name to check availability for
     facilityName = promptFacilityName("Enter facility name: ");
-    response = client.queryAvailability(facilityName);
-    parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response);
+    daysOfWeek = promptDaysOfWeek("Enter choice (1-7, comma-separated): ");
+    response = client.queryAvailability(facilityName, daysOfWeek);
+    parsedResponse = ResponseParser::parseQueryAvailabilityResponse(response, daysOfWeek);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse))
     {
@@ -479,6 +498,20 @@ void UserInterface::handleEchoMessage()
     }
 }
 
+void UserInterface::handleExit()
+{
+    bool confirmation = promptConfirmation("Exit Facility Booking System (yes/no)? ");
+    if (confirmation)
+    {
+        std::cout << "Exiting..." << std::endl;
+        exit(0);
+    }
+    else
+    {
+        std::cout << "Returning to main menu..." << std::endl;
+    }
+}
+
 int UserInterface::promptChoice(const std::string prompt)
 {
     int choice;
@@ -519,21 +552,10 @@ std::string UserInterface::promptFacilityName(const std::string prompt)
 std::string UserInterface::promptDayOfWeek(const std::string prompt)
 {
     int choice;
-    std::vector<std::string> daysOfWeekMenu = {
-        "Day of Week",
-        "1. MONDAY",
-        "2. TUESDAY",
-        "3. WEDNESDAY",
-        "4. THURSDAY",
-        "5. FRIDAY",
-        "6. SATURDAY",
-        "7. SUNDAY"
-    };
-    std::vector<std::string> daysOfWeek = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
 
     while (true)
     {
-        std::cout << generateBox(daysOfWeekMenu);
+        std::cout << generateBox(DAYS_OF_WEEK_MENU);
         std::cout << prompt;
         std::cin >> choice;
 
@@ -545,7 +567,62 @@ std::string UserInterface::promptDayOfWeek(const std::string prompt)
         }
         else
         {
-            return daysOfWeek[choice - 1];
+            return DAYS_OF_WEEK[choice - 1];
+        }
+    }
+}
+
+std::string UserInterface::promptDaysOfWeek(const std::string prompt)
+{
+    while (true)
+    {
+        std::cout << generateBox(DAYS_OF_WEEK_MENU);
+        std::cout << prompt;
+
+        std::string input;
+        std::cin >> input;
+
+        // Split the input by commas
+        std::vector<std::string> tokens;
+        std::stringstream ss(input);
+        std::string token;
+        while (std::getline(ss, token, ','))
+        {
+            tokens.push_back(token);
+        }
+
+        // Validate each token
+        std::vector<std::string> selectedDays;
+        bool isValid = true;
+        for (const auto &choiceStr : tokens)
+        {
+            try
+            {
+                int choice = std::stoi(choiceStr);
+                if (choice < 1 || choice > 7)
+                {
+                    std::cout << "Invalid input: " << choiceStr << ". Please enter numbers between 1 and 7." << std::endl;
+                    isValid = false;
+                    break;
+                }
+                selectedDays.push_back(DAYS_OF_WEEK[choice - 1]);
+            }
+            catch (const std::invalid_argument &)
+            {
+                std::cout << "Invalid input: " << choiceStr << ". Please enter valid numbers separated by commas." << std::endl;
+                isValid = false;
+                break;
+            }
+        }
+
+        if (isValid)
+        {
+            // Join the selected days into a comma-separated string
+            std::string result = std::accumulate(
+                std::next(selectedDays.begin()), selectedDays.end(), selectedDays[0],
+                [](std::string a, const std::string &b) { return a + "," + b; });
+
+            return result;
         }
     }
 }

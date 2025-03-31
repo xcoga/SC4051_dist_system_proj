@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
 
 /* Public methods */
 std::vector<std::string> ResponseParser::parseQueryFacilityNamesResponse(const std::string &response)
@@ -52,10 +53,30 @@ std::vector<std::string> ResponseParser::parseQueryFacilityNamesResponse(const s
     return parsedResponse;
 }
 
-std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const std::string &response)
+std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(
+    const std::string &response,
+    const std::string &daysRequested
+)
 {
     std::vector<std::string> parsedResponse;
     std::istringstream responseStream(response);
+
+    std::vector<std::string> daysOfWeek = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
+
+    bool filterDays = !daysRequested.empty(); // Only filter if daysRequested is not empty
+    std::unordered_set<std::string> requestedDaysSet;
+
+    if (filterDays)
+    {
+        std::istringstream daysStream(daysRequested);
+        std::string dayToken;
+        while (std::getline(daysStream, dayToken, ','))
+        {
+            requestedDaysSet.insert(dayToken);
+        }
+    }
+
+    std::unordered_map<std::string, std::string> availabilityMap;
 
     if (isErrorResponse(responseStream))
     {
@@ -98,7 +119,6 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
 
                 while (std::getline(lineStream, timeslot, ','))
                 {
-                    // Ignore whitespaces as well
                     if (!timeslot.empty())
                     {
                         size_t dashPos = timeslot.find('-');
@@ -118,7 +138,37 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(const st
                 }
 
                 // Add formatted timeslots to parsed response
-                parsedResponse.push_back(formattedTimeslots);
+                availabilityMap[day] = formattedTimeslots;
+                // parsedResponse.push_back(formattedTimeslots);
+            }
+        }
+
+        // Only filter days if requested by user
+        if (filterDays)
+        {
+            for (const std::string &day : daysOfWeek)
+            {
+                if (requestedDaysSet.count(day))
+                {
+                    if (availabilityMap.find(day) != availabilityMap.end())
+                    {
+                        parsedResponse.push_back(availabilityMap[day]);
+                    }
+                    else
+                    {
+                        parsedResponse.push_back(day + ": Closed");
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (const std::string &day : daysOfWeek)
+            {
+                if (availabilityMap.find(day) != availabilityMap.end())
+                {
+                    parsedResponse.push_back(availabilityMap[day]);
+                }
             }
         }
     }

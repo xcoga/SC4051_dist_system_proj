@@ -11,6 +11,10 @@ class UserInterface
 private:
     Client &client;
 
+    static const std::vector<std::string> MAIN_MENU;
+    static const std::vector<std::string> DAYS_OF_WEEK_MENU;
+    static const std::vector<std::string> DAYS_OF_WEEK;
+
     void handleUserChoice(const int choice);
     void handleQueryFacilityNames();
     void handleQueryAvailability();
@@ -22,10 +26,12 @@ private:
     void handleRateFacility();
     void handleQueryRating();
     void handleEchoMessage();
+    void handleExit();
 
     static int promptChoice(const std::string prompt);
     static std::string promptFacilityName(const std::string prompt);
     static std::string promptDayOfWeek(const std::string prompt);
+    static std::string promptDaysOfWeek(const std::string prompt);
     static std::string promptTime(const std::string prompt);
     static std::string promptBookingID(const std::string prompt);
     static int promptOffset(const std::string prompt);

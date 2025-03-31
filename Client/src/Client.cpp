@@ -50,9 +50,9 @@ std::string Client::queryFacilityNames()
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::queryAvailability(std::string facilityName)
+std::string Client::queryAvailability(std::string facilityName, std::string daysOfWeek)
 {
-    std::string messageData = "facility," + facilityName;
+    std::string messageData = "facility," + facilityName + "," + daysOfWeek;
 
     RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
 
@@ -260,7 +260,7 @@ std::string Client::receiveResponse()
     }
     catch(const std::exception& e)
     {
-        std::cerr << "Error receiving data: " << e.what() << std::endl;
+        std::cerr << e.what() << std::endl;
     }
 
     return messageData;

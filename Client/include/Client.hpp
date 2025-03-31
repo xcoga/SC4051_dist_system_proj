@@ -28,7 +28,7 @@ public:
     ~Client();
 
     std::string queryFacilityNames();
-    std::string queryAvailability(std::string facilityName);
+    std::string queryAvailability(std::string facilityName, std::string daysOfWeek);
     std::string bookFacility(
         std::string facilityName,
         std::string dayOfWeek,
