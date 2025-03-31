@@ -3,6 +3,8 @@
 #include "Serializer.hpp"
 #include "UserInterface.hpp"
 
+#include <chrono>
+
 Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 {
     try

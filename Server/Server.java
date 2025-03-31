@@ -508,8 +508,17 @@ public class Server {
     }
 
     lastUpdatedFacility = facilityName;
+    
 
+    //Check if the timeslot to update is available
     Availability availability = facility.getAvailability();
+    if (availability == null || !availability.isAvailable(newTimeSlot)) {
+      responseMessage = new RequestMessage(
+          Operation.WRITE.getOpCode(),
+          requestMessage.getRequestID(),
+          "status:ERROR\nmessage:Facility not available at the requested time");
+      return responseMessage;
+    }
 
     // Capture user information
     String userInfo = userAddress.toString() + ":" + userPort;
