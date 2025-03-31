@@ -27,7 +27,7 @@ import java.io.IOException;
 
 // Server class to handle requests from clients and manage facility bookings
 public class Server {
-  private static final double DROP_CHANCE = 0.1; // % chance to drop a request
+  private static final double DROP_CHANCE = 0.4; // % chance to drop a request
 
   private static MonitorService facilityMonitorService;
   private static RequestHistory requestHistory;
@@ -75,7 +75,7 @@ public class Server {
         // send response
         try {
           byte[] replybuff = Serializer.serialize(responseMessage);
-          System.out.println("serialized");
+
           // Send response (echo the received message)
           DatagramPacket reply = new DatagramPacket(replybuff,
               replybuff.length,

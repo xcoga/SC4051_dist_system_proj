@@ -117,7 +117,6 @@ public class Serializer {
 
     private static void writePrimitive(ByteBuffer buffer, Object value, Class<?> type) {
         if (type == int.class) {
-            System.out.println("detected int: " + value);
             buffer.writeInt(((Number) value).intValue());
         } else if (type == long.class) {
             buffer.writeLong(((Number) value).longValue());
@@ -166,8 +165,6 @@ public class Serializer {
         if (calculatedParity != receivedParityBit) {
             throw new Exception("Parity check failed: data corruption detected");
         }
-
-        System.out.println("Parity check passed in deserialization");
 
         // Deserialization
         deserializedObjects.clear();
@@ -288,7 +285,7 @@ public class Serializer {
     }
 
     private static Object readPrimitive(ByteReader reader, Class<?> type) {
-        System.out.println("detected primitive: " + type);
+
         if (type == int.class) {
             return reader.readInt();
         } else if (type == long.class) {
