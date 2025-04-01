@@ -1,10 +1,11 @@
 #include "UserInterface.hpp"
 
-#include "ResponseParser.hpp"
-
-#include <regex>
+#include <cstdio>
 #include <limits>
 #include <numeric>
+#include <regex>
+
+#include "ResponseParser.hpp"
 
 /* Constructors */
 UserInterface::UserInterface(Client &client) : client(client) {}
@@ -71,27 +72,35 @@ void UserInterface::displayConnectionInfo(Socket &socket, struct sockaddr_in &se
         exit(1);
     }
 
-    // Print the bound IP address and port
-    char ipStr[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
-    std::string ipAddress = "Client IP Address: " + std::string(ipStr);
-    std::string port = "Client Port: " + std::to_string(ntohs(clientAddr.sin_port));
+    char clientIp[INET_ADDRSTRLEN], serverIp[INET_ADDRSTRLEN];
+    std::string clientPort, serverPort;
 
-    char serverIpStr[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(serverAddr.sin_addr), serverIpStr, INET_ADDRSTRLEN);
-    std::string serverIpAddress = "Server IP Address: " + std::string(serverIpStr);
-    std::string serverPort = "Server Port: " + std::to_string(ntohs(serverAddr.sin_port));
+    inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIp, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &(serverAddr.sin_addr), serverIp, INET_ADDRSTRLEN);
+    clientPort = std::to_string(ntohs(clientAddr.sin_port));
+    serverPort = std::to_string(ntohs(serverAddr.sin_port));
 
     std::vector<std::string> connectionInfo = {
         "Connection Information",
         "Client socket has been successfully bound.",
-        ipAddress,
-        port,
+        "Client IP Address: " + std::string(clientIp),
+        "Client Port: " + clientPort,
         "",
         "Client is connected to the server.",
-        serverIpAddress,
-        serverPort
+        "Server IP Address: " + std::string(serverIp),
+        "Server Port: " + serverPort
     };
+
+    // // Print the bound IP address and port
+    // char ipStr[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
+    // std::string ipAddress = "Client IP Address: " + std::string(ipStr);
+    // std::string port = "Client Port: " + std::to_string(ntohs(clientAddr.sin_port));
+
+    // char serverIpStr[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &(serverAddr.sin_addr), serverIpStr, INET_ADDRSTRLEN);
+    // std::string serverIpAddress = "Server IP Address: " + std::string(serverIpStr);
+    // std::string serverPort = "Server Port: " + std::to_string(ntohs(serverAddr.sin_port));
 
     std::cout << std::endl;
     std::cout << generateBox(connectionInfo);

@@ -1,9 +1,9 @@
 #ifndef RESPONSE_PARSER_HPP
 #define RESPONSE_PARSER_HPP
 
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 
 class ResponseParser
 {

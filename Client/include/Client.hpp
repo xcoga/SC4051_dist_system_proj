@@ -1,13 +1,9 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 
 #include "RequestMessage.hpp"
 #include "Socket.hpp"

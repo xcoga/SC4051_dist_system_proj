@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include "Client.hpp"
-#include "UserInterface.hpp"
 #include "Serializer.hpp"
+#include "UserInterface.hpp"
 
 void registerClasses()
 {

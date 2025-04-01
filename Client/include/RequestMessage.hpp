@@ -19,7 +19,7 @@ public:
         READ = 0,
         WRITE = 1,
         UPDATE = 2,
-        DELETE = 3,
+        DELETE_REQUEST = 3,
         MONITOR = 4,
         ECHO = 5
     };

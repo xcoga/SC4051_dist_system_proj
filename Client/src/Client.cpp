@@ -1,9 +1,9 @@
 #include "Client.hpp"
 
+#include <chrono>
+
 #include "Serializer.hpp"
 #include "UserInterface.hpp"
-
-#include <chrono>
 
 Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 {
@@ -139,7 +139,7 @@ std::string Client::deleteBooking(std::string bookingID)
 
     std::string messageData = bookingID + "," + facilityName;
     
-    RequestMessage requestMessage(RequestMessage::DELETE, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::DELETE_REQUEST, requestID, messageData);
 
     return sendWithRetry(requestMessage);
 }
@@ -238,34 +238,6 @@ void Client::sendRequest(const RequestMessage &request, bool retry)
         exit(1);
     }
 }
-
-// std::string Client::receiveResponse()
-// {
-//     char recvBuffer[BUFFER_SIZE];
-//     struct sockaddr_in senderAddr;
-//     std::string messageData;
-
-//     try
-//     {
-//         int bytesReceived = socket.receiveDataFrom(recvBuffer, senderAddr);
-
-//         // TODO: Check parity
-
-//         // Deserialize response
-//         std::vector<uint8_t> receivedData(recvBuffer, recvBuffer + bytesReceived);
-//         std::shared_ptr<JavaSerializable> deserializedObj = JavaDeserializer::deserialize(receivedData);
-
-//         std::shared_ptr<RequestMessage> responseMessage = std::dynamic_pointer_cast<RequestMessage>(deserializedObj);
-//         messageData = responseMessage->getData();
-//     }
-//     catch(const std::exception& e)
-//     {
-//         std::cerr << e.what() << std::endl;
-//     }
-
-//     return messageData;
-// }
-
 
 std::string Client::receiveResponse(uint32_t expectedRequestID)
 {

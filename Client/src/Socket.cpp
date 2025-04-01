@@ -7,6 +7,7 @@
     // Winsock initialization
     bool initializeWinsock()
     {
+        WSADATA wsaData;
         return (WSAStartup(MAKEWORD(2, 2), &wsaData) == 0);
     }
 
