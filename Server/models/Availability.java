@@ -5,15 +5,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Availability class represents the availability of a facility for each day of
+ * the week.
+ * It also manages bookings and checks for conflicts.
+ */
 public class Availability {
-  private boolean[] days;
-  private int[] startHour;
-  private int[] startMinute;
-  private int[] endHour;
-  private int[] endMinute;
-  private List<Booking>[] bookedSlots;
-  private String facilityName;
+  private boolean[] days; // Array to indicate if the facility is open on each day
+  private int[] startHour; // Start hour for each day
+  private int[] startMinute; // Start minute for each day
+  private int[] endHour; // End hour for each day
+  private int[] endMinute; // End minute for each day
+  private List<Booking>[] bookedSlots; // List of booked slots for each day
+  private String facilityName; // Name of the facility
 
+  /**
+   * Constructor to initialize the Availability object.
+   */
   @SuppressWarnings("unchecked")
   public Availability() {
     this.days = new boolean[7];
@@ -27,6 +35,11 @@ public class Availability {
     }
   }
 
+  /**
+   * Convert the Availability object to a string representation.
+   * 
+   * @return A string containing the availability details for each day.
+   */
   public String toString() {
     String str = "Availability: ";
     for (int i = 0; i < 7; i++) {
@@ -42,6 +55,16 @@ public class Availability {
     return str;
   }
 
+  /**
+   * Set the availability for a specific day.
+   * 
+   * @param day         The day of the week.
+   * @param open        Whether the facility is open on this day.
+   * @param startHour   Start hour of availability.
+   * @param startMinute Start minute of availability.
+   * @param endHour     End hour of availability.
+   * @param endMinute   End minute of availability.
+   */
   public void setAvaOfDay(DayOfWeek day, boolean open, int startHour, int startMinute, int endHour, int endMinute) {
     this.days[day.getValue() - 1] = open;
     this.startHour[day.getValue() - 1] = startHour;
@@ -70,6 +93,12 @@ public class Availability {
     return this.endMinute[day.getValue() - 1];
   }
 
+  /**
+   * Check if a time slot is available for booking.
+   * 
+   * @param timeSlot The time slot to check.
+   * @return True if the time slot is available, false otherwise.
+   */
   public boolean isAvailable(TimeSlot timeSlot) {
     int dayIndex = timeSlot.day.getValue() - 1;
     if (!this.days[dayIndex]) {
@@ -85,6 +114,13 @@ public class Availability {
     return true;
   }
 
+  /**
+   * Book a time slot for a user.
+   * 
+   * @param userInfo Information about the user.
+   * @param timeSlot The time slot to book.
+   * @return A unique confirmation ID for the booking.
+   */
   public String bookTimeSlot(String userInfo, TimeSlot timeSlot) {
     int dayIndex = timeSlot.day.getValue() - 1;
     String confirmationID = UUID.randomUUID().toString();
@@ -93,17 +129,13 @@ public class Availability {
     return confirmationID;
   }
 
-  // public String removeTimeSlot(String prev_bookingId, String userInfo){
-  // for (TimeSlot slot : this.bookedSlots[dayIndex]) {
-  // if (slot.confirmationID.equals(prev_bookingId) &&
-  // slot.userInfo.equals(userInfo)) {
-  // this.bookedSlots[dayIndex].remove(slot);
-  // return slot.confirmationID;
-  // }
-  // }
-  // return null;
-  // }
-
+  /**
+   * Remove a booked time slot.
+   * 
+   * @param prev_bookingId The confirmation ID of the booking to remove.
+   * @param userInfo       Information about the user.
+   * @return The confirmation ID of the removed booking, or null if not found.
+   */
   public String removeTimeSlot(String prev_bookingId, String userInfo) {
     // Loop through each day
     for (int dayIndex = 0; dayIndex < this.bookedSlots.length; dayIndex++) {
@@ -119,6 +151,12 @@ public class Availability {
     return null;
   }
 
+  /**
+   * Get booking information for a specific confirmation ID.
+   * 
+   * @param confirmationID The confirmation ID of the booking.
+   * @return The Booking object if found, null otherwise.
+   */
   public Booking getBookingInfo(String confirmationID) {
     for (int i = 0; i < 7; i++) {
       for (Booking slot : this.bookedSlots[i]) {
@@ -130,45 +168,51 @@ public class Availability {
     return null;
   }
 
-public List<TimeSlot> getAvailableTimeSlots(DayOfWeek day) {
+  /**
+   * Get a list of available time slots for a specific day.
+   * 
+   * @param day The day of the week.
+   * @return A list of available TimeSlot objects.
+   */
+  public List<TimeSlot> getAvailableTimeSlots(DayOfWeek day) {
     int dayIndex = day.getValue() - 1;
     List<TimeSlot> availableSlots = new ArrayList<>();
 
     if (!this.days[dayIndex]) {
-        return availableSlots; // Return empty list if the facility is closed on this day
+      return availableSlots; // Return empty list if the facility is closed on this day
     }
 
     // Sort booked slots by start time
     List<Booking> sortedBookings = new ArrayList<>(this.bookedSlots[dayIndex]);
     sortedBookings.sort((a, b) -> {
-        if (a.timeSlot.startHour != b.timeSlot.startHour) {
-            return Integer.compare(a.timeSlot.startHour, b.timeSlot.startHour);
-        }
-        return Integer.compare(a.timeSlot.startMinute, b.timeSlot.startMinute);
+      if (a.timeSlot.startHour != b.timeSlot.startHour) {
+        return Integer.compare(a.timeSlot.startHour, b.timeSlot.startHour);
+      }
+      return Integer.compare(a.timeSlot.startMinute, b.timeSlot.startMinute);
     });
 
     int currentStartHour = this.startHour[dayIndex];
     int currentStartMinute = this.startMinute[dayIndex];
 
     for (Booking bookedSlot : sortedBookings) {
-        // Add available slot before the booked slot
-        if (currentStartHour < bookedSlot.timeSlot.startHour ||
-            (currentStartHour == bookedSlot.timeSlot.startHour && currentStartMinute < bookedSlot.timeSlot.startMinute)) {
-            availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute, 
-                                           bookedSlot.timeSlot.startHour, bookedSlot.timeSlot.startMinute, day));
-        }
-        // Update the start time to the end of the booked slot
-        currentStartHour = bookedSlot.timeSlot.endHour;
-        currentStartMinute = bookedSlot.timeSlot.endMinute;
+      // Add available slot before the booked slot
+      if (currentStartHour < bookedSlot.timeSlot.startHour ||
+          (currentStartHour == bookedSlot.timeSlot.startHour && currentStartMinute < bookedSlot.timeSlot.startMinute)) {
+        availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute,
+            bookedSlot.timeSlot.startHour, bookedSlot.timeSlot.startMinute, day));
+      }
+      // Update the start time to the end of the booked slot
+      currentStartHour = bookedSlot.timeSlot.endHour;
+      currentStartMinute = bookedSlot.timeSlot.endMinute;
     }
 
     // Add the remaining available slot after the last booked slot
     if (currentStartHour < this.endHour[dayIndex] ||
         (currentStartHour == this.endHour[dayIndex] && currentStartMinute < this.endMinute[dayIndex])) {
-        availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute, 
-                                       this.endHour[dayIndex], this.endMinute[dayIndex], day));
+      availableSlots.add(new TimeSlot(currentStartHour, currentStartMinute,
+          this.endHour[dayIndex], this.endMinute[dayIndex], day));
     }
 
     return availableSlots;
-}
+  }
 }
