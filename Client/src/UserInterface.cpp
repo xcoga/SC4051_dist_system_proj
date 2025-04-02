@@ -296,15 +296,15 @@ void UserInterface::handleUpdateBooking()
     std::cout << "Update Existing Booking selected." << std::endl;
 
     int offsetMinutes;
-    std::string bookingID, dayOfWeek, newStartTime, newEndTime, response;
+    std::string bookingID, oldBookingDetails, newStartTime, newEndTime, newBookingDetails;
     std::vector<std::string> parsedResponse;
     bool confirmation;
 
     bookingID = promptBookingID("Enter booking ID: ");
 
-    // Display booking details
-    response = client.queryBooking(bookingID);
-    parsedResponse = ResponseParser::parseQueryBookingResponse(response);
+    // Display old booking details
+    oldBookingDetails = client.queryBooking(bookingID);
+    parsedResponse = ResponseParser::parseQueryBookingResponse(oldBookingDetails);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse))
     {
@@ -320,8 +320,8 @@ void UserInterface::handleUpdateBooking()
 
     offsetMinutes = promptOffset("Enter offset in minutes (positive for later, negative for earlier): ");
 
-    response = client.updateBooking(bookingID, offsetMinutes);
-    parsedResponse = ResponseParser::parseUpdateBookingResponse(response);
+    newBookingDetails = client.updateBooking(bookingID, offsetMinutes, oldBookingDetails);
+    parsedResponse = ResponseParser::parseUpdateBookingResponse(newBookingDetails);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse))
     {
@@ -334,15 +334,15 @@ void UserInterface::handleDeleteBooking()
     std::cout << std::endl;
     std::cout << "Delete Existing Booking selected." << std::endl;
 
-    std::string bookingID, response;
+    std::string bookingID, oldBookingDetails, response;
     std::vector<std::string> parsedResponse;
     bool confirmation;
 
     bookingID = promptBookingID("Enter booking ID: ");
 
     // Display booking details
-    response = client.queryBooking(bookingID);
-    parsedResponse = ResponseParser::parseQueryBookingResponse(response);
+    oldBookingDetails = client.queryBooking(bookingID);
+    parsedResponse = ResponseParser::parseQueryBookingResponse(oldBookingDetails);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse))
     {
@@ -356,7 +356,7 @@ void UserInterface::handleDeleteBooking()
         return;
     }
 
-    response = client.deleteBooking(bookingID);
+    response = client.deleteBooking(bookingID, oldBookingDetails);
     parsedResponse = ResponseParser::parseDeleteBookingResponse(response);
     std::cout << generateBox(parsedResponse);
     if (isErrorResponse(parsedResponse))
