@@ -69,10 +69,10 @@ void Socket::bind(int port)
     }
 #else
     if (::bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-#endif
     {
         throw std::runtime_error("Bind failed! Error: " + std::string(strerror(errno)));
     }
+#endif
 }
 
 void Socket::setReceiveTimeout(int seconds)
