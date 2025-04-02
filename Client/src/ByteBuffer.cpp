@@ -70,7 +70,7 @@ void ByteBuffer::writeLong(int64_t value)
 /**
  * @brief Writes a double-precision floating-point value to the buffer.
  * 
- * The double is in IEE 754 represendtation, making it 64 bits long.
+ * The double is in IEE 754 representation, making it 64 bits long.
  * Copying it directly into 64-bit variable ensures that the binary representation is preserved exactly.
  * 
  * @param value The double value to write.
