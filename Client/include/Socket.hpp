@@ -13,6 +13,7 @@
     #include <unistd.h>
 #endif
 
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
