@@ -13,10 +13,24 @@
  */
 namespace Constants
 {
-    // General constants
+    /**
+     * @brief Timeout for socket operations in seconds.
+     */
     const int TIMEOUT_SEC = 5;
+
+    /**
+     * @brief Maximum number of retries for socket operations.
+     */
     const int MAX_RETRIES = 5;
+
+    /**
+     * @brief Size of the buffer for socket communication.
+     */
     const int BUFFER_SIZE = 1024;
+
+    /**
+     * @brief Days of the week.
+     */
     const std::vector<std::string> DAYS_OF_WEEK = {
         "MONDAY",
         "TUESDAY",
@@ -27,7 +41,9 @@ namespace Constants
         "SUNDAY"
     };
 
-    // Menu string vectors
+    /**
+     * @brief Main menu content.
+     */
     const std::vector<std::string> MAIN_MENU = {
         "Facility Booking System",
         "1. Query Facility Names",
@@ -42,6 +58,10 @@ namespace Constants
         "10. [DEBUG] Echo Message",
         "11. Exit"
     };
+
+    /**
+     * @brief Days of the week menu content
+     */
     const std::vector<std::string> DAYS_OF_WEEK_MENU = {
         "Day of Week",
         "1. MONDAY",
@@ -53,8 +73,14 @@ namespace Constants
         "7. SUNDAY"
     };
 
-    // Status strings
+    /**
+     * @brief Status string indicating successful operation.
+     */
     const std::string STATUS_SUCCESS = "status:SUCCESS";
+
+    /**
+     * @brief Status string indicating an error occurred.
+     */
     const std::string STATUS_ERROR = "status:ERROR";
 }
 
