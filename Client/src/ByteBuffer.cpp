@@ -34,6 +34,9 @@ void ByteBuffer::writeByte(uint8_t value)
 /**
  * @brief Writes a 32-bit integer to the buffer in big-endian format.
  * 
+ * The integer is split into 4 bytes and written in the order of most significant byte
+ * (MSB) to least significant byte (LSB).
+ * 
  * @param value The 32-bit integer to write.
  */
 void ByteBuffer::writeInt(int32_t value)
@@ -46,6 +49,9 @@ void ByteBuffer::writeInt(int32_t value)
 
 /**
  * @brief Writes a 64-bit integer to the buffer in big-endian format.
+ * 
+ * The integer is split into 8 bytes and written in the order of most significant byte
+ * (MSB) to least significant byte (LSB).
  * 
  * @param value The 64-bit integer to write.
  */
