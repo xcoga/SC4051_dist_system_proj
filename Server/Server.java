@@ -25,17 +25,20 @@ import java.io.IOException;
 
 /**
  * Server class to handle client requests and manage facility bookings.
- * Implements a UDP server with at-most-once and at-least-once invocation semantics.
+ * Implements a UDP server with at-most-once and at-least-once invocation
+ * semantics.
  */
 public class Server {
-  private static final double DROP_CHANCE = 0.4; // Probability of dropping a request (for testing reliability)
+  // Probability of dropping a request (used for testing reliability)
+  private static final double DROP_CHANCE = 0.4;
 
   // Service classes for managing facilities, request history, and monitoring
   private static MonitorService facilityMonitorService;
   private static RequestHistory requestHistory;
   private static FacilityFactory facilityFactory;
 
-  // Flag to determine invocation semantics: true for at-most-once, false for at-least-once
+  // Flag to determine invocation semantics: true for at-most-once, false for
+  // at-least-once
   private static boolean checkHistory = true;
 
   // UDP socket for communication
@@ -112,14 +115,15 @@ public class Server {
   }
 
   /**
-   * Initializes the service classes and creates initial facilities with availability.
+   * Initializes the service classes and creates initial facilities with
+   * availability.
    */
   private static void init() {
     facilityMonitorService = new MonitorService();
     requestHistory = new RequestHistory();
     facilityFactory = new FacilityFactory();
 
-    // Create some facilities at the start
+    // Create some facilities by default at the start
     Facility f1 = facilityFactory.newFacility("Weekday1");
     Facility f2 = facilityFactory.newFacility("Weekday2");
     Facility f3 = facilityFactory.newFacility("Weekends");
@@ -144,7 +148,8 @@ public class Server {
   }
 
   /**
-   * Handles incoming client requests and processes them based on the operation type.
+   * Handles incoming client requests and processes them based on the operation
+   * type.
    * 
    * @param request DatagramPacket containing the client's request.
    * @return RequestMessage response to be sent back to the client.
@@ -202,7 +207,7 @@ public class Server {
     // Process the request based on its operation type
     switch (requestMessage.getOperation()) {
       case READ:
-        // example requests format: facility,Weekday1
+        // Handle READ operations (e.g., facility info, booking info, ratings)
         String[] requestString = requestMessage.getData().split(",");
         if (requestString == null || requestString.length == 1) {
           responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
@@ -283,6 +288,7 @@ public class Server {
         break;
 
       case WRITE:
+        // Handle WRITE operations (e.g., book a facility)
         // For book facility request, format:
         // facilityName,day,startHour,startMinute,endHour,endMinute
         try {
@@ -294,12 +300,12 @@ public class Server {
 
         break;
 
-      // UPDATE has 2 cases: 1. Update booking 2. Add a rating
-      // 1. Update Booking, Expected format:
-      // "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
-      // 2. Add Rating, Expected format: "rating",facilityName,rating
       case UPDATE:
-
+        // Handle UPDATE operations (e.g., update booking, add rating)
+        // UPDATE has 2 cases: 1. Update booking 2. Add a rating
+        // 1. Update Booking, Expected format:
+        // "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
+        // 2. Add Rating, Expected format: "rating",facilityName,rating
         try {
           // Parse the request to get the type of update
           String updateType = Parser.parseUpdateType(requestMessage.getData());
@@ -331,7 +337,7 @@ public class Server {
         break;
 
       case DELETE:
-
+        // Handle DELETE operations (e.g., delete booking)
         try {
           // Delete booking. Expected format: "<bookingId>,<facilityName>"
           responseMessage = deleteBooking(requestMessage, request.getAddress(), request.getPort());
@@ -345,6 +351,7 @@ public class Server {
         break;
 
       case MONITOR:
+        // Handle MONITOR operations (e.g., register for monitoring updates)
         // Monitor request format: "<register>,<facilityName>,<monitor interval>"
         try {
           String[] monitorRequestString = requestMessage.getData().split(",");
@@ -359,28 +366,25 @@ public class Server {
             String facilityName = monitorRequestString[1];
             int monitorInterval = Integer.parseInt(monitorRequestString[2]);
 
-            //CHECK if the facilityName provided by user is correct.
-            if (facilityFactory.getFacility(facilityName) == null){
+            // CHECK if the facilityName provided by user is correct.
+            if (facilityFactory.getFacility(facilityName) == null) {
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                   "status:ERROR\nmessage:Invalid facilityName provided");
-              break;              
+              break;
             }
-            
 
             Monitor clientMonitor = new Monitor(facilityName, requestMessage.getRequestID(), request.getAddress(),
                 request.getPort(), monitorInterval);
 
             facilityMonitorService.registerMonitor(clientMonitor);
             responseMessage = new RequestMessage(
-              Operation.MONITOR.getOpCode(),
-              requestMessage.getRequestID(),
-              String.format(
-                "status:SUCCESS\n" +
-                "facility:%s\n" +
-                "interval:%d",
-                facilityName, monitorInterval
-              )
-            );
+                Operation.MONITOR.getOpCode(),
+                requestMessage.getRequestID(),
+                String.format(
+                    "status:SUCCESS\n" +
+                        "facility:%s\n" +
+                        "interval:%d",
+                    facilityName, monitorInterval));
           } else {
             responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
                 "status:ERROR\nmessage:Invalid request format");
@@ -423,24 +427,6 @@ public class Server {
     }
 
     return responseMessage;
-  }
-
-  private static void printSupposedData(int requestType, int requestID, String data) {
-    RequestMessage x = new RequestMessage(requestType, requestID, data);
-    byte[] buffer = null;
-
-    try {
-      buffer = Serializer.serialize(x);
-
-      System.out.println("Supposed data size: " + buffer.length + " bytes");
-      for (byte b : buffer) {
-        System.out.print(String.format("%02X ", b & 0xFF));
-      }
-      System.out.println();
-    } catch (Exception e) {
-      System.err.println("Error serializing request: " + e.getMessage());
-      e.printStackTrace();
-    }
   }
 
   private static RequestMessage bookFacility(RequestMessage request, InetAddress userAddress, int userPort) {
@@ -489,12 +475,12 @@ public class Server {
         request.getRequestID(),
         String.format(
             "status:SUCCESS\n" +
-              "bookingID:%s\n" +
-              "user:%s\n" +
-              "facility:%s\n" +
-              "day:%s\n" +
-              "startTime:%s\n" +
-              "endTime:%s",
+                "bookingID:%s\n" +
+                "user:%s\n" +
+                "facility:%s\n" +
+                "day:%s\n" +
+                "startTime:%s\n" +
+                "endTime:%s",
             confirmationID, userInfo, facilityName, bookTimeSlot.getDay(), bookTimeSlot.getStartTime(),
             bookTimeSlot.getEndTime()));
 
@@ -533,9 +519,8 @@ public class Server {
     }
 
     lastUpdatedFacility = facilityName;
-    
 
-    //Check if the timeslot to update is available
+    // Check if the timeslot to update is available
     Availability availability = facility.getAvailability();
     if (availability == null || !availability.isAvailable(newTimeSlot)) {
       responseMessage = new RequestMessage(
@@ -569,9 +554,7 @@ public class Server {
                   "startTime:%s\n" +
                   "endTime:%s\n",
               delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, newTimeSlot.getStartTime(),
-              newTimeSlot.getEndTime()
-          )
-      );
+              newTimeSlot.getEndTime()));
 
       return responseMessage;
 
@@ -667,11 +650,12 @@ public class Server {
       for (DayOfWeek day : DayOfWeek.values()) {
         // if days not specified, get all days
         // else if days specified, only get those days
-        if(!(days == null || days.isEmpty()) && days.get(day) == null) {
+        if (!(days == null || days.isEmpty()) && days.get(day) == null) {
           continue;
-        } 
+        }
 
-        System.out.println("Checking availability for day: " + day);
+        // Debug message
+        // System.out.println("Checking availability for day: " + day);
 
         List<TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
         if (!timeslots.isEmpty()) {
