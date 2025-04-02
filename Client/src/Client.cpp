@@ -5,11 +5,20 @@
 
 #include <chrono>
 
+/**
+ * @brief Constructs a Client object and initializes the connection to the server.
+ *
+ * This constructor creates a UDP socket, binds it to a local address, and sets up
+ * the remote server address. It also sets a timeout for receiving data.
+ *
+ * @param serverIp The IP address of the server.
+ * @param serverPort The port number of the server.
+ */
 Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 {
     try
     {
-        socket.create(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        socket.create(AF_INET, SOCK_DGRAM, IPPROTO_UDP); // Create a UDP socket
     }
     catch (const std::runtime_error &e)
     {
@@ -17,11 +26,11 @@ Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
         exit(1);
     }
 
-    makeLocalSocketAddress(&clientAddr);
+    makeLocalSocketAddress(&clientAddr); // Set up the local address
 
     try
     {
-        socket.bind(0);
+        socket.bind(0); // Bind to any available port
     }
     catch (const std::runtime_error &e)
     {
@@ -29,36 +38,70 @@ Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
         exit(1);
     }
 
-    makeRemoteSocketAddress(&serverAddr, const_cast<char *>(serverIp.c_str()), serverPort);
+    makeRemoteSocketAddress(&serverAddr, const_cast<char *>(serverIp.c_str()), serverPort); // Set up the server address
 
-    socket.setReceiveTimeout(TIMEOUT_SEC);
+    socket.setReceiveTimeout(TIMEOUT_SEC); // Set a timeout for receiving data
 
-    UserInterface::displayConnectionInfo(socket, serverAddr);
+    UserInterface::displayConnectionInfo(socket, serverAddr); // Display connection info to the user
 }
 
+/**
+ * @brief Destructor for the Client class.
+ *
+ * This destructor closes the socket when the client object is destroyed.
+ */
 Client::~Client()
 {
-    socket.closeSocket();
+    socket.closeSocket(); // Close the socket when the client is destroyed
 }
 
+/**
+ * @brief Queries the names of all available facilities.
+ *
+ * This method sends a request to the server to retrieve the names of all facilities.
+ *
+ * @return A string containing the list of facility names or an error message.
+ */
 std::string Client::queryFacilityNames()
 {
-    std::string messageData = "facility,ALL";
+    std::string messageData = "facility,ALL"; // Request all facility name
 
-    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData); // READ operation
 
-    return sendWithRetry(requestMessage);
+    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }
 
+/**
+ * @brief Queries the availability of a facility for specific days.
+ * 
+ * This method sends a request to the server to check the availability of a facility for the specified days.
+ * 
+ * @param facilityName The name of the facility to query availability for.
+ * @param daysOfWeek A comma-separated list of days (e.g., "MONDAY,TUESDAY,WEDNESDAY").
+ * 
+ * @return A string containing the availability information or error message.
+ */
 std::string Client::queryAvailability(std::string facilityName, std::string daysOfWeek)
 {
-    std::string messageData = "facility," + facilityName + "," + daysOfWeek;
+    std::string messageData = "facility," + facilityName + "," + daysOfWeek; // Request availability for the specified facility and days
 
-    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData); // READ operation
 
-    return sendWithRetry(requestMessage);
+    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }
 
+/**
+ * @brief Books a facility for a specific day and time range.
+ * 
+ * This method sends a request to the server to book a facility for the specified day and time range.
+ * 
+ * @param facilityName The name of the facility.
+ * @param dayOfWeek The day of the week (e.g., "MONDAY").
+ * @param startTime The start time in HHMM format (e.g., "0900").
+ * @param endTime The end time in HHMM format (e.g., "1100").
+ * 
+ * @return A string containing the booking confirmation or error message.
+ */
 std::string Client::bookFacility(
     std::string facilityName,
     std::string dayOfWeek,
@@ -67,32 +110,56 @@ std::string Client::bookFacility(
 )
 {
     std::string startTimeHour, startTimeMinute, endTimeHour, endTimeMinute;
+    // Extract hours and minutes from the start and end times
     startTimeHour = startTime.substr(0, 2);
     startTimeMinute = startTime.substr(2, 2);
     endTimeHour = endTime.substr(0, 2);
     endTimeMinute = endTime.substr(2, 2);
 
-    std::string messageData = facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute;
+    std::string messageData = facilityName + "," + dayOfWeek + "," + startTimeHour + "," + startTimeMinute + "," + endTimeHour + "," + endTimeMinute; // Booking request for the specified facility, day, and times
 
-    RequestMessage requestMessage(RequestMessage::WRITE, requestID, messageData);    
+    RequestMessage requestMessage(RequestMessage::WRITE, requestID, messageData); // WRITE operation
 
-    return sendWithRetry(requestMessage);
+    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }
 
+/**
+ * @brief Queries the details of an existing booking.
+ * 
+ * This method sends a request to the server to retrieve the details of an existing booking.
+ * 
+ * @param bookingID The ID of the booking to query.
+ * 
+ * @return A string containing the booking details or an error message.
+ */
 std::string Client::queryBooking(std::string bookingID)
 {
-    std::string messageData = "booking," + bookingID;
+    std::string messageData = "booking," + bookingID; // Request booking details for the specified ID
 
-    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::READ, requestID, messageData); // READ operation
 
-    return sendWithRetry(requestMessage);
+    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }
 
-std::string Client::updateBooking(std::string oldBookingID, int offsetMinutes)
+/**
+ * @brief Updates an existing booking by applying a time offset.
+ * 
+ * This method sends a request to the server to update an existing booking by applying a time offset.
+ * The new start and end times are first calculated based on the old booking details and the offset.
+ * Then, the update request containing the old booking ID, facility name, day of the week, and new times are sent to the server.
+ * 
+ * @param oldBookingID The ID of the booking to update.
+ * @param offsetMinutes The time offset in minutes (positive for later, negative for earlier).
+ * @param oldBookingDetails The details of the old booking to be updated.
+ * 
+ * @return A string containing the updated booking details or an error message.
+ */
+std::string Client::updateBooking(
+    std::string oldBookingID,
+    int offsetMinutes,
+    std::string oldBookingDetails
+)
 {
-    // Make queryBooking call first to get the old booking details
-    std::string oldBookingDetails = queryBooking(oldBookingID);
-
     // Extract facility name, day of week, start time, and end time from the old booking details
     std::string facilityName = extractFacilityName(oldBookingDetails);
     std::string oldDayOfWeek = extractDayOfWeek(oldBookingDetails);
@@ -127,25 +194,47 @@ std::string Client::updateBooking(std::string oldBookingID, int offsetMinutes)
         std::to_string(newEndMinute)
     );
 
-    RequestMessage requestMessage(RequestMessage::UPDATE, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::UPDATE, requestID, messageData); // UPDATE operation
 
-    return sendWithRetry(requestMessage);
+    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }
 
-std::string Client::deleteBooking(std::string bookingID)
+/**
+ * @brief Deletes an existing booking.
+ * 
+ * This method sends a request to the server to delete an existing booking.
+ * 
+ * @param bookingID The ID of the booking to delete.
+ * @param bookingDetails The details of the booking to delete.
+ * 
+ * @return A string containing the deletion confirmation or an error message.
+ */
+std::string Client::deleteBooking(std::string bookingID, std::string bookingDetails)
 {
-    // Make queryBooking call first to get the old booking details, especially the facility name
-    // Facility name is required for the delete booking request
-    std::string bookingDetails = queryBooking(bookingID);
+    // Extract the facility name from the existing booking as it is required for the delete booking request
     std::string facilityName = extractFacilityName(bookingDetails);
 
-    std::string messageData = bookingID + "," + facilityName;
+    std::string messageData = bookingID + "," + facilityName; // Request to delete the booking with the specified ID and facility name
     
-    RequestMessage requestMessage(RequestMessage::DELETE, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::DELETE, requestID, messageData); // DELETE operation
 
-    return sendWithRetry(requestMessage);
+    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }
 
+/**
+ * @brief Monitors the availability of a facility for a specified duration.
+ * 
+ * This method sends a request to the server to register the client's interest in monitoring the availability of a facility.
+ * The request message includes the facility to monitor and the duration in seconds.
+ * The server will respond with availability updates, if any, during the monitoring period.
+ * During the monitoring period, the client is blocked from executing other operations.
+ * 
+ * @param facilityName The name of the facility to monitor.
+ * @param durationSeconds The duration to monitor in seconds.
+ * @param onUpdate Callback function to handle updates during monitoring.
+ * 
+ * @note The boolean in the callback function indicates whether the update message is a registration response. This is required for the callback function to handle the two different types of responses (registration and updates) correctly.
+ */
 void Client::monitorAvailability(
     std::string facilityName,
     int durationSeconds,
