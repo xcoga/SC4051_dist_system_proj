@@ -79,7 +79,7 @@ std::string Client::queryFacilityNames()
  * 
  * @return A string containing the availability information or error message.
  */
-std::string Client::queryAvailability(const std::string facilityName, const std::string daysOfWeek)
+std::string Client::queryAvailability(std::string facilityName, std::string daysOfWeek)
 {
     std::string messageData = "facility," + facilityName + "," + daysOfWeek; // Request availability for the specified facility and days
 
@@ -209,22 +209,13 @@ std::string Client::updateBooking(
 std::string Client::deleteBooking(std::string bookingID, std::string bookingDetails)
 {
     // Extract the facility name from the existing booking as it is required for the delete booking request
-    return sendWithRetry(requestMessage);
-}
-
-std::string Client::deleteBooking(const std::string bookingID)
-{
-    // Make queryBooking call first to get the old booking details, especially the facility name
-    // Facility name is required for the delete booking request
-    std::string bookingDetails = queryBooking(bookingID);
     std::string facilityName = extractFacilityName(bookingDetails);
 
     std::string messageData = bookingID + "," + facilityName; // Request to delete the booking with the specified ID and facility name
-    
-    RequestMessage requestMessage(RequestMessage::DELETE, requestID, messageData); // DELETE operation
-    RequestMessage requestMessage(RequestMessage::DELETE_REQUEST, requestID, messageData);
 
-    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
+    RequestMessage requestMessage(RequestMessage::DELETE_REQUEST, requestID, messageData); // DELETE (enum named as DELETE_REQUEST) operation
+
+    return sendWithRetry(requestMessage);
 }
 
 /**
@@ -247,15 +238,18 @@ void Client::monitorAvailability(
     const std::function<void(const std::string &, const bool)> &onUpdate
 )
 {
-    std::string messageData = "register," + facilityName + "," + std::to_string(durationSeconds);
+    std::string messageData = "register," + facilityName + "," + std::to_string(durationSeconds); // Request to register for monitoring the specified facility for the specified duration
 
-    RequestMessage requestMessage(RequestMessage::MONITOR, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::MONITOR, requestID, messageData); // MONITOR operation
 
     std::string registrationResponse = sendWithRetry(requestMessage);
-    onUpdate(registrationResponse, true);
+    onUpdate(registrationResponse, true); // Call the callback function with the registration response
 
+    // Check if the registration was successful
     if (registrationResponse.find("status:SUCCESS") == 0)
     {
+        // If successful, listen for updates for the specified duration
+        // Client is blocked from making other requests during this time
         listenForMonitoringUpdates(durationSeconds, [onUpdate](const std::string &update, bool isRegistrationResponse)
         {
             onUpdate(update, false);
@@ -263,15 +257,34 @@ void Client::monitorAvailability(
     }
 }
 
+/**
+ * @brief Rates a facility.
+ * 
+ * This method sends a request to the server to rate a facility.
+ * 
+ * @param facilityName The name of the facility to rate.
+ * @param rating The rating value (e.g., 4.5).
+ * 
+ * @return A string containing the rating confirmation or error message.
+ */
 std::string Client::rateFacility(std::string facilityName, float rating)
 {
-    std::string messageData = "rating," + facilityName + "," + std::to_string(rating);
+    std::string messageData = "rating," + facilityName + "," + std::to_string(rating); // Request to rate the facility with the specified name and rating
 
-    RequestMessage requestMessage(RequestMessage::UPDATE, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::UPDATE, requestID, messageData); // UPDATE operation
 
-    return sendWithRetry(requestMessage);
+    return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }
 
+/**
+ * @brief Queries the rating of a facility.
+ * 
+ * This method sends a request to the server to retrieve the average rating of a facility.
+ * 
+ * @param facilityName The name of the facility to query.
+ * 
+ * @return A string containing the rating information or error message.
+ */
 std::string Client::queryRating(std::string facilityName)
 {
     std::string messageData = "rating," + facilityName;
@@ -281,6 +294,15 @@ std::string Client::queryRating(std::string facilityName)
     return sendWithRetry(requestMessage);
 }
 
+/**
+ * @brief Sends an echo message to the server and receives the response.
+ * 
+ * This method sends a message to the server and waits for the echoed response.
+ * 
+ * @param messageData The message data to send.
+ * 
+ * @return A string containing the echoed message from the server or error message.
+ */
 std::string Client::echoMessage(std::string messageData)
 {
     RequestMessage requestMessage(RequestMessage::ECHO, requestID, messageData);
@@ -288,13 +310,31 @@ std::string Client::echoMessage(std::string messageData)
     return sendWithRetry(requestMessage);
 }
 
+/**
+ * @brief Creates a local socket address.
+ * 
+ * This method initializes the local socket address structure with the specified parameters.
+ * 
+ * @param sa Pointer to the sockaddr_in structure to initialize.
+ */
 void Client::makeLocalSocketAddress(struct sockaddr_in *sa)
 {
     sa->sin_family = AF_INET;
-    sa->sin_port = htons(8000);                 // Let the system choose a port
+    sa->sin_port = htons(8000);                 // Set client port to 8000
     sa->sin_addr.s_addr = htonl(INADDR_ANY);    // On local host
 }
 
+/**
+ * @brief Creates a remote socket address from a hostname and port.
+ * 
+ * This method initializes the remote socket address structure with the specified hostname and port.
+ * It first tries to convert the hostname to an IP address. If that fails, it resolves the hostname using gethostbyname.
+ * This is necessary for the client to be able to communicate with the server.
+ * 
+ * @param sa Pointer to the sockaddr_in structure to initialize.
+ * @param hostname The hostname or IP address of the server.
+ * @param port The port number of the server.
+ */
 void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int port)
 {
     sa->sin_family = AF_INET;
@@ -316,6 +356,17 @@ void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int
     }
 }
 
+/**
+ * @brief Sends a request message to the server.
+ * 
+ * This method serializes the request message and sends it to the server.
+ * It increments the request ID for each new request.
+ * 
+ * @param request The request message to send.
+ * @param retry Whether this is a retry attempt.
+ * 
+ * @note The retry flag is used to determine whether to increment the request ID or not.
+ */
 void Client::sendRequest(const RequestMessage &request, bool retry)
 {
     if (!retry)
@@ -336,6 +387,16 @@ void Client::sendRequest(const RequestMessage &request, bool retry)
     }
 }
 
+/**
+ * @brief Receives a response from the server and verifies the request ID.
+ * 
+ * This method receives a response from the server, deserializes it, and checks if the request ID matches the expected one.
+ * If it doesn't match, it returns an empty string to trigger a retry.
+ * 
+ * @param expectedRequestID The expected request ID for the response.
+ * 
+ * @return A string containing the response message from the server or error message.
+ */
 std::string Client::receiveResponse(uint32_t expectedRequestID)
 {
     char recvBuffer[BUFFER_SIZE];
@@ -370,6 +431,16 @@ std::string Client::receiveResponse(uint32_t expectedRequestID)
     return messageData;
 }
 
+/**
+ * @brief Sends a request to the server with retries.
+ * 
+ * This method attempts to send a request to the server multiple times in case of timeouts or no response.
+ * It uses a maximum number of retries defined by MAX_RETRIES.
+ * 
+ * @param request The request message to send.
+ * 
+ * @return A string containing the response message from the server or error message.
+ */
 std::string Client::sendWithRetry(const RequestMessage &request)
 {
     for (int attempt = 0; attempt < MAX_RETRIES; ++attempt)
@@ -390,6 +461,16 @@ std::string Client::sendWithRetry(const RequestMessage &request)
     return "status:ERROR\nmessage:Request failed after " + std::to_string(MAX_RETRIES) + " attempts.";
 }
 
+/**
+ * @brief Extracts the facility name from the booking details string.
+ * 
+ * This method searches for the facility name in the booking details string.
+ * It looks for the prefix "facility:" and extracts the name that follows it.
+ * 
+ * @param bookingDetails The booking details string.
+ * 
+ * @return The extracted facility name.
+ */
 std::string Client::extractFacilityName(const std::string &bookingDetails)
 {
     const std::string facilityPrefix = "facility:";
@@ -405,6 +486,16 @@ std::string Client::extractFacilityName(const std::string &bookingDetails)
     return "";
 }
 
+/**
+ * @brief Extracts the day of the week from the booking details string.
+ * 
+ * This method searches for the day of the week in the booking details string.
+ * It looks for the prefix "day:" and extracts the name that follows it.
+ * 
+ * @param bookingDetails The booking details string.
+ * 
+ * @return The extracted day of the week.
+ */
 std::string Client::extractDayOfWeek(const std::string &bookingDetails)
 {
     const std::string dayPrefix = "day:";
@@ -420,6 +511,16 @@ std::string Client::extractDayOfWeek(const std::string &bookingDetails)
     return "";
 }
 
+/**
+ * @brief Extracts the start time from the booking details string.
+ * 
+ * This method searches for the start time in the booking details string.
+ * It looks for the prefix "startTime:" and extracts the time that follows it.
+ * 
+ * @param bookingDetails The booking details string.
+ * 
+ * @return The extracted start time in HHMM format.
+ */
 std::string Client::extractStartTime(const std::string &bookingDetails)
 {
     const std::string startTimePrefix = "startTime:";
@@ -435,6 +536,16 @@ std::string Client::extractStartTime(const std::string &bookingDetails)
     return "";
 }
 
+/**
+ * @brief Extracts the end time from the booking details string.
+ * 
+ * This method searches for the end time in the booking details string.
+ * It looks for the prefix "endTime:" and extracts the time that follows it.
+ * 
+ * @param bookingDetails The booking details string.
+ * 
+ * @return The extracted end time in HHMM format.
+ */
 std::string Client::extractEndTime(const std::string &bookingDetails)
 {
     const std::string endTimePrefix = "endTime:";
@@ -450,6 +561,15 @@ std::string Client::extractEndTime(const std::string &bookingDetails)
     return "";
 }
 
+/**
+ * @brief Listens for monitoring updates from the server.
+ * 
+ * This method listens for updates from the server during the monitoring period.
+ * It uses a timeout to break out of the loop after the specified duration.
+ * 
+ * @param durationSeconds The duration to monitor in seconds.
+ * @param onUpdate Callback function to handle updates during monitoring.
+ */
 void Client::listenForMonitoringUpdates(
     int durationSeconds,
     const std::function<void(const std::string &, const bool)> &onUpdate
