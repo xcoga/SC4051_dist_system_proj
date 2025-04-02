@@ -571,7 +571,7 @@ void UserInterface::handleExit()
 /**
  * @brief Prompts the user for choice input and validates it.
  * 
- * This method displays a prompt message to the user and waits for input.
+ * This function displays a prompt message to the user and waits for input.
  * It validates the input to ensure it is a number between 1 and 11.
  * If the input is invalid, it clears the error state and prompts again.
  * 
@@ -626,7 +626,7 @@ std::string UserInterface::promptFacilityName(const std::string prompt)
 /**
  * @brief Prompts the user for a day of the week.
  * 
- * This method displays a menu of days of the week and prompts the user to select one.
+ * This function displays a menu of days of the week and prompts the user to select one.
  * It validates the input to ensure it is a number between 1 and 7.
  * If the input is invalid, it clears the error state and prompts again.
  * If the input is valid, it returns the corresponding day name.
@@ -661,7 +661,7 @@ std::string UserInterface::promptDayOfWeek(const std::string prompt)
 /**
  * @brief Prompts the user for multiple days of the week.
  * 
- * This method displays a menu of days of the week and prompts the user to select multiple days.
+ * This function displays a menu of days of the week and prompts the user to select multiple days.
  * It validates the input to ensure each selected day is a number between 1 and 7.
  * If the input is invalid, it clears the error state and prompts again.
  * If the input is valid, it returns a comma-separated string of the corresponding day names for the user's input.
@@ -728,7 +728,7 @@ std::string UserInterface::promptDaysOfWeek(const std::string prompt)
 /**
  * @brief Prompts the user for a time in HHMM format.
  * 
- * This method displays a prompt message to the user and waits for input.
+ * This function displays a prompt message to the user and waits for input.
  * It validates the input to ensure it is in the correct HHMM format (24-hour clock).
  * If the input is invalid, it clears the error state and prompts again.
  * 
@@ -760,7 +760,7 @@ std::string UserInterface::promptTime(const std::string prompt)
 /**
  * @brief Prompts the user for a booking ID.
  * 
- * This method displays a prompt message to the user and waits for input.
+ * This function displays a prompt message to the user and waits for input.
  * It validates the input to ensure it is in the correct UUID v4 format.
  * If the input is invalid, it clears the error state and prompts again.
  * 
@@ -793,7 +793,7 @@ std::string UserInterface::promptBookingID(const std::string prompt)
 /**
  * @brief Prompts the user for an offset in minutes.
  * 
- * This method displays a prompt message to the user and waits for input.
+ * This function displays a prompt message to the user and waits for input.
  * It validates the input to ensure it is a non-zero integer.
  * If the input is invalid, it clears the error state and prompts again.
  * 
@@ -830,7 +830,7 @@ int UserInterface::promptOffset(const std::string prompt)
 /**
  * @brief Prompts the user for confirmation.
  * 
- * This method displays a prompt message to the user and waits for input.
+ * This function displays a prompt message to the user and waits for input.
  * It validates the input to ensure it is either 'yes' or 'no' or 'y' or 'n'.
  * If the input is invalid, it clears the error state and prompts again.
  * 
@@ -863,7 +863,7 @@ bool UserInterface::promptConfirmation(const std::string prompt)
 /**
  * @brief Prompts the user for a rating between 1 and 5.
  * 
- * This method displays a prompt message to the user and waits for input.
+ * This function displays a prompt message to the user and waits for input.
  * It validates the input to ensure it is a float between 1 and 5.
  * If the input is invalid, it clears the error state and prompts again.
  * 
@@ -896,7 +896,7 @@ float UserInterface::promptRating(const std::string prompt)
 /**
  * @brief Prompts the user for a duration in seconds.
  * 
- * This method displays a prompt message to the user and waits for input.
+ * This function displays a prompt message to the user and waits for input.
  * It validates the input to ensure it is a positive integer.
  * If the input is invalid, it clears the error state and prompts again.
  * 
@@ -942,7 +942,7 @@ int UserInterface::promptDuration(const std::string prompt)
 /**
  * @brief Generates a box with centered text for the user interface.
  * 
- * This method takes a vector of strings as input and generates a box with the header centered and the content left-aligned.
+ * This function takes a vector of strings as input and generates a box with the header centered and the content left-aligned.
  * The first line is treated as the header, and the rest are treated as content lines.
  * 
  * @param content The vector of strings to be displayed in the box.
@@ -990,7 +990,7 @@ std::string UserInterface::generateBox(const std::vector<std::string> &content)
  * @brief Checks if the response indicates an error.
  * 
  * Every parsed response vector that corresponds to an error message will have "Error" as its first element.
- * Hence, this method checks if the first element of the parsed response vector is "Error" to determine whether the response is an error.
+ * Hence, this function checks if the first element of the parsed response vector is "Error" to determine whether the response is an error.
  * 
  * @param parsedResponse The parsed response vector to check.
  * 
