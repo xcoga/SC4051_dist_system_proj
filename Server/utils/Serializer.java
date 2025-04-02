@@ -3,12 +3,23 @@ package Server.utils;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Serializer class provides methods to serialize and deserialize objects.
+ * It handles circular references, primitive types, arrays, and custom objects.
+ * It also includes parity bit calculation for data integrity.
+ */
 public class Serializer {
-    // Track objects already serialized to handle circular references
-    private static Map<Object, Integer> serializedObjects = new HashMap<>();
-    private static Map<Integer, Object> deserializedObjects = new HashMap<>();
-    private static int objectCounter = 0;
+    private static Map<Object, Integer> serializedObjects = new HashMap<>(); // Tracks serialized objects
+    private static Map<Integer, Object> deserializedObjects = new HashMap<>(); // Tracks deserialized objects
+    private static int objectCounter = 0; // Counter for object references
 
+    /**
+     * Serialize an object into a byte array.
+     * 
+     * @param obj The object to serialize.
+     * @return A byte array representing the serialized object.
+     * @throws Exception If serialization fails.
+     */
     public static byte[] serialize(Object obj) throws Exception {
         serializedObjects.clear();
         objectCounter = 0;
@@ -26,6 +37,13 @@ public class Serializer {
         return buffer.getBuffer();
     }
 
+    /**
+     * Serialize an individual object and write it to the buffer.
+     * 
+     * @param obj    The object to serialize.
+     * @param buffer The ByteBuffer to write serialized data to.
+     * @throws Exception If serialization fails.
+     */
     private static void serializeObject(Object obj, ByteBuffer buffer) throws Exception {
         /*
          * Structure of the byte array:
@@ -97,6 +115,14 @@ public class Serializer {
 
     }
 
+    /**
+     * Write a value to the buffer based on its type.
+     * 
+     * @param buffer The ByteBuffer to write to.
+     * @param value  The value to write.
+     * @param type   The type of the value.
+     * @throws Exception If writing fails.
+     */
     private static void writeValue(ByteBuffer buffer, Object value, Class<?> type) throws Exception {
         if (type.isPrimitive()) {
             writePrimitive(buffer, value, type);
@@ -115,6 +141,13 @@ public class Serializer {
         }
     }
 
+    /**
+     * Write a primitive value to the buffer.
+     * 
+     * @param buffer The ByteBuffer to write to.
+     * @param value  The primitive value to write.
+     * @param type   The type of the primitive value.
+     */
     private static void writePrimitive(ByteBuffer buffer, Object value, Class<?> type) {
         if (type == int.class) {
             buffer.writeInt(((Number) value).intValue());
@@ -127,6 +160,14 @@ public class Serializer {
         }
     }
 
+    /**
+     * Write an array to the buffer.
+     * 
+     * @param buffer The ByteBuffer to write to.
+     * @param value  The array to write.
+     * @param type   The type of the array.
+     * @throws Exception If writing fails.
+     */
     private static void writeArray(ByteBuffer buffer, Object value, Class<?> type) throws Exception {
         if (value == null) {
             buffer.writeInt(-1);
@@ -155,6 +196,13 @@ public class Serializer {
      * ClassName, field_lengths, fieldname, fieldType,fieldVal
      */
 
+    /**
+     * Deserialize a byte array into an object.
+     * 
+     * @param data The byte array to deserialize.
+     * @return The deserialized object.
+     * @throws Exception If deserialization fails.
+     */
     public static Object deserialize(byte[] data) throws Exception {
         // Parity checking
         byte receivedParityBit = data[data.length - 1];
@@ -179,6 +227,14 @@ public class Serializer {
      * 
      * Primitive class types cannot get the class name using Class.forName method
      * during deserialization
+     */
+
+    /**
+     * Get the class from its name, handling primitive types.
+     * 
+     * @param className The name of the class.
+     * @return The Class object.
+     * @throws ClassNotFoundException If the class cannot be found.
      */
     private static Class<?> getClassFromName(String className) throws ClassNotFoundException {
         // Handle primitive types
@@ -206,6 +262,13 @@ public class Serializer {
         }
     }
 
+    /**
+     * Deserialize an individual object from the reader.
+     * 
+     * @param reader The ByteReader to read data from.
+     * @return The deserialized object.
+     * @throws Exception If deserialization fails.
+     */
     private static Object deserializeObject(ByteReader reader) throws Exception {
         byte nullMarker = reader.readByte();
         if (nullMarker == 0) {
@@ -271,6 +334,14 @@ public class Serializer {
         return obj;
     }
 
+    /**
+     * Read a value from the reader based on its type.
+     * 
+     * @param reader The ByteReader to read from.
+     * @param type   The type of the value.
+     * @return The read value.
+     * @throws Exception If reading fails.
+     */
     private static Object readValue(ByteReader reader, Class<?> type) throws Exception {
         if (type.isPrimitive()) {
             return readPrimitive(reader, type);
@@ -284,6 +355,13 @@ public class Serializer {
         }
     }
 
+    /**
+     * Read a primitive value from the reader.
+     * 
+     * @param reader The ByteReader to read from.
+     * @param type   The type of the primitive value.
+     * @return The read primitive value.
+     */
     private static Object readPrimitive(ByteReader reader, Class<?> type) {
 
         if (type == int.class) {
@@ -298,6 +376,14 @@ public class Serializer {
         return null;
     }
 
+    /**
+     * Read an array from the reader.
+     * 
+     * @param reader The ByteReader to read from.
+     * @param type   The type of the array.
+     * @return The read array.
+     * @throws Exception If reading fails.
+     */
     private static Object readArray(ByteReader reader, Class<?> type) throws Exception {
         int length = reader.readInt();
         if (length == -1) {
