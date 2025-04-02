@@ -92,6 +92,8 @@ std::string Client::updateBooking(const std::string oldBookingID, const int offs
 {
     // Make queryBooking call first to get the old booking details
     std::string oldBookingDetails = queryBooking(oldBookingID);
+
+    // Extract facility name, day of week, start time, and end time from the old booking details
     std::string facilityName = extractFacilityName(oldBookingDetails);
     std::string oldDayOfWeek = extractDayOfWeek(oldBookingDetails);
     std::string oldStartTime = extractStartTime(oldBookingDetails);
@@ -239,7 +241,7 @@ void Client::sendRequest(const RequestMessage &request, const bool retry)
     }
 }
 
-std::string Client::receiveResponse(const uint32_t expectedRequestID)
+std::string Client::receiveResponse(uint32_t expectedRequestID)
 {
     char recvBuffer[BUFFER_SIZE];
     struct sockaddr_in senderAddr;
@@ -281,7 +283,6 @@ std::string Client::sendWithRetry(const RequestMessage &request)
 
         // std::string response = receiveResponse();
         std::string response = receiveResponse(request.getRequestID());
-
 
         if (!response.empty())
         {
