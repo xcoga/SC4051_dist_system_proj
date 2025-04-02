@@ -4,19 +4,29 @@
 #include <cstring>
 
 #ifdef _WIN32
-    // Winsock initialization
+    /**
+     * @brief Initializes Winsock for Windows systems.
+     * 
+     * @return True if initialization is successful, false otherwise.
+     */
     bool initializeWinsock()
     {
         WSADATA wsaData;
         return (WSAStartup(MAKEWORD(2, 2), &wsaData) == 0);
     }
 
+    /**
+     * @brief Cleans up Winsock resources for Windows systems.
+     */
     void cleanupWinsock()
     {
         WSACleanup();
     }
 #endif
 
+/**
+ * @brief Constructs a Socket object and initializes platform-specific resources.
+ */
 Socket::Socket() : sockfd(-1)
 {
 #ifdef _WIN32
@@ -28,6 +38,9 @@ Socket::Socket() : sockfd(-1)
 #endif
 }
 
+/**
+ * @brief Destroys the Socket object and cleans up resources.
+ */
 Socket::~Socket()
 {
     closeSocket();
@@ -36,6 +49,17 @@ Socket::~Socket()
 #endif
 }
 
+/**
+ * @brief Creates a socket with the specified domain, type, and protocol.
+ * 
+ * This method initializes the socket using the specified parameters. It throws an exception if the socket creation fails.
+ * 
+ * @param domain The communication domain (e.g., AF_INET for IPv4).
+ * @param type The socket type (e.g., SOCK_DGRAM for UDP).
+ * @param protocol The protocol to use (e.g., IPPROTO_UDP for UDP).
+ * 
+ * @throws std::runtime_error if socket creation fails.
+ */
 void Socket::create(int domain, int type, int protocol)
 {
 #ifdef _WIN32
@@ -54,6 +78,15 @@ void Socket::create(int domain, int type, int protocol)
 #endif
 }
 
+/**
+ * @brief Binds the socket to the specified port.
+ * 
+ * This method binds the socket to the specified port. It throws an exception if the binding fails.
+ * 
+ * @param port The port number to bind the socket to.
+ * 
+ * @throws std::runtime_error if binding fails.
+ */
 void Socket::bind(int port)
 {
     sockaddr_in addr;
@@ -76,6 +109,17 @@ void Socket::bind(int port)
 #endif
 }
 
+/**
+ * @brief Sets the receive timeout for the socket.
+ * 
+ * This method sets the receive timeout for the socket. It throws an exception if setting the timeout fails.
+ * 
+ * @param seconds The timeout duration in seconds.
+ * 
+ * @throws std::runtime_error if setting the timeout fails.
+ * 
+ * @note On Windows, the timeout is set in milliseconds. Hence, the input in seconds is first converted to milliseconds before setting the timeout.
+ */
 void Socket::setReceiveTimeout(int seconds)
 {
 #ifdef _WIN32
@@ -96,7 +140,16 @@ void Socket::setReceiveTimeout(int seconds)
 #endif
 }
 
-
+/**
+ * @brief Sends data to a specified address.
+ * 
+ * This method sends data to the specified address. It throws an exception if sending fails.
+ * 
+ * @param data The data to send.
+ * @param addr The destination address.
+ * 
+ * @throws std::runtime_error if sending fails.
+ */
 void Socket::sendDataTo(const std::vector<uint8_t> &data, const struct sockaddr_in &addr)
 {
 #ifdef _WIN32
@@ -115,6 +168,18 @@ void Socket::sendDataTo(const std::vector<uint8_t> &data, const struct sockaddr_
 #endif
 }
 
+/**
+ * @brief Receives data from a specified address.
+ * 
+ * This method receives data from the specified address. It throws an exception if receiving fails.
+ * 
+ * @param buffer The buffer to store the received data.
+ * @param addr The source address.
+ * 
+ * @return The number of bytes received.
+ * 
+ * @throws std::runtime_error if receiving fails.
+ */
 int Socket::receiveDataFrom(char *buffer, struct sockaddr_in &addr)
 {
 #ifdef _WIN32
@@ -149,6 +214,15 @@ int Socket::receiveDataFrom(char *buffer, struct sockaddr_in &addr)
     return bytesReceived;
 }
 
+/**
+ * @brief Retrieves the local socket name (IP address and port).
+ * 
+ * This method retrieves the local socket name and stores it in the provided address structure. It throws an exception if retrieving the socket name fails.
+ * 
+ * @param addr The address structure to store the socket name.
+ * 
+ * @return 0 on success, or throws an exception on failure.
+ */
 int Socket::getSocketName(struct sockaddr *addr)
 {
 #ifdef _WIN32
@@ -170,6 +244,9 @@ int Socket::getSocketName(struct sockaddr *addr)
     return result;
 }
 
+/**
+ * @brief Closes the socket and cleans up resources.
+ */
 void Socket::closeSocket()
 {
 #ifdef _WIN32
