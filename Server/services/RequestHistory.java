@@ -4,7 +4,8 @@ import java.util.ArrayList;
 
 /**
  * RequestHistory class is used to store and manage client requests.
- * It prevents duplicate requests for non-idempotent operations by maintaining a history of requests.
+ * It prevents duplicate requests for non-idempotent operations by maintaining a
+ * history of requests.
  * It supports adding, checking, and updating requests in the history.
  */
 public class RequestHistory {
@@ -34,8 +35,8 @@ public class RequestHistory {
    */
   public RequestInfo containsRequest(RequestInfo requestInfo) {
     for (RequestInfo r : this.requestHistory) {
-      if (r.requestMessage.getRequestID() == requestInfo.requestMessage.getRequestID() && 
-          r.clientAddress.equals(requestInfo.clientAddress) && 
+      if (r.requestMessage.getRequestID() == requestInfo.requestMessage.getRequestID() &&
+          r.clientAddress.equals(requestInfo.clientAddress) &&
           r.clientPort == requestInfo.clientPort) {
         return r;
       }
@@ -44,10 +45,12 @@ public class RequestHistory {
   }
 
   /**
-   * Check if a more recent request is in the history and replace it if the new request is more recent.
+   * Check if a more recent request is in the history and replace it if the new
+   * request is more recent.
    * 
    * @param requestInfo RequestInfo object to check and add.
-   * @return The previous RequestInfo if a more recent request exists, null otherwise.
+   * @return The previous RequestInfo if a more recent request exists, null
+   *         otherwise.
    */
   public RequestInfo containsAndReplace(RequestInfo requestInfo) {
     RequestInfo r = null;
@@ -55,14 +58,15 @@ public class RequestHistory {
       r = this.requestHistory.get(i);
 
       // If there is a request from the same client in the history
-      if (r.clientAddress.equals(requestInfo.clientAddress) && 
+      if (r.clientAddress.equals(requestInfo.clientAddress) &&
           r.clientPort == requestInfo.clientPort) {
         // If the new request id is higher, replace the request
         if (r.requestMessage.getRequestID() < requestInfo.requestMessage.getRequestID()) {
           this.requestHistory.set(i, requestInfo);
           return null;
         }
-        // If the new request id is lower, return the previous request info for handling by server
+        // If the new request id is lower, return the previous request info for handling
+        // by server
         return r;
       }
     }
@@ -77,12 +81,12 @@ public class RequestHistory {
    */
   public boolean updateRequestInfo(RequestInfo requestInfo) {
     for (RequestInfo r : this.requestHistory) {
-      if (r.requestMessage.getRequestID() == requestInfo.requestMessage.getRequestID() && 
-          r.clientAddress.equals(requestInfo.clientAddress) && 
+      if (r.requestMessage.getRequestID() == requestInfo.requestMessage.getRequestID() &&
+          r.clientAddress.equals(requestInfo.clientAddress) &&
           r.clientPort == requestInfo.clientPort) {
-            // update the previous request here.
-            r.responseMessage = requestInfo.responseMessage;
-            return true;
+        // update the previous request here.
+        r.responseMessage = requestInfo.responseMessage;
+        return true;
       }
     }
     return false;

@@ -2,12 +2,13 @@ package Server;
 
 /**
  * RequestMessage class represents a message sent between the client and server.
- * It contains the type of request, a unique request ID, and any associated data.
+ * It contains the type of request, a unique request ID, and any associated
+ * data.
  */
 public class RequestMessage {
   private int requestType; // Type of the request (e.g., READ, WRITE, etc.)
-  private int requestID;   // Unique identifier for the request
-  private String data;     // Additional data associated with the request
+  private int requestID; // Unique identifier for the request
+  private String data; // Additional data associated with the request
 
   /**
    * Default constructor required for deserialization.

@@ -1,9 +1,6 @@
 package Server.models;
 
 import java.time.DayOfWeek;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * BookingDetails class represents the details of a booking request.

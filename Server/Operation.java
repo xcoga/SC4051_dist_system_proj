@@ -5,14 +5,14 @@ package Server;
  * Each operation is associated with a unique integer code.
  */
 public enum Operation {
-  NONE(-1),    // No operation
-  READ(0),     // Read operation
-  WRITE(1),    // Write operation
-  UPDATE(2),   // Update operation
-  DELETE(3),   // Delete operation
-  MONITOR(4),  // Monitor operation
-  ECHO(5),     // Echo operation
-  RATING(6);   // Rating operation
+  NONE(-1), // No operation
+  READ(0), // Read operation
+  WRITE(1), // Write operation
+  UPDATE(2), // Update operation
+  DELETE(3), // Delete operation
+  MONITOR(4), // Monitor operation
+  ECHO(5), // Echo operation
+  RATING(6); // Rating operation
 
   private int op; // The integer code associated with the operation
 

@@ -13,8 +13,8 @@ public class UDPClient {
   public static void main(String args[]) {
     // Default server and client configuration
     String hostname = "localhost"; // Server hostname
-    int serverPort = 6789;         // Server port
-    int clientPort = 62766;        // Client port
+    int serverPort = 6789; // Server port
+    int clientPort = 62766; // Client port
 
     // Create a scanner for user input
     Scanner scanner = new Scanner(System.in);
@@ -29,7 +29,8 @@ public class UDPClient {
 
       while (continueRunning) {
         // Prompt user for operation code
-        System.out.println("\nEnter operation code (integer) (-1=NONE, 0=READ, 1=WRITE, 2=UPDATE, 3=DELETE, 4=MONITOR, 5=ECHO, 7=EXIT): ");
+        System.out.println(
+            "\nEnter operation code (integer) (-1=NONE, 0=READ, 1=WRITE, 2=UPDATE, 3=DELETE, 4=MONITOR, 5=ECHO, 7=EXIT): ");
         int opCode;
         try {
           opCode = Integer.parseInt(scanner.nextLine());
