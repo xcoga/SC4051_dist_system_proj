@@ -3,8 +3,6 @@
 #include "Serializer.hpp"
 #include "UserInterface.hpp"
 
-#include <chrono>
-
 /**
  * @brief Constructs a Client object and initializes the connection to the server.
  *
@@ -81,7 +79,7 @@ std::string Client::queryFacilityNames()
  * 
  * @return A string containing the availability information or error message.
  */
-std::string Client::queryAvailability(std::string facilityName, std::string daysOfWeek)
+std::string Client::queryAvailability(const std::string facilityName, const std::string daysOfWeek)
 {
     std::string messageData = "facility," + facilityName + "," + daysOfWeek; // Request availability for the specified facility and days
 
@@ -157,8 +155,7 @@ std::string Client::queryBooking(std::string bookingID)
 std::string Client::updateBooking(
     std::string oldBookingID,
     int offsetMinutes,
-    std::string oldBookingDetails
-)
+    std::string oldBookingDetails)
 {
     // Extract facility name, day of week, start time, and end time from the old booking details
     std::string facilityName = extractFacilityName(oldBookingDetails);
@@ -212,11 +209,20 @@ std::string Client::updateBooking(
 std::string Client::deleteBooking(std::string bookingID, std::string bookingDetails)
 {
     // Extract the facility name from the existing booking as it is required for the delete booking request
+    return sendWithRetry(requestMessage);
+}
+
+std::string Client::deleteBooking(const std::string bookingID)
+{
+    // Make queryBooking call first to get the old booking details, especially the facility name
+    // Facility name is required for the delete booking request
+    std::string bookingDetails = queryBooking(bookingID);
     std::string facilityName = extractFacilityName(bookingDetails);
 
     std::string messageData = bookingID + "," + facilityName; // Request to delete the booking with the specified ID and facility name
     
     RequestMessage requestMessage(RequestMessage::DELETE, requestID, messageData); // DELETE operation
+    RequestMessage requestMessage(RequestMessage::DELETE_REQUEST, requestID, messageData);
 
     return sendWithRetry(requestMessage); // Send the request with retry (in case of timeout)
 }

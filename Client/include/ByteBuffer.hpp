@@ -1,11 +1,12 @@
 #ifndef BYTEBUFFER_HPP
 #define BYTEBUFFER_HPP
 
-#include <iostream>
-#include <vector>
-#include <string>
+#include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 class ByteBuffer
 {

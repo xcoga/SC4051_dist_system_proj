@@ -10,4 +10,4 @@ namespace Parity
     bool verifyEvenParity(const std::vector<uint8_t> &data, uint8_t parityBit);
 }
 
-#endif // PARITY_UTILS_HPP
+#endif // PARITY_HPP

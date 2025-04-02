@@ -9,14 +9,17 @@ import Server.Operation;
 import Server.RequestMessage;
 
 /**
- * MonitorService class is used to manage all the monitors.
- * It can register, remove, and notify clients
- * when the underlying resource is updated.
+ * MonitorService class manages all monitors registered by clients.
+ * It supports registering, removing, and notifying monitors when a resource is
+ * updated.
  */
 public class MonitorService {
   private static final Logger LOGGER = Logger.getLogger("MonitorService");
-  private ArrayList<Monitor> monitors;
+  private ArrayList<Monitor> monitors; // List of registered monitors
 
+  /**
+   * Constructor to initialize the MonitorService object.
+   */
   public MonitorService() {
     this.monitors = new ArrayList<Monitor>();
   }
@@ -40,9 +43,11 @@ public class MonitorService {
   }
 
   /**
-   * Notify all clients when the underlying resource is updated.
+   * Notify all clients monitoring a specific resource when it is updated.
    * 
-   * @param socket DatagramSocket object for sending notifications.
+   * @param socket       DatagramSocket object for sending notifications.
+   * @param facilityName The name of the resource being monitored.
+   * @param message      The notification message to send.
    */
   public void notifyAll(DatagramSocket socket, String facilityName, String message) {
     // Create the notification message
@@ -72,7 +77,9 @@ public class MonitorService {
   }
 
   /**
-   * Remove all expired monitors.
+   * Remove all expired monitors from the monitor service.
+   * 
+   * @return True if any monitors were removed, false otherwise.
    */
   public boolean removeExpiredMonitors() {
     return this.monitors.removeIf(Monitor::ifExpired);

@@ -1,18 +1,38 @@
 package Server.utils;
 
+/**
+ * ByteBuffer class provides methods to write primitive types and strings to a
+ * byte array.
+ * It is used during serialization to construct a serialized byte array.
+ */
 public class ByteBuffer {
-    private byte[] buffer;
-    private int position;
+    private byte[] buffer; // The byte array to write to
+    private int position; // Current position in the byte array
 
+    /**
+     * Constructor to initialize the ByteBuffer with a specified capacity.
+     * 
+     * @param capacity The initial capacity of the buffer.
+     */
     public ByteBuffer(int capacity) {
-        buffer = new byte[capacity];
-        position = 0;
+        this.buffer = new byte[capacity];
+        this.position = 0;
     }
 
+    /**
+     * Write a single byte to the buffer.
+     * 
+     * @param value The byte to write.
+     */
     public void writeByte(byte value) {
         buffer[position++] = value;
     }
 
+    /**
+     * Write an integer (4 bytes) to the buffer.
+     * 
+     * @param value The integer to write.
+     */
     public void writeInt(int value) {
         /*
          * This function stores Integers into the buffer.
@@ -32,11 +52,21 @@ public class ByteBuffer {
         writeByte((byte) (value & 0xFF));
     }
 
+    /**
+     * Write a double (8 bytes) to the buffer.
+     * 
+     * @param value The double to write.
+     */
     public void writeDouble(double value) {
         long bits = Double.doubleToLongBits(value);
         writeLong(bits);
     }
 
+    /**
+     * Write a long (8 bytes) to the buffer.
+     * 
+     * @param value The long to write.
+     */
     public void writeLong(long value) {
         writeByte((byte) ((value >> 56) & 0xFF));
         writeByte((byte) ((value >> 48) & 0xFF));
@@ -48,6 +78,11 @@ public class ByteBuffer {
         writeByte((byte) (value & 0xFF));
     }
 
+    /**
+     * Write a string to the buffer.
+     * 
+     * @param value The string to write.
+     */
     public void writeString(String value) {
         byte[] bytes = value.getBytes();
         writeInt(bytes.length);
@@ -56,6 +91,11 @@ public class ByteBuffer {
         }
     }
 
+    /**
+     * Get the contents of the buffer as a byte array.
+     * 
+     * @return A byte array containing the written data.
+     */
     public byte[] getBuffer() {
         byte[] result = new byte[position];
         System.arraycopy(buffer, 0, result, 0, position);

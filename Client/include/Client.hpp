@@ -2,8 +2,8 @@
 #define CLIENT_HPP
 
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 
 #include "RequestMessage.hpp"
 #include "Socket.hpp"
@@ -62,10 +62,10 @@ public:
      * @return A string containing the booking confirmation or error message.
      */
     std::string bookFacility(
-        std::string facilityName,
-        std::string dayOfWeek,
-        std::string startTime,
-        std::string endTime
+        const std::string facilityName,
+        const std::string dayOfWeek,
+        const std::string startTime,
+        const std::string endTime
     );
 
     /**
@@ -103,8 +103,8 @@ public:
      * @param onUpdate Callback function to handle updates during monitoring.
      */
     void monitorAvailability(
-        std::string facilityName,
-        int durationSeconds,
+        const std::string facilityName,
+        const int durationSeconds,
         const std::function<void(const std::string &, const bool)> &onUpdate
     );
 
@@ -200,7 +200,7 @@ private:
      * @param onUpdate Callback function to handle updates during monitoring.
      */
     void listenForMonitoringUpdates(
-        int durationSeconds,
+        const int durationSeconds,
         const std::function<void(const std::string &, const bool)> &onUpdate
     );
 };

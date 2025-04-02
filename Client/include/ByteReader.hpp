@@ -1,11 +1,12 @@
 #ifndef BYTEREADER_HPP
 #define BYTEREADER_HPP
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <stdexcept>
+#include <cstdint>
 #include <cstring>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 class ByteReader
 {

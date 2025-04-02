@@ -6,16 +6,17 @@
     #include <ws2tcpip.h>
     #pragma comment(lib, "Ws2_32.lib")
 #else
-    #include <sys/socket.h>
-    #include <netinet/in.h>
     #include <arpa/inet.h>
-    #include <unistd.h>
     #include <netdb.h>
+    #include <netinet/in.h>
+    #include <sys/socket.h>
+    #include <unistd.h>
 #endif
 
+#include <cstdint>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #define BUFFER_SIZE 1024
 

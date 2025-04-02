@@ -1,4 +1,4 @@
-#include "../include/Parity.hpp"
+#include "Parity.hpp"
 
 namespace Parity
 {

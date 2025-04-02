@@ -5,10 +5,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.time.DayOfWeek;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import Server.models.Availability;
 import Server.models.Booking;
@@ -25,20 +23,32 @@ import Server.utils.Parser;
 
 import java.io.IOException;
 
-// Server class to handle requests from clients and manage facility bookings
+/**
+ * Server class to handle client requests and manage facility bookings.
+ * Implements a UDP server with at-most-once and at-least-once invocation
+ * semantics.
+ */
 public class Server {
-  private static final double DROP_CHANCE = 0.4; // % chance to drop a request
+  // Probability of dropping a request (used for testing reliability)
+  private static final double DROP_CHANCE = 0.4;
 
+  // Service classes for managing facilities, request history, and monitoring
   private static MonitorService facilityMonitorService;
   private static RequestHistory requestHistory;
   private static FacilityFactory facilityFactory;
 
-  private static boolean checkHistory = true; // true for at-most-once, false for at-least-once
+  // Flag to determine invocation semantics: true for at-most-once, false for
+  // at-least-once
+  private static boolean checkHistory = true;
 
+  // UDP socket for communication
   private static DatagramSocket aSocket = null;
+
+  // Tracks the last updated facility for monitoring purposes
   private static String lastUpdatedFacility = null;
 
   public static void main(String[] args) {
+    // Determine invocation semantics based on command-line arguments
     String invocationScematic = args.length > 0 ? args[0] : "default";
 
     if (invocationScematic.equals("at-least-once")) {
@@ -48,35 +58,37 @@ public class Server {
       System.out.println("Server started with at-most-once invocation semantics.");
     }
 
+    // Initialize service classes and facilities
     init();
-    RequestMessage requestMessage = null;
 
     try {
-      // Bind socket to port 6789
+      // Bind the UDP socket to port 6789
       aSocket = new DatagramSocket(6789);
-      byte[] buffer = new byte[1000];
+      byte[] buffer = new byte[1000]; // Buffer for receiving data
 
       System.out.println("UDP Server is running on port 6789...");
       while (true) {
-        // Receive request
+        // Receive a request from a client
         DatagramPacket request = new DatagramPacket(buffer, buffer.length);
         aSocket.receive(request); // Blocks until a packet is received
 
         System.out.println("\n\nReceived request from: " + request.getAddress() + ":" + request.getPort());
 
+        // Simulate dropping requests based on DROP_CHANCE
         boolean dropRequest = Math.random() < DROP_CHANCE;
         if (dropRequest) {
           System.out.println("Dropping request from " + request.getAddress() + ":" + request.getPort());
           continue; // Skip processing this request
         }
+
+        // Handle the request and generate a response
         RequestMessage responseMessage = handleRequest(request);
         System.out.println("Current request history: " + requestHistory.toString());
 
-        // send response
+        // Send the response back to the client
         try {
           byte[] replybuff = Serializer.serialize(responseMessage);
 
-          // Send response (echo the received message)
           DatagramPacket reply = new DatagramPacket(replybuff,
               replybuff.length,
               request.getAddress(),
@@ -88,13 +100,13 @@ public class Server {
         } catch (Exception e) {
           System.out.println("Error serializing response: " + e.getMessage());
         }
-
       }
     } catch (SocketException e) {
       System.err.println("Socket error: " + e.getMessage());
     } catch (IOException e) {
       System.err.println("IO error: " + e.getMessage());
     } finally {
+      // Ensure the socket is closed when the server shuts down
       if (aSocket != null && !aSocket.isClosed()) {
         aSocket.close();
         System.out.println("Server socket closed.");
@@ -102,13 +114,16 @@ public class Server {
     }
   }
 
-  // initailize the service classes
+  /**
+   * Initializes the service classes and creates initial facilities with
+   * availability.
+   */
   private static void init() {
     facilityMonitorService = new MonitorService();
     requestHistory = new RequestHistory();
     facilityFactory = new FacilityFactory();
 
-    // Create some facilities at the start
+    // Create some facilities by default at the start
     Facility f1 = facilityFactory.newFacility("Weekday1");
     Facility f2 = facilityFactory.newFacility("Weekday2");
     Facility f3 = facilityFactory.newFacility("Weekends");
@@ -133,27 +148,27 @@ public class Server {
   }
 
   /**
-   * Implements server logic to handle requests from clients.
+   * Handles incoming client requests and processes them based on the operation
+   * type.
    * 
-   * @param request DatagramPacket request from client.
-   * @return RequestMessage response to client.
+   * @param request DatagramPacket containing the client's request.
+   * @return RequestMessage response to be sent back to the client.
    */
   public static RequestMessage handleRequest(DatagramPacket request) {
     RequestMessage requestMessage = null;
     RequestMessage responseMessage = null;
     lastUpdatedFacility = null;
 
+    // Simulate processing delay to mimic real-world server behavior
     try {
-        // Simulate processing delay between 3-8 seconds
-        int processingDelay = 3000 + (int)(Math.random() * 5000);
-        System.out.println("Simulating slow processing for " + processingDelay + "ms");
-        Thread.sleep(processingDelay);
+      int processingDelay = 3000 + (int) (Math.random() * 5000);
+      System.out.println("Simulating slow processing for " + processingDelay + "ms");
+      Thread.sleep(processingDelay);
     } catch (InterruptedException e) {
-        System.err.println("Sleep interrupted: " + e.getMessage());
+      System.err.println("Sleep interrupted: " + e.getMessage());
     }
 
-
-    // Deserialize request
+    // Deserialize the request message
     try {
       byte[] receivedData = new byte[request.getLength()];
       System.arraycopy(request.getData(), request.getOffset(), receivedData, 0, request.getLength());
@@ -165,20 +180,16 @@ public class Server {
       responseMessage = new RequestMessage(Operation.READ.getOpCode(), 0, "status:ERROR\nmessage:Bad request");
       return responseMessage;
     }
-    // do nothing if requested server to echo
+
+    // Handle ECHO operation (no processing required)
     if (requestMessage.getOperation() == Operation.ECHO) {
       System.out.println("Echo request received");
       return requestMessage;
     }
 
-    // TODO uncomment
-    // responseMessage = new RequestMessage(0, 0, "Good: good request");
-    // return responseMessage;
-
-    // if invocation semantics is at-least-once, check if request is in history
+    // Check request history for at-most-once semantics
     if (checkHistory) {
       System.out.println("Checking request history...");
-      // Check if request is in history, return previous response if it is
       RequestInfo requestInformation = new RequestInfo(
           requestMessage,
           request.getAddress(),
@@ -186,17 +197,17 @@ public class Server {
           null);
       RequestInfo prevRequest = requestHistory.containsRequest(requestInformation);
       if (prevRequest != null) {
-        System.out.printf("Duplicate %s request id %d detected\n",requestMessage.getOperation(),requestMessage.getRequestID());
-        // response for already done is the same as the previous request
+        System.out.printf("Duplicate %s request id %d detected\n", requestMessage.getOperation(),
+            requestMessage.getRequestID());
         responseMessage = prevRequest.responseMessage;
         return responseMessage;
       }
     }
 
-    // Process request
+    // Process the request based on its operation type
     switch (requestMessage.getOperation()) {
       case READ:
-        // example requests format: facility,Weekday1
+        // Handle READ operations (e.g., facility info, booking info, ratings)
         String[] requestString = requestMessage.getData().split(",");
         if (requestString == null || requestString.length == 1) {
           responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
@@ -277,6 +288,7 @@ public class Server {
         break;
 
       case WRITE:
+        // Handle WRITE operations (e.g., book a facility)
         // For book facility request, format:
         // facilityName,day,startHour,startMinute,endHour,endMinute
         try {
@@ -288,12 +300,12 @@ public class Server {
 
         break;
 
-      // UPDATE has 2 cases: 1. Update booking 2. Add a rating
-      // 1. Update Booking, Expected format:
-      // "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
-      // 2. Add Rating, Expected format: "rating",facilityName,rating
       case UPDATE:
-
+        // Handle UPDATE operations (e.g., update booking, add rating)
+        // UPDATE has 2 cases: 1. Update booking 2. Add a rating
+        // 1. Update Booking, Expected format:
+        // "book,<prevBookingID>,<facilityName>,<Day>,<startHour>,<startMinute>,<endHour>,<endMinute>"
+        // 2. Add Rating, Expected format: "rating",facilityName,rating
         try {
           // Parse the request to get the type of update
           String updateType = Parser.parseUpdateType(requestMessage.getData());
@@ -325,7 +337,7 @@ public class Server {
         break;
 
       case DELETE:
-
+        // Handle DELETE operations (e.g., delete booking)
         try {
           // Delete booking. Expected format: "<bookingId>,<facilityName>"
           responseMessage = deleteBooking(requestMessage, request.getAddress(), request.getPort());
@@ -339,6 +351,7 @@ public class Server {
         break;
 
       case MONITOR:
+        // Handle MONITOR operations (e.g., register for monitoring updates)
         // Monitor request format: "<register>,<facilityName>,<monitor interval>"
         try {
           String[] monitorRequestString = requestMessage.getData().split(",");
@@ -353,28 +366,25 @@ public class Server {
             String facilityName = monitorRequestString[1];
             int monitorInterval = Integer.parseInt(monitorRequestString[2]);
 
-            //CHECK if the facilityName provided by user is correct.
-            if (facilityFactory.getFacility(facilityName) == null){
+            // CHECK if the facilityName provided by user is correct.
+            if (facilityFactory.getFacility(facilityName) == null) {
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                   "status:ERROR\nmessage:Invalid facilityName provided");
-              break;              
+              break;
             }
-            
 
             Monitor clientMonitor = new Monitor(facilityName, requestMessage.getRequestID(), request.getAddress(),
                 request.getPort(), monitorInterval);
 
             facilityMonitorService.registerMonitor(clientMonitor);
             responseMessage = new RequestMessage(
-              Operation.MONITOR.getOpCode(),
-              requestMessage.getRequestID(),
-              String.format(
-                "status:SUCCESS\n" +
-                "facility:%s\n" +
-                "interval:%d",
-                facilityName, monitorInterval
-              )
-            );
+                Operation.MONITOR.getOpCode(),
+                requestMessage.getRequestID(),
+                String.format(
+                    "status:SUCCESS\n" +
+                        "facility:%s\n" +
+                        "interval:%d",
+                    facilityName, monitorInterval));
           } else {
             responseMessage = new RequestMessage(Operation.MONITOR.getOpCode(), requestMessage.getRequestID(),
                 "status:ERROR\nmessage:Invalid request format");
@@ -385,13 +395,14 @@ public class Server {
         }
 
         break;
+
       default:
         responseMessage = new RequestMessage(Operation.NONE.getOpCode(), requestMessage.getRequestID(),
             "status:ERROR\nmessage:Unknown operation");
         break;
     }
 
-    // save request and response to history
+    // Save the request and response to the history for at-most-once semantics
     RequestInfo currentRequestInformation = new RequestInfo(
         requestMessage,
         request.getAddress(),
@@ -416,24 +427,6 @@ public class Server {
     }
 
     return responseMessage;
-  }
-
-  private static void printSupposedData(int requestType, int requestID, String data) {
-    RequestMessage x = new RequestMessage(requestType, requestID, data);
-    byte[] buffer = null;
-
-    try {
-      buffer = Serializer.serialize(x);
-
-      System.out.println("Supposed data size: " + buffer.length + " bytes");
-      for (byte b : buffer) {
-        System.out.print(String.format("%02X ", b & 0xFF));
-      }
-      System.out.println();
-    } catch (Exception e) {
-      System.err.println("Error serializing request: " + e.getMessage());
-      e.printStackTrace();
-    }
   }
 
   private static RequestMessage bookFacility(RequestMessage request, InetAddress userAddress, int userPort) {
@@ -482,12 +475,12 @@ public class Server {
         request.getRequestID(),
         String.format(
             "status:SUCCESS\n" +
-              "bookingID:%s\n" +
-              "user:%s\n" +
-              "facility:%s\n" +
-              "day:%s\n" +
-              "startTime:%s\n" +
-              "endTime:%s",
+                "bookingID:%s\n" +
+                "user:%s\n" +
+                "facility:%s\n" +
+                "day:%s\n" +
+                "startTime:%s\n" +
+                "endTime:%s",
             confirmationID, userInfo, facilityName, bookTimeSlot.getDay(), bookTimeSlot.getStartTime(),
             bookTimeSlot.getEndTime()));
 
@@ -526,9 +519,8 @@ public class Server {
     }
 
     lastUpdatedFacility = facilityName;
-    
 
-    //Check if the timeslot to update is available
+    // Check if the timeslot to update is available
     Availability availability = facility.getAvailability();
     if (availability == null || !availability.isAvailable(newTimeSlot)) {
       responseMessage = new RequestMessage(
@@ -562,9 +554,7 @@ public class Server {
                   "startTime:%s\n" +
                   "endTime:%s\n",
               delete_confirmationID, booking_confirmationID, userInfo, facilityName, dayStr, newTimeSlot.getStartTime(),
-              newTimeSlot.getEndTime()
-          )
-      );
+              newTimeSlot.getEndTime()));
 
       return responseMessage;
 
@@ -660,11 +650,12 @@ public class Server {
       for (DayOfWeek day : DayOfWeek.values()) {
         // if days not specified, get all days
         // else if days specified, only get those days
-        if(!(days == null || days.isEmpty()) && days.get(day) == null) {
+        if (!(days == null || days.isEmpty()) && days.get(day) == null) {
           continue;
-        } 
+        }
 
-        System.out.println("Checking availability for day: " + day);
+        // Debug message
+        // System.out.println("Checking availability for day: " + day);
 
         List<TimeSlot> timeslots = availability.getAvailableTimeSlots(day);
         if (!timeslots.isEmpty()) {

@@ -1,10 +1,10 @@
 #ifndef USER_INTERFACE_HPP
 #define USER_INTERFACE_HPP
 
+#include <memory>
+
 #include "Client.hpp"
 #include "Socket.hpp"
-
-#include <memory>
 
 class UserInterface
 {
