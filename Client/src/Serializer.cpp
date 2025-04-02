@@ -1,17 +1,17 @@
 #include "Serializer.hpp"
 
+#include <cstring>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include "ByteBuffer.hpp"
 #include "ByteReader.hpp"
 #include "Parity.hpp"
-
-#include <iostream>
-#include <vector>
-#include <string>
-#include <map>
-#include <memory>
-#include <cstring>
-#include <stdexcept>
-#include <functional>
 
 // Initialize static members
 std::map<int, std::shared_ptr<JavaSerializable>> JavaDeserializer::deserializedObjects;
@@ -90,7 +90,6 @@ std::shared_ptr<JavaSerializable> ObjectFactory::createObject(const std::string 
 }
 
 // JavaDeserializer
-
 std::shared_ptr<JavaSerializable> JavaDeserializer::deserialize(const std::vector<uint8_t> &data)
 {
     if (data.empty())

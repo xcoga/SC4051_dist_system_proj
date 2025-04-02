@@ -1,13 +1,13 @@
 #include "ByteBuffer.hpp"
 
+#include <cstdint>
+#include <cstring>
 #include <iostream>
-#include <vector>
-#include <string>
 #include <map>
 #include <memory>
-#include <cstring>
 #include <stdexcept>
-#include <functional>
+#include <string>
+#include <vector>
 
 ByteBuffer::ByteBuffer(size_t initialSize)
 {

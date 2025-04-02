@@ -1,13 +1,13 @@
 #include "ByteReader.hpp"
 
+#include <cstdint>
+#include <cstring>
 #include <iostream>
-#include <vector>
-#include <string>
 #include <map>
 #include <memory>
-#include <cstring>
 #include <stdexcept>
-#include <functional>
+#include <string>
+#include <vector>
 
 ByteReader::ByteReader(const std::vector<uint8_t> &data) : buffer(data) {}
 

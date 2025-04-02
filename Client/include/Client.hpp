@@ -1,13 +1,9 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 
 #include "RequestMessage.hpp"
 #include "Socket.hpp"
@@ -24,36 +20,36 @@ private:
     int requestID;
 
 public:
-    Client(const std::string &serverIp, int serverPort);
+    Client(const std::string &serverIp, const int serverPort);
     ~Client();
 
     std::string queryFacilityNames();
-    std::string queryAvailability(std::string facilityName, std::string daysOfWeek);
+    std::string queryAvailability(const std::string facilityName, const std::string daysOfWeek);
     std::string bookFacility(
-        std::string facilityName,
-        std::string dayOfWeek,
-        std::string startTime,
-        std::string endTime
+        const std::string facilityName,
+        const std::string dayOfWeek,
+        const std::string startTime,
+        const std::string endTime
     );
-    std::string queryBooking(std::string bookingID);
-    std::string updateBooking(std::string oldBookingID, int offsetMinutes);
-    std::string deleteBooking(std::string bookingID);
+    std::string queryBooking(const std::string bookingID);
+    std::string updateBooking(const std::string oldBookingID, const int offsetMinutes);
+    std::string deleteBooking(const std::string bookingID);
     void monitorAvailability(
-        std::string facilityName,
-        int durationSeconds,
+        const std::string facilityName,
+        const int durationSeconds,
         const std::function<void(const std::string &, const bool)> &onUpdate
     );
-    std::string rateFacility(std::string facilityName, float rating);       // Non-idempotent operation
-    std::string queryRating(std::string facilityName);                      // Idempotent operation
-    std::string echoMessage(std::string messageData);
+    std::string rateFacility(const std::string facilityName, const float rating);       // Non-idempotent operation
+    std::string queryRating(const std::string facilityName);                      // Idempotent operation
+    std::string echoMessage(const std::string messageData);
 
 private:
     void makeLocalSocketAddress(struct sockaddr_in *sa);
-    void makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int port);
+    void makeRemoteSocketAddress(struct sockaddr_in *sa, const char *hostname, const int port);
 
-    void sendRequest(const RequestMessage &request, bool retry = false);
+    void sendRequest(const RequestMessage &request, const bool retry = false);
     // std::string receiveResponse();
-    std::string receiveResponse(uint32_t expectedRequestID);
+    std::string receiveResponse(const uint32_t expectedRequestID);
     std::string sendWithRetry(const RequestMessage &request);
 
     std::string extractFacilityName(const std::string &bookingDetails);
@@ -62,7 +58,7 @@ private:
     std::string extractEndTime(const std::string &bookingDetails);
 
     void listenForMonitoringUpdates(
-        int durationSeconds,
+        const int durationSeconds,
         const std::function<void(const std::string &, const bool)> &onUpdate
     );
 };

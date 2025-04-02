@@ -1,11 +1,11 @@
 #include "Client.hpp"
 
+#include <chrono>
+
 #include "Serializer.hpp"
 #include "UserInterface.hpp"
 
-#include <chrono>
-
-Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
+Client::Client(const std::string &serverIp, const int serverPort) : requestID(0)
 {
     try
     {
@@ -50,7 +50,7 @@ std::string Client::queryFacilityNames()
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::queryAvailability(std::string facilityName, std::string daysOfWeek)
+std::string Client::queryAvailability(const std::string facilityName, const std::string daysOfWeek)
 {
     std::string messageData = "facility," + facilityName + "," + daysOfWeek;
 
@@ -60,10 +60,10 @@ std::string Client::queryAvailability(std::string facilityName, std::string days
 }
 
 std::string Client::bookFacility(
-    std::string facilityName,
-    std::string dayOfWeek,
-    std::string startTime,
-    std::string endTime
+    const std::string facilityName,
+    const std::string dayOfWeek,
+    const std::string startTime,
+    const std::string endTime
 )
 {
     std::string startTimeHour, startTimeMinute, endTimeHour, endTimeMinute;
@@ -79,7 +79,7 @@ std::string Client::bookFacility(
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::queryBooking(std::string bookingID)
+std::string Client::queryBooking(const std::string bookingID)
 {
     std::string messageData = "booking," + bookingID;
 
@@ -88,7 +88,7 @@ std::string Client::queryBooking(std::string bookingID)
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::updateBooking(std::string oldBookingID, int offsetMinutes)
+std::string Client::updateBooking(const std::string oldBookingID, const int offsetMinutes)
 {
     // Make queryBooking call first to get the old booking details
     std::string oldBookingDetails = queryBooking(oldBookingID);
@@ -132,7 +132,7 @@ std::string Client::updateBooking(std::string oldBookingID, int offsetMinutes)
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::deleteBooking(std::string bookingID)
+std::string Client::deleteBooking(const std::string bookingID)
 {
     // Make queryBooking call first to get the old booking details, especially the facility name
     // Facility name is required for the delete booking request
@@ -141,14 +141,14 @@ std::string Client::deleteBooking(std::string bookingID)
 
     std::string messageData = bookingID + "," + facilityName;
     
-    RequestMessage requestMessage(RequestMessage::DELETE, requestID, messageData);
+    RequestMessage requestMessage(RequestMessage::DELETE_REQUEST, requestID, messageData);
 
     return sendWithRetry(requestMessage);
 }
 
 void Client::monitorAvailability(
-    std::string facilityName,
-    int durationSeconds,
+    const std::string facilityName,
+    const int durationSeconds,
     const std::function<void(const std::string &, const bool)> &onUpdate
 )
 {
@@ -168,7 +168,7 @@ void Client::monitorAvailability(
     }
 }
 
-std::string Client::rateFacility(std::string facilityName, float rating)
+std::string Client::rateFacility(const std::string facilityName, const float rating)
 {
     std::string messageData = "rating," + facilityName + "," + std::to_string(rating);
 
@@ -177,7 +177,7 @@ std::string Client::rateFacility(std::string facilityName, float rating)
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::queryRating(std::string facilityName)
+std::string Client::queryRating(const std::string facilityName)
 {
     std::string messageData = "rating," + facilityName;
 
@@ -186,7 +186,7 @@ std::string Client::queryRating(std::string facilityName)
     return sendWithRetry(requestMessage);
 }
 
-std::string Client::echoMessage(std::string messageData)
+std::string Client::echoMessage(const std::string messageData)
 {
     RequestMessage requestMessage(RequestMessage::ECHO, requestID, messageData);
 
@@ -200,7 +200,7 @@ void Client::makeLocalSocketAddress(struct sockaddr_in *sa)
     sa->sin_addr.s_addr = htonl(INADDR_ANY);    // On local host
 }
 
-void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int port)
+void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, const char *hostname, const int port)
 {
     sa->sin_family = AF_INET;
     sa->sin_port = htons(port);
@@ -221,7 +221,7 @@ void Client::makeRemoteSocketAddress(struct sockaddr_in *sa, char *hostname, int
     }
 }
 
-void Client::sendRequest(const RequestMessage &request, bool retry)
+void Client::sendRequest(const RequestMessage &request, const bool retry)
 {
     if (!retry)
     {
@@ -259,8 +259,8 @@ std::string Client::receiveResponse(uint32_t expectedRequestID)
         
         // Verify the response matches our request ID
         if (responseMessage->getRequestID() != expectedRequestID) {
-            std::cerr << "Received response for request ID " 
-                      << responseMessage->getRequestID() 
+            std::cerr << "Received response for request ID "
+                      << responseMessage->getRequestID()
                       << " but expected " << expectedRequestID << std::endl;
             return ""; // Return empty string to trigger retry
         }
@@ -356,7 +356,7 @@ std::string Client::extractEndTime(const std::string &bookingDetails)
 }
 
 void Client::listenForMonitoringUpdates(
-    int durationSeconds,
+    const int durationSeconds,
     const std::function<void(const std::string &, const bool)> &onUpdate
 )
 {
