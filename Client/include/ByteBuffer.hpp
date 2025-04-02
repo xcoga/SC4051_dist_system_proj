@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "Constants.hpp"
+
 /**
  * @class ByteBuffer
  * @brief A utility class for writing data into a byte buffer in big-endian format.
@@ -24,9 +26,9 @@ private:
 public:
     /**
      * @brief Constructs a ByteBuffer with an optional initial size.
-     * @param initialSize The initial size of the buffer (default is 1024 bytes).
+     * @param initialSize The initial size of the buffer (default is BUFFER_SIZE).
      */
-    ByteBuffer(size_t initialSize = 1024);
+    ByteBuffer(size_t initialSize = Constants::BUFFER_SIZE);
 
     /**
      * @brief Writes a single byte to the buffer.

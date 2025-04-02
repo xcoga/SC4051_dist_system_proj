@@ -1,10 +1,11 @@
 #include "ResponseParser.hpp"
 
-#include "Serializer.hpp"
-
 #include <iostream>
 #include <sstream>
 #include <unordered_set>
+
+#include "Constants.hpp"
+#include "Serializer.hpp"
 
 /**
  * @brief Parses the response for querying facility names.
@@ -83,8 +84,6 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(
 {
     std::vector<std::string> parsedResponse;
     std::istringstream responseStream(response);
-
-    std::vector<std::string> daysOfWeek = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
 
     bool filterDays = !daysRequested.empty(); // Only filter if daysRequested is not empty
     std::unordered_set<std::string> requestedDaysSet;
@@ -169,7 +168,7 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(
         // Only filter days if requested by user
         if (filterDays)
         {
-            for (const std::string &day : daysOfWeek)
+            for (const std::string &day : Constants::DAYS_OF_WEEK)
             {
                 if (requestedDaysSet.count(day))
                 {
@@ -186,7 +185,7 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(
         }
         else
         {
-            for (const std::string &day : daysOfWeek)
+            for (const std::string &day : Constants::DAYS_OF_WEEK)
             {
                 if (availabilityMap.find(day) != availabilityMap.end())
                 {
@@ -591,7 +590,7 @@ bool ResponseParser::isErrorResponse(std::istringstream &responseStream)
 {
     std::string line;
 
-    if (std::getline(responseStream, line) && line.find("status:ERROR") == 0)
+    if (std::getline(responseStream, line) && line.find(Constants::STATUS_ERROR) == 0)
     {
         return true;
     }

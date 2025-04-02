@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cstring>
 
+#include "Constants.hpp"
+
 #ifdef _WIN32
     /**
      * @brief Initializes Winsock for Windows systems.
@@ -187,7 +189,7 @@ int Socket::receiveDataFrom(char *buffer, struct sockaddr_in &addr)
 #else
     socklen_t addrLen = sizeof(addr);
 #endif
-    int bytesReceived = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&addr, &addrLen);
+    int bytesReceived = recvfrom(sockfd, buffer, Constants::BUFFER_SIZE, 0, (struct sockaddr *)&addr, &addrLen);
     if (bytesReceived < 0)
     {
 #ifdef _WIN32

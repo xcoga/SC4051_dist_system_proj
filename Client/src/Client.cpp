@@ -1,5 +1,6 @@
 #include "Client.hpp"
 
+#include "Constants.hpp"
 #include "Serializer.hpp"
 #include "UserInterface.hpp"
 
@@ -38,7 +39,7 @@ Client::Client(const std::string &serverIp, int serverPort) : requestID(0)
 
     makeRemoteSocketAddress(&serverAddr, const_cast<char *>(serverIp.c_str()), serverPort); // Set up the server address
 
-    socket.setReceiveTimeout(TIMEOUT_SEC); // Set a timeout for receiving data
+    socket.setReceiveTimeout(Constants::TIMEOUT_SEC); // Set a timeout for receiving data
 
     UserInterface::displayConnectionInfo(socket, serverAddr); // Display connection info to the user
 }
@@ -246,7 +247,7 @@ void Client::monitorAvailability(
     onUpdate(registrationResponse, true); // Call the callback function with the registration response
 
     // Check if the registration was successful
-    if (registrationResponse.find("status:SUCCESS") == 0)
+    if (registrationResponse.find(Constants::STATUS_SUCCESS) == 0)
     {
         // If successful, listen for updates for the specified duration
         // Client is blocked from making other requests during this time
@@ -399,7 +400,7 @@ void Client::sendRequest(const RequestMessage &request, bool retry)
  */
 std::string Client::receiveResponse(uint32_t expectedRequestID)
 {
-    char recvBuffer[BUFFER_SIZE];
+    char recvBuffer[Constants::BUFFER_SIZE];
     struct sockaddr_in senderAddr;
     std::string messageData;
 
@@ -435,7 +436,7 @@ std::string Client::receiveResponse(uint32_t expectedRequestID)
  * @brief Sends a request to the server with retries.
  * 
  * This method attempts to send a request to the server multiple times in case of timeouts or no response.
- * It uses a maximum number of retries defined by MAX_RETRIES.
+ * It uses a maximum number of retries defined by MAX_RETRIES in Constants.hpp.
  * 
  * @param request The request message to send.
  * 
@@ -443,7 +444,7 @@ std::string Client::receiveResponse(uint32_t expectedRequestID)
  */
 std::string Client::sendWithRetry(const RequestMessage &request)
 {
-    for (int attempt = 0; attempt < MAX_RETRIES; ++attempt)
+    for (int attempt = 0; attempt < Constants::MAX_RETRIES; ++attempt)
     {
         sendRequest(request, attempt > 0); // Retry flag is false for first attempt and true for subsequent attempts
 
@@ -455,10 +456,10 @@ std::string Client::sendWithRetry(const RequestMessage &request)
             return response;
         }
 
-        std::cerr << "No response received. Retrying... (" << (attempt + 1) << "/" << MAX_RETRIES << ")" << std::endl;
+        std::cerr << "No response received. Retrying... (" << (attempt + 1) << "/" << Constants::MAX_RETRIES << ")" << std::endl;
     }
 
-    return "status:ERROR\nmessage:Request failed after " + std::to_string(MAX_RETRIES) + " attempts.";
+    return Constants::STATUS_ERROR + "\nmessage:Request failed after " + std::to_string(Constants::MAX_RETRIES) + " attempts.";
 }
 
 /**
@@ -582,7 +583,7 @@ void Client::listenForMonitoringUpdates(
 
     while (std::chrono::steady_clock::now() < endTime)
     {
-        char recvBuffer[BUFFER_SIZE];
+        char recvBuffer[Constants::BUFFER_SIZE];
         struct sockaddr_in senderAddr;
 
         try
@@ -602,5 +603,5 @@ void Client::listenForMonitoringUpdates(
         }
     }
 
-    socket.setReceiveTimeout(TIMEOUT_SEC);
+    socket.setReceiveTimeout(Constants::TIMEOUT_SEC);
 }

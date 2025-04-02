@@ -20,10 +20,6 @@ class UserInterface
 private:
     Client &client; ///< Reference to the Client object for server communication.
 
-    static const std::vector<std::string> MAIN_MENU; ///< Main menu options.
-    static const std::vector<std::string> DAYS_OF_WEEK_MENU; ///< Days of the week menu options.
-    static const std::vector<std::string> DAYS_OF_WEEK; ///< Days of the week names.
-
     /**
      * @brief Handles the user's choice from the main menu.
      * 

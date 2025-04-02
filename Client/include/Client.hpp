@@ -8,9 +8,6 @@
 #include "RequestMessage.hpp"
 #include "Socket.hpp"
 
-#define TIMEOUT_SEC 5
-#define MAX_RETRIES 5
-
 /**
  * @class Client
  * @brief Handles communication with the server for facility booking operations.

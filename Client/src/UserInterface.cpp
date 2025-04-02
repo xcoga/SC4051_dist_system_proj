@@ -5,6 +5,7 @@
 #include <numeric>
 #include <regex>
 
+#include "Constants.hpp"
 #include "ResponseParser.hpp"
 
 /**
@@ -12,42 +13,6 @@
  * @param client Reference to the Client object for server communication.
  */
 UserInterface::UserInterface(Client &client) : client(client) {}
-
-const std::vector<std::string> UserInterface::MAIN_MENU = {
-    "Facility Booking System",
-    "1. Query Facility Names",
-    "2. Query Facility Availability",
-    "3. Book Facility",
-    "4. Query Existing Booking",
-    "5. Update Existing Booking",
-    "6. Delete Existing Booking",
-    "7. Monitor Facility Availability",
-    "8. Rate Facility",
-    "9. Query Facility Rating",
-    "10. Echo Message",
-    "11. Exit"
-};
-
-const std::vector<std::string> UserInterface::DAYS_OF_WEEK_MENU = {
-    "Day of Week",
-    "1. MONDAY",
-    "2. TUESDAY",
-    "3. WEDNESDAY",
-    "4. THURSDAY",
-    "5. FRIDAY",
-    "6. SATURDAY",
-    "7. SUNDAY"
-};
-
-const std::vector<std::string> UserInterface::DAYS_OF_WEEK = {
-    "MONDAY",
-    "TUESDAY",
-    "WEDNESDAY",
-    "THURSDAY",
-    "FRIDAY",
-    "SATURDAY",
-    "SUNDAY"
-};
 
 /**
  * @brief Displays the main menu and handles user input.
@@ -59,7 +24,7 @@ void UserInterface::displayMenu()
     while (true)
     {
         std::cout << std::endl;
-        std::cout << generateBox(MAIN_MENU);
+        std::cout << generateBox(Constants::MAIN_MENU);
 
         choice = UserInterface::promptChoice("Enter choice (1-11): ");
 
@@ -641,7 +606,7 @@ std::string UserInterface::promptDayOfWeek(const std::string prompt)
 
     while (true)
     {
-        std::cout << generateBox(DAYS_OF_WEEK_MENU);
+        std::cout << generateBox(Constants::DAYS_OF_WEEK_MENU);
         std::cout << prompt;
         std::cin >> choice;
 
@@ -653,7 +618,7 @@ std::string UserInterface::promptDayOfWeek(const std::string prompt)
         }
         else
         {
-            return DAYS_OF_WEEK[choice - 1];
+            return Constants::DAYS_OF_WEEK[choice - 1];
         }
     }
 }
@@ -674,7 +639,7 @@ std::string UserInterface::promptDaysOfWeek(const std::string prompt)
 {
     while (true)
     {
-        std::cout << generateBox(DAYS_OF_WEEK_MENU);
+        std::cout << generateBox(Constants::DAYS_OF_WEEK_MENU);
         std::cout << prompt;
 
         std::string input;
@@ -703,7 +668,7 @@ std::string UserInterface::promptDaysOfWeek(const std::string prompt)
                     isValid = false;
                     break;
                 }
-                selectedDays.push_back(DAYS_OF_WEEK[choice - 1]);
+                selectedDays.push_back(Constants::DAYS_OF_WEEK[choice - 1]);
             }
             catch (const std::invalid_argument &)
             {

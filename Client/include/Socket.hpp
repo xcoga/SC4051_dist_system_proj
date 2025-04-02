@@ -18,8 +18,6 @@
 #include <string>
 #include <vector>
 
-#define BUFFER_SIZE 1024 ///< Default buffer size for socket operations.
-
 /**
  * @class Socket
  * @brief A wrapper class for socket operations, supporting both Windows and Unix-based systems.
