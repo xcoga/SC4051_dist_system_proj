@@ -7,10 +7,12 @@
 
 #include "ResponseParser.hpp"
 
-/* Constructors */
+/**
+ * @brief Constructs a UserInterface object.
+ * @param client Reference to the Client object for server communication.
+ */
 UserInterface::UserInterface(Client &client) : client(client) {}
 
-/* Constants */
 const std::vector<std::string> UserInterface::MAIN_MENU = {
     "Facility Booking System",
     "1. Query Facility Names",
@@ -47,7 +49,9 @@ const std::vector<std::string> UserInterface::DAYS_OF_WEEK = {
     "SUNDAY"
 };
 
-/* Public methods */
+/**
+ * @brief Displays the main menu and handles user input.
+ */
 void UserInterface::displayMenu()
 {
     int choice;
@@ -63,6 +67,12 @@ void UserInterface::displayMenu()
     }
 }
 
+/**
+ * @brief Displays connection information for the client and server.
+ * 
+ * @param socket The socket object used for communication.
+ * @param serverAddr The server address structure.
+ */
 void UserInterface::displayConnectionInfo(Socket &socket, struct sockaddr_in &serverAddr)
 {
     struct sockaddr_in clientAddr;
@@ -91,21 +101,16 @@ void UserInterface::displayConnectionInfo(Socket &socket, struct sockaddr_in &se
         "Server Port: " + serverPort
     };
 
-    // // Print the bound IP address and port
-    // char ipStr[INET_ADDRSTRLEN];
-    // inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
-    // std::string ipAddress = "Client IP Address: " + std::string(ipStr);
-    // std::string port = "Client Port: " + std::to_string(ntohs(clientAddr.sin_port));
-
-    // char serverIpStr[INET_ADDRSTRLEN];
-    // inet_ntop(AF_INET, &(serverAddr.sin_addr), serverIpStr, INET_ADDRSTRLEN);
-    // std::string serverIpAddress = "Server IP Address: " + std::string(serverIpStr);
-    // std::string serverPort = "Server Port: " + std::to_string(ntohs(serverAddr.sin_port));
-
     std::cout << std::endl;
     std::cout << generateBox(connectionInfo);
 }
 
+/**
+ * @brief Prompts the user for the server IP address and port number.
+ * 
+ * @param prompt The prompt message to display.
+ * @return The server IP address as a string.
+ */
 std::string UserInterface::promptServerIP(const std::string prompt)
 {
     std::regex ipRegex(R"(^(\d{1,3}\.){3}\d{1,3}$|^localhost$)");
@@ -127,6 +132,12 @@ std::string UserInterface::promptServerIP(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for the server port number.
+ * 
+ * @param prompt The prompt message to display.
+ * @return The server port number as an integer.
+ */
 int UserInterface::promptServerPort(const std::string prompt)
 {
     std::regex portRegex(R"(^\d{1,5}$)");
@@ -163,7 +174,11 @@ int UserInterface::promptServerPort(const std::string prompt)
     return serverPort;
 }
 
-/* Private methods */
+/**
+ * @brief Handles the user's choice from the main menu.
+ * 
+ * @param choice The user's main menu choice.
+ */
 void UserInterface::handleUserChoice(const int choice)
 {
     switch (choice)
@@ -206,6 +221,9 @@ void UserInterface::handleUserChoice(const int choice)
     }
 }
 
+/**
+ * @brief Handles the user's choice for querying facility names.
+ */
 void UserInterface::handleQueryFacilityNames()
 {
     std::cout << std::endl;
@@ -219,6 +237,9 @@ void UserInterface::handleQueryFacilityNames()
     std::cout << generateBox(parsedResponse);
 }
 
+/**
+ * @brief Handles the user's choice for querying facility availability.
+ */
 void UserInterface::handleQueryAvailability()
 {
     std::cout << std::endl;
@@ -248,6 +269,9 @@ void UserInterface::handleQueryAvailability()
     }
 }
 
+/**
+ * @brief Handles the user's choice for booking a facility.
+ */
 void UserInterface::handleBookFacility()
 {
     std::cout << std::endl;
@@ -280,6 +304,9 @@ void UserInterface::handleBookFacility()
     }
 }
 
+/**
+ * @brief Handles the user's choice for querying an existing booking.
+ */
 void UserInterface::handleQueryBooking()
 {
     std::cout << std::endl;
@@ -299,6 +326,9 @@ void UserInterface::handleQueryBooking()
     }
 }
 
+/**
+ * @brief Handles the user's choice for updating an existing booking.
+ */
 void UserInterface::handleUpdateBooking()
 {
     std::cout << std::endl;
@@ -338,6 +368,9 @@ void UserInterface::handleUpdateBooking()
     }
 }
 
+/**
+ * @brief Handles the user's choice for deleting an existing booking.
+ */
 void UserInterface::handleDeleteBooking()
 {
     std::cout << std::endl;
@@ -374,6 +407,9 @@ void UserInterface::handleDeleteBooking()
     }
 }
 
+/**
+ * @brief Handles the user's choice for monitoring facility availability.
+ */
 void UserInterface::handleMonitorAvailability()
 {
     std::cout << std::endl;
@@ -416,9 +452,11 @@ void UserInterface::handleMonitorAvailability()
     };
     std::cout << generateBox(parsedResponse);
     std::cout << "Returning to main menu..." << std::endl;
-    // std::cout << "Received response from server: " << response << std::endl;
 }
 
+/**
+ * @brief Handles the user's choice for rating a facility.
+ */
 void UserInterface::handleRateFacility()
 {
     std::cout << std::endl;
@@ -449,6 +487,9 @@ void UserInterface::handleRateFacility()
     }
 }
 
+/**
+ * @brief Handles the user's choice for querying facility rating.
+ */
 void UserInterface::handleQueryRating()
 {
     std::cout << std::endl;
@@ -477,6 +518,9 @@ void UserInterface::handleQueryRating()
     }
 }
 
+/**
+ * @brief Handles the user's choice for echoing a message.
+ */
 void UserInterface::handleEchoMessage()
 {
     std::cout << std::endl;
@@ -507,6 +551,9 @@ void UserInterface::handleEchoMessage()
     }
 }
 
+/**
+ * @brief Handles the user's choice for exiting the application.
+ */
 void UserInterface::handleExit()
 {
     bool confirmation = promptConfirmation("Exit Facility Booking System (yes/no)? ");
@@ -521,6 +568,17 @@ void UserInterface::handleExit()
     }
 }
 
+/**
+ * @brief Prompts the user for choice input and validates it.
+ * 
+ * This method displays a prompt message to the user and waits for input.
+ * It validates the input to ensure it is a number between 1 and 11.
+ * If the input is invalid, it clears the error state and prompts again.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The user's validated main menu choice.
+ */
 int UserInterface::promptChoice(const std::string prompt)
 {
     int choice;
@@ -547,6 +605,13 @@ int UserInterface::promptChoice(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for a facility name.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The facility name entered by the user.
+ */
 std::string UserInterface::promptFacilityName(const std::string prompt)
 {
     std::string facilityName;
@@ -558,6 +623,18 @@ std::string UserInterface::promptFacilityName(const std::string prompt)
     return facilityName;
 }
 
+/**
+ * @brief Prompts the user for a day of the week.
+ * 
+ * This method displays a menu of days of the week and prompts the user to select one.
+ * It validates the input to ensure it is a number between 1 and 7.
+ * If the input is invalid, it clears the error state and prompts again.
+ * If the input is valid, it returns the corresponding day name.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The day of the week entered by the user.
+ */
 std::string UserInterface::promptDayOfWeek(const std::string prompt)
 {
     int choice;
@@ -581,6 +658,18 @@ std::string UserInterface::promptDayOfWeek(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for multiple days of the week.
+ * 
+ * This method displays a menu of days of the week and prompts the user to select multiple days.
+ * It validates the input to ensure each selected day is a number between 1 and 7.
+ * If the input is invalid, it clears the error state and prompts again.
+ * If the input is valid, it returns a comma-separated string of the corresponding day names for the user's input.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The days of the week entered by the user.
+ */
 std::string UserInterface::promptDaysOfWeek(const std::string prompt)
 {
     while (true)
@@ -636,6 +725,17 @@ std::string UserInterface::promptDaysOfWeek(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for a time in HHMM format.
+ * 
+ * This method displays a prompt message to the user and waits for input.
+ * It validates the input to ensure it is in the correct HHMM format (24-hour clock).
+ * If the input is invalid, it clears the error state and prompts again.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The time entered by the user in HHMM format.
+ */
 std::string UserInterface::promptTime(const std::string prompt)
 {
     std::regex timeRegex(R"(^([01]\d|2[0-3])[0-5]\d$)");
@@ -657,6 +757,17 @@ std::string UserInterface::promptTime(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for a booking ID.
+ * 
+ * This method displays a prompt message to the user and waits for input.
+ * It validates the input to ensure it is in the correct UUID v4 format.
+ * If the input is invalid, it clears the error state and prompts again.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The booking ID entered by the user.
+ */
 std::string UserInterface::promptBookingID(const std::string prompt)
 {
     // Booking ID is in UUID v4 format
@@ -679,6 +790,17 @@ std::string UserInterface::promptBookingID(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for an offset in minutes.
+ * 
+ * This method displays a prompt message to the user and waits for input.
+ * It validates the input to ensure it is a non-zero integer.
+ * If the input is invalid, it clears the error state and prompts again.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The offset in minutes entered by the user.
+ */
 int UserInterface::promptOffset(const std::string prompt)
 {
     int offset;
@@ -705,6 +827,17 @@ int UserInterface::promptOffset(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for confirmation.
+ * 
+ * This method displays a prompt message to the user and waits for input.
+ * It validates the input to ensure it is either 'yes' or 'no' or 'y' or 'n'.
+ * If the input is invalid, it clears the error state and prompts again.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return True if the user confirms, false otherwise.
+ */
 bool UserInterface::promptConfirmation(const std::string prompt)
 {
     std::regex yesNoRegex(R"(^\s*(yes|y|no|n)\s*$)", std::regex::icase);
@@ -727,6 +860,17 @@ bool UserInterface::promptConfirmation(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for a rating between 1 and 5.
+ * 
+ * This method displays a prompt message to the user and waits for input.
+ * It validates the input to ensure it is a float between 1 and 5.
+ * If the input is invalid, it clears the error state and prompts again.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The rating entered by the user.
+ */
 float UserInterface::promptRating(const std::string prompt)
 {
     float rating;
@@ -749,6 +893,17 @@ float UserInterface::promptRating(const std::string prompt)
     }
 }
 
+/**
+ * @brief Prompts the user for a duration in seconds.
+ * 
+ * This method displays a prompt message to the user and waits for input.
+ * It validates the input to ensure it is a positive integer.
+ * If the input is invalid, it clears the error state and prompts again.
+ * 
+ * @param prompt The prompt message to display.
+ * 
+ * @return The duration in seconds entered by the user.
+ */
 int UserInterface::promptDuration(const std::string prompt)
 {
     std::string input;
@@ -784,6 +939,16 @@ int UserInterface::promptDuration(const std::string prompt)
     }
 }
 
+/**
+ * @brief Generates a box with centered text for the user interface.
+ * 
+ * This method takes a vector of strings as input and generates a box with the header centered and the content left-aligned.
+ * The first line is treated as the header, and the rest are treated as content lines.
+ * 
+ * @param content The vector of strings to be displayed in the box.
+ * 
+ * @return A string representing the generated box with centered text.
+ */
 std::string UserInterface::generateBox(const std::vector<std::string> &content)
 {
     if (content.empty())
@@ -821,6 +986,16 @@ std::string UserInterface::generateBox(const std::vector<std::string> &content)
     return box;
 }
 
+/**
+ * @brief Checks if the response indicates an error.
+ * 
+ * Every parsed response vector that corresponds to an error message will have "Error" as its first element.
+ * Hence, this method checks if the first element of the parsed response vector is "Error" to determine whether the response is an error.
+ * 
+ * @param parsedResponse The parsed response vector to check.
+ * 
+ * @return True if the response indicates an error, false otherwise.
+ */
 bool UserInterface::isErrorResponse(const std::vector<std::string> &parsedResponse)
 {
     if (!parsedResponse.empty() && parsedResponse[0] == "Error")
