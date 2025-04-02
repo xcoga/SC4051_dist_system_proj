@@ -6,7 +6,17 @@
 #include <sstream>
 #include <unordered_set>
 
-/* Public methods */
+/**
+ * @brief Parses the response for querying facility names.
+ * 
+ * This function takes the raw server response as input and parses it to extract facility names.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed facility names.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed facility names or an error message.
+ */
 std::vector<std::string> ResponseParser::parseQueryFacilityNamesResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -53,6 +63,19 @@ std::vector<std::string> ResponseParser::parseQueryFacilityNamesResponse(const s
     return parsedResponse;
 }
 
+/**
+ * @brief Parses the response for querying facility availability.
+ * 
+ * This function takes the raw server response and an optional list of requested days as input.
+ * It parses the response to extract availability information for the specified days.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed availability information.
+ * 
+ * @param response The raw server response.
+ * @param daysRequested A comma-separated list of days to filter availability (optional).
+ * 
+ * @return A vector of strings containing the parsed availability information or an error message.
+ */
 std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(
     const std::string &response,
     const std::string &daysRequested
@@ -176,12 +199,33 @@ std::vector<std::string> ResponseParser::parseQueryAvailabilityResponse(
     return parsedResponse;
 }
 
+/**
+ * @brief Parses the response for booking a facility.
+ * 
+ * The server returns the same message structure upon successful booking and querying booking details.
+ * Hence, this function is identical to parseQueryBookingResponse() and serves only as a wrapper.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed booking details or an error message.
+ */
 std::vector<std::string> ResponseParser::parseBookFacilityResponse(const std::string &response)
 {
     // Both queryBooking and bookFacility responses are the same
     return parseQueryBookingResponse(response);
 }
 
+/**
+ * @brief Parses the response for querying booking details.
+ * 
+ * This function takes the raw server response as input and parses it to extract booking details.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed booking details.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed booking details or an error message.
+ */
 std::vector<std::string> ResponseParser::parseQueryBookingResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -242,6 +286,17 @@ std::vector<std::string> ResponseParser::parseQueryBookingResponse(const std::st
     return parsedResponse;
 }
 
+/**
+ * @brief Parses the response for updating a booking.
+ * 
+ * This function takes the raw server response as input and parses it to extract updated booking details.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed updated booking details.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed updated booking details or an error message.
+ */
 std::vector<std::string> ResponseParser::parseUpdateBookingResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -305,6 +360,17 @@ std::vector<std::string> ResponseParser::parseUpdateBookingResponse(const std::s
     return parsedResponse;
 }
 
+/**
+ * @brief Parses the response for deleting a booking.
+ * 
+ * This function takes the raw server response as input and parses it to extract deletion confirmation.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed deletion confirmation.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed deletion confirmation or an error message.
+ */
 std::vector<std::string> ResponseParser::parseDeleteBookingResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -344,6 +410,17 @@ std::vector<std::string> ResponseParser::parseDeleteBookingResponse(const std::s
     return parsedResponse;
 }
 
+/**
+ * @brief Parses the response for monitoring facility availability.
+ * 
+ * This function takes the raw server response as input and parses it to extract monitoring registration details.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed monitoring registration details.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed monitoring registration details or an error message.
+ */
 std::vector<std::string> ResponseParser::parseMonitorAvailabilityResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -383,6 +460,17 @@ std::vector<std::string> ResponseParser::parseMonitorAvailabilityResponse(const 
     return parsedResponse;
 }
 
+/**
+ * @brief Parses the response for adding a rating to a facility.
+ * 
+ * This function takes the raw server response as input and parses it to extract rating confirmation.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed rating confirmation.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed rating confirmation or an error message.
+ */
 std::vector<std::string> ResponseParser::parseRateFacilityResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -466,6 +554,17 @@ std::vector<std::string> ResponseParser::parseQueryRatingResponse(const std::str
     return parsedResponse;
 }
 
+/**
+ * @brief Parses the response for echoing a message.
+ * 
+ * This function takes the raw server response as input and parses it to extract the echoed message.
+ * If the response indicates an error, it extracts the error message and returns it in a vector.
+ * Otherwise, it returns a vector containing the parsed echoed message.
+ * 
+ * @param response The raw server response.
+ * 
+ * @return A vector of strings containing the parsed echoed message or an error message.
+ */
 std::vector<std::string> ResponseParser::parseEchoMessageResponse(const std::string &response)
 {
     std::vector<std::string> parsedResponse;
@@ -478,7 +577,16 @@ std::vector<std::string> ResponseParser::parseEchoMessageResponse(const std::str
     return parsedResponse;
 }
 
-/* Private methods */
+/**
+ * @brief Checks if the response indicates an error.
+ * 
+ * This function takes an input stream containing the server response and checks if it indicates an error.
+ * It returns true if the response indicates an error, false otherwise.
+ * 
+ * @param responseStream The input stream containing the server response.
+ * 
+ * @return True if the response indicates an error, false otherwise.
+ */
 bool ResponseParser::isErrorResponse(std::istringstream &responseStream)
 {
     std::string line;
