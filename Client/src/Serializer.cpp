@@ -17,12 +17,20 @@
 std::map<int, std::shared_ptr<JavaSerializable>> JavaDeserializer::deserializedObjects;
 int JavaDeserializer::objectCounter = 0;
 std::map<std::string, std::function<std::shared_ptr<JavaSerializable>()>> ObjectFactory::creators;
-
-// Initialize static members
 std::map<const void *, int> JavaSerializer::serializedObjects;
 int JavaSerializer::objectCounter = 0;
 
-// JavaSerializer
+/* JavaSerializer */
+/**
+ * @brief Serializes a JavaSerializable object into a byte buffer.
+ * 
+ * This method handles circular references by maintaining a map of serialized objects.
+ * It writes the object type, field metadata, and field values into a byte buffer.
+ * 
+ * @param obj The object to serialize.
+ * 
+ * @return A vector of bytes containing the serialized data.
+ */
 std::vector<uint8_t> JavaSerializer::serialize(const JavaSerializable *obj)
 {
     serializedObjects.clear();
@@ -37,6 +45,15 @@ std::vector<uint8_t> JavaSerializer::serialize(const JavaSerializable *obj)
     return buffer.getBuffer();
 }
 
+/**
+ * @brief Serializes the object and writes it into a byte buffer.
+ * 
+ * This method handles circular references by checking if the object has already been serialized.
+ * It writes the object type, field metadata, and field values into the buffer.
+ * 
+ * @param obj The object to serialize.
+ * @param buffer The byte buffer to write the serialized data into.
+ */
 void JavaSerializer::serializeObject(const JavaSerializable *obj, ByteBuffer &buffer)
 {
     if (obj == nullptr)
@@ -78,7 +95,18 @@ void JavaSerializer::serializeObject(const JavaSerializable *obj, ByteBuffer &bu
     obj->serializeFieldValues(buffer);
 }
 
-// ObjectFactory
+/* ObjectFactory */
+/**
+ * @brief Creates an object based on its class name.
+ * 
+ * This method uses a factory pattern to create objects of different types.
+ * 
+ * @param className The name of the class.
+ * 
+ * @return A shared pointer to the created object.
+ * 
+ * @throws std::runtime_error if the class name is not registered.
+ */
 std::shared_ptr<JavaSerializable> ObjectFactory::createObject(const std::string &className)
 {
     auto it = creators.find(className);
@@ -89,7 +117,19 @@ std::shared_ptr<JavaSerializable> ObjectFactory::createObject(const std::string 
     return it->second();
 }
 
-// JavaDeserializer
+/* JavaDeserializer */
+/**
+ * @brief Deserializes a JavaSerializable object from a byte buffer.
+ * 
+ * This method verifies the parity of the received data and then deserializes the object.
+ * It handles circular references by maintaining a map of deserialized objects.
+ * 
+ * @param data The byte buffer containing the serialized data.
+ * 
+ * @return A shared pointer to the deserialized object.
+ * 
+ * @throws std::runtime_error if deserialization fails or if the parity check fails.
+ */
 std::shared_ptr<JavaSerializable> JavaDeserializer::deserialize(const std::vector<uint8_t> &data)
 {
     if (data.empty())
@@ -113,6 +153,18 @@ std::shared_ptr<JavaSerializable> JavaDeserializer::deserialize(const std::vecto
     return deserializeObject(reader);
 }
 
+/**
+ * @brief Deserializes an object from a byte reader.
+ * 
+ * This method reads the object type, field metadata, and field values from the byte reader.
+ * It handles circular references by maintaining a map of deserialized objects.
+ * 
+ * @param reader The byte reader to read the serialized data from.
+ * 
+ * @return A shared pointer to the deserialized object.
+ * 
+ * @throws std::runtime_error if deserialization fails or if the field metadata does not match.
+ */
 std::shared_ptr<JavaSerializable> JavaDeserializer::deserializeObject(ByteReader &reader)
 {
     uint8_t nullMarker = reader.readByte();
