@@ -55,7 +55,7 @@ namespace Constants
         "7. Monitor Facility Availability",
         "8. Rate Facility",
         "9. Query Facility Rating",
-        "10. [DEBUG] Echo Message",
+        "10. Echo Message",
         "11. Exit"
     };
 
