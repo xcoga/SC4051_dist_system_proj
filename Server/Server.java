@@ -32,8 +32,9 @@ public class Server {
   // Probability of dropping a request (used for testing reliability)
   // private static final double DROP_CHANCE = 0.4;
   
-  // For dropping every other request by alternating between true and false
+  // If `DROP_REQUEST` is `true`, the server will simulate dropping requests. `DROP` will alternate between dropping the current request.
   private static boolean DROP_REQUEST = false;
+  private static boolean DROP = false;
 
   // Simulate 6s (6000ms) processing delay
   private static final int PROCESSING_DELAY_MS = 6000;
@@ -93,8 +94,11 @@ public class Server {
         // boolean dropRequest = Math.random() < DROP_CHANCE;
 
         // Drop every other request
-        DROP_REQUEST = !DROP_REQUEST;
-        if (DROP_REQUEST) {
+        if (DROP_REQUEST){
+          DROP = !DROP;
+        }
+        
+        if (DROP) {
           System.out.println("Dropping request from " + request.getAddress() + ":" + request.getPort());
           continue; // Skip processing this request
         }
