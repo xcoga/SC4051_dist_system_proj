@@ -4,9 +4,9 @@ This is a repository for the AY24/25 Semester 2 SC4051 group project to design a
 
 ## Contributors
 
-- Nicholas ([@nicholasbay](https://github.com/nicholasbay))
-- Owen ([@Owen-Choh](https://github.com/Owen-Choh))
-- Xichen ([@xcoga](https://github.com/xcoga))
+- Bay Yong Wei Nicholas ([@nicholasbay](https://github.com/nicholasbay))
+- Choh Lit Han Owen ([@Owen-Choh](https://github.com/Owen-Choh))
+- Dai Xichen ([@xcoga](https://github.com/xcoga))
 
 ## Request-Reply Structure
 
