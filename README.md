@@ -51,6 +51,8 @@ Data is in Big Endian format. MSB of data is at LSB of buffer.
 1. To compile Java source files into `Server/bin/` directory, run: `javac -d Server/bin Server/Server.java Server/utils/*.java`
 
 2. To start the Java server, run: `java -cp Server/bin Server.Server`
+   - For at-least-once configuration with request dropping: run: `java -cp Server/bin Server.Server at-least-once true`
+   - For at-most-once configuration with request dropping: run: `java -cp Server/bin Server.Server at-most-once true`
 
 ### C++ Client
 

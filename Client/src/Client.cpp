@@ -3,7 +3,7 @@
 #include "Constants.hpp"
 #include "Serializer.hpp"
 #include "UserInterface.hpp"
-
+#include <chrono>
 /**
  * @brief Constructs a Client object and initializes the connection to the server.
  *

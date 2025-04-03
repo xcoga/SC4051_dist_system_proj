@@ -32,8 +32,9 @@ public class Server {
   // Probability of dropping a request (used for testing reliability)
   // private static final double DROP_CHANCE = 0.4;
   
-  // For dropping every other request by alternating between true and false
+  // If `DROP_REQUEST` is `true`, the server will simulate dropping requests. `DROP` will alternate between dropping the current request.
   private static boolean DROP_REQUEST = false;
+  private static boolean DROP = false;
 
   // Simulate 6s (6000ms) processing delay
   private static final int PROCESSING_DELAY_MS = 6000;
@@ -55,13 +56,22 @@ public class Server {
 
   public static void main(String[] args) {
     // Determine invocation semantics based on command-line arguments
+    // E.g. java -cp Server/bin Server.Server at-least-once true
     String invocationScematic = args.length > 0 ? args[0] : "default";
+    DROP_REQUEST = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
 
     if (invocationScematic.equals("at-least-once")) {
       System.out.println("Server started with at-least-once invocation semantics.");
       checkHistory = false;
     } else {
       System.out.println("Server started with at-most-once invocation semantics.");
+    }
+
+    if(DROP_REQUEST == false){
+      System.out.println("Server will not simulate drop request");
+    }
+    else{
+      System.out.println("Server will simulate drop request. Alternate requests will be dropped.");
     }
 
     // Initialize service classes and facilities
@@ -84,8 +94,11 @@ public class Server {
         // boolean dropRequest = Math.random() < DROP_CHANCE;
 
         // Drop every other request
-        DROP_REQUEST = !DROP_REQUEST;
-        if (DROP_REQUEST) {
+        if (DROP_REQUEST){
+          DROP = !DROP;
+        }
+        
+        if (DROP) {
           System.out.println("Dropping request from " + request.getAddress() + ":" + request.getPort());
           continue; // Skip processing this request
         }
