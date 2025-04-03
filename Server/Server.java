@@ -30,7 +30,13 @@ import java.io.IOException;
  */
 public class Server {
   // Probability of dropping a request (used for testing reliability)
-  private static final double DROP_CHANCE = 0.4;
+  // private static final double DROP_CHANCE = 0.4;
+  
+  // For dropping every other request by alternating between true and false
+  private static boolean DROP_REQUEST = false;
+
+  // Simulate 6s (6000ms) processing delay
+  private static final int PROCESSING_DELAY_MS = 6000;
 
   // Service classes for managing facilities, request history, and monitoring
   private static MonitorService facilityMonitorService;
@@ -75,8 +81,11 @@ public class Server {
         System.out.println("\n\nReceived request from: " + request.getAddress() + ":" + request.getPort());
 
         // Simulate dropping requests based on DROP_CHANCE
-        boolean dropRequest = Math.random() < DROP_CHANCE;
-        if (dropRequest) {
+        // boolean dropRequest = Math.random() < DROP_CHANCE;
+
+        // Drop every other request
+        DROP_REQUEST = !DROP_REQUEST;
+        if (DROP_REQUEST) {
           System.out.println("Dropping request from " + request.getAddress() + ":" + request.getPort());
           continue; // Skip processing this request
         }
@@ -161,9 +170,9 @@ public class Server {
 
     // Simulate processing delay to mimic real-world server behavior
     try {
-      int processingDelay = 3000 + (int) (Math.random() * 5000);
-      System.out.println("Simulating slow processing for " + processingDelay + "ms");
-      Thread.sleep(processingDelay);
+      // int processingDelay = 3000 + (int) (Math.random() * 5000);
+      System.out.println("Simulating slow processing for " + PROCESSING_DELAY_MS + "ms");
+      Thread.sleep(PROCESSING_DELAY_MS);
     } catch (InterruptedException e) {
       System.err.println("Sleep interrupted: " + e.getMessage());
     }
