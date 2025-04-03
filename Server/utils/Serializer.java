@@ -48,13 +48,15 @@ public class Serializer {
         /*
          * Structure of the byte array:
          * 
-         * Null marker
-         * Object reference marker (Checks if object has been serialized before)
-         * Object reference/handle (consists of the entire object's fieldname, fieldtype
-         * + data.)
-         * 
-         * In each object reference/handle:
-         * ClassName, field_lengths, fieldname, fieldType,fieldVal
+            Null marker (0 = null, 1 = non-null)
+            For non-null objects:
+                Reference marker (1 = previously serialized object, 0 = new object)
+                For previously serialized objects: just the object handle/ID
+                For new objects:
+                    Object handle assignment
+                    Class name
+                    Field count
+                    For each field: field name, field type, field value
          */
 
         if (obj == null) {
@@ -66,11 +68,13 @@ public class Serializer {
 
         // Check if object type was already serialized. Check if object handle exists.
         if (serializedObjects.containsKey(obj)) {
+            //Handle exists, write the handle instead of serializing the whole object again.
             buffer.writeByte((byte) 1); // reference marker, object handle exists.
             buffer.writeInt(serializedObjects.get(obj));
             return;
         }
 
+        //Object handle does not exist, prepare to serialize the object instance.
         buffer.writeByte((byte) 0); // reference marker, object handle dont exist.
         serializedObjects.put(obj, objectCounter++);
 
@@ -108,7 +112,7 @@ public class Serializer {
             // writeValue(buffer, field.get(obj), field.getType());
         }
 
-        // TESTING THIS LOOP
+        //Write the values of each field.
         for (java.lang.reflect.Field field : serializableFields) {
             writeValue(buffer, field.get(obj), field.getType());
         }
