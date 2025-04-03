@@ -55,13 +55,22 @@ public class Server {
 
   public static void main(String[] args) {
     // Determine invocation semantics based on command-line arguments
+    // E.g. java -cp Server/bin Server.Server at-least-once true
     String invocationScematic = args.length > 0 ? args[0] : "default";
+    DROP_REQUEST = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
 
     if (invocationScematic.equals("at-least-once")) {
       System.out.println("Server started with at-least-once invocation semantics.");
       checkHistory = false;
     } else {
       System.out.println("Server started with at-most-once invocation semantics.");
+    }
+
+    if(DROP_REQUEST == false){
+      System.out.println("Server will not simulate drop request");
+    }
+    else{
+      System.out.println("Server will simulate drop request. Alternate requests will be dropped.");
     }
 
     // Initialize service classes and facilities
