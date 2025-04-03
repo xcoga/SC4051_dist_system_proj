@@ -1,38 +1,20 @@
 # SC4051 Distributed Systems Project
 
-This is a repository for the SC4051 group project to design and implement a `Distributed Facility Booking System`.
+This is a repository for the AY24/25 Semester 2 SC4051 group project to design and implement a Distributed Facility Booking System.
+
+## Contributors
+
+- Nicholas ([@nicholasbay](https://github.com/nicholasbay))
+- Owen ([@Owen-Choh](https://github.com/Owen-Choh))
+- Xichen ([@xcoga](https://github.com/xcoga))
 
 ## Request-Reply Structure
 
-### Request
-
-| Byte Offset | Field            | Size (in bytes) | Data Type | Description                               |
-| ----------- | ---------------- | --------------- | --------- | ----------------------------------------- |
-| 0           | Request Type     | 4               | Integer   | See [Request Types](#request-types)       |
-| 4           | Request ID       | 4               | Integer   | 0-indexed for every client                |
-| 8           | Application Data | Variable        |           | See [Data Marshalling](#data-marshalling) |
-| Variable    | Even parity bit  | 1               | Byte      | Even parity bit for error detection       |
-
-#### Request Types
-
-| ID  | Request Type | Description |
-| --- | ------------ | ----------- |
-| 0   | `READ`       |             |
-| 1   | `WRITE`      |             |
-| 2   | `UPDATE`     |             |
-| 3   | `DELETE`     |             |
-| 4   | `MONITOR`    |             |
-
-### Reply
-
-| Byte Offset | Field            | Size (in bytes) | Data Type | Description                               |
-| ----------- | ---------------- | --------------- | --------- | ----------------------------------------- |
-| 0           | Request ID       | 4               | Integer   | ID of request that server is replying to  |
-| 4           | Application Data | Variable        |           | See [Data Marshalling](#data-marshalling) |
+Refer to the [API specifications](API_Specification.md) for the request-reply structure.
 
 ## Data Marshalling
 
-Data is in Big Endian format. MSB of data is at LSB of buffer.
+Data is in big-endian format, meaning the most-significant byte (MSB) of data is at the least-significant byte (LSB) of buffer.
 
 ### Structure
 
@@ -69,12 +51,3 @@ Data is in Big Endian format. MSB of data is at LSB of buffer.
    - On Windows, run: `Client.exe`
 
    - On UNIX, run: `./Client`
-
-#### Windows-specific
-
-1. Compile into .exe file called 'Client':
-   g++ Client/Client.cpp Client/utils/ByteBuffer.cpp Client/utils/ByteReader.cpp Client/utils/Serializer.cpp Client/utils/Parity.cpp -o Client/Client -lws2_32
-
-Note: The -lws2_32 flag in your compilation command is a linker flag that tells the compiler to link your program with the Windows Socket 2 library (ws2_32.dll)
-
-2.  Execute the file: Client.exe
