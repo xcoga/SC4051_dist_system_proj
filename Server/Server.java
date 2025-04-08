@@ -37,7 +37,7 @@ public class Server {
   private static boolean DROP = false;
 
   // Simulate 6s (6000ms) processing delay
-  private static final int PROCESSING_DELAY_MS = 6000;
+  private static final int PROCESSING_DELAY_MS = 2000;
 
   // Service classes for managing facilities, request history, and monitoring
   private static MonitorService facilityMonitorService;
@@ -105,7 +105,10 @@ public class Server {
 
         // Handle the request and generate a response
         RequestMessage responseMessage = handleRequest(request);
-        System.out.println("Current request history: " + requestHistory.toString());
+        System.out.println("\n------------CURRENT REQUEST HISTORY------------");
+        System.out.println(requestHistory.toString() + "\n");
+        System.out.println("------------END OF REQUEST HISTORY------------");
+        
 
         // Send the response back to the client
         try {
@@ -195,7 +198,7 @@ public class Server {
       byte[] receivedData = new byte[request.getLength()];
       System.arraycopy(request.getData(), request.getOffset(), receivedData, 0, request.getLength());
       requestMessage = (RequestMessage) Serializer.deserialize(receivedData);
-      System.out.println("Request: " + requestMessage.toString());
+      System.out.println("Request received: " + requestMessage.toString());
     } catch (Exception e) {
       System.err.println("Error deserializing request: " + e.getMessage());
 
@@ -219,7 +222,7 @@ public class Server {
           null);
       RequestInfo prevRequest = requestHistory.containsRequest(requestInformation);
       if (prevRequest != null) {
-        System.out.printf("Duplicate %s request id %d detected\n", requestMessage.getOperation(),
+        System.out.printf("DUPLICATE %s request id %d detected------------------------------------------------------\n", requestMessage.getOperation(),
             requestMessage.getRequestID());
         responseMessage = prevRequest.responseMessage;
         return responseMessage;
@@ -260,7 +263,7 @@ public class Server {
               for (int i = 2; i < requestString.length; i++) {
                 days.put(DayOfWeek.valueOf(requestString[i]), "true");
               }
-              System.out.println("Days: " + days.toString());
+              // System.out.println("Days: " + days.toString());
 
               responseMessage = new RequestMessage(Operation.READ.getOpCode(), requestMessage.getRequestID(),
                   formatFacilityAvailability(requestString[1], days));
@@ -663,7 +666,7 @@ public class Server {
   // facilityName cannot be null
   private static String formatFacilityAvailability(String facilityName, HashMap<DayOfWeek, String> days) {
     // return specified facility information
-    System.out.println("handleRequest: Requested facility: " + facilityName);
+    // System.out.println("handleRequest: Requested facility: " + facilityName);
     Facility requestedFacility = facilityFactory.getFacility(facilityName);
     if (requestedFacility != null) {
       // Get available timeslots for the requested facility

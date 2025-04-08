@@ -27,7 +27,13 @@ public class Rating {
     public void addRating(double rating) {
         this.totalRatingSum += rating;
         this.numberOfRatings++;
-        calculateAverageRating();
+        if (numberOfRatings == 0) {
+            this.averageRating = 0.0;
+            return;
+        }
+
+        this.averageRating = this.totalRatingSum / this.numberOfRatings;
+        
     }
 
     /**
@@ -41,6 +47,7 @@ public class Rating {
         }
 
         this.averageRating = this.totalRatingSum / this.numberOfRatings;
+
     }
 
     /**

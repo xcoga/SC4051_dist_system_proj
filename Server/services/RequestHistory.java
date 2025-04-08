@@ -98,7 +98,7 @@ public class RequestHistory {
    * @return A string containing all requests in the history.
    */
   public String toString() {
-    String str = "Request History: ";
+    String str = "Request History: \n";
     for (RequestInfo r : this.requestHistory) {
       str += r.toString() + ";\n";
     }
